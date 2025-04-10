@@ -1,4 +1,4 @@
-package project.luckybooky.global.response;
+package project.luckybooky.global.apiPayload.response;
 
 import lombok.Builder;
 import lombok.Getter;

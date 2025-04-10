@@ -1,12 +1,12 @@
-package project.luckybooky.global.error.exception;
+package project.luckybooky.global.apiPayload.error.exception;
 
 import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.Getter;
-import project.luckybooky.global.error.dto.ErrorCode;
-import project.luckybooky.global.error.dto.ErrorResponse.FieldError;
+import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.dto.ErrorResponse.FieldError;
 
 /**
  * 비즈니스 예외를 표현하는 추상적 예외 클래스.

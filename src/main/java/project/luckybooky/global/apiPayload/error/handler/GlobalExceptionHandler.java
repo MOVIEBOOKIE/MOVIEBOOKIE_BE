@@ -1,4 +1,4 @@
-package project.luckybooky.global.error.handler;
+package project.luckybooky.global.apiPayload.error.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -17,9 +17,9 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
-import project.luckybooky.global.error.dto.ErrorCode;
-import project.luckybooky.global.error.dto.ErrorResponse;
-import project.luckybooky.global.error.exception.BusinessException;
+import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.dto.ErrorResponse;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
 @Slf4j
 @RestControllerAdvice

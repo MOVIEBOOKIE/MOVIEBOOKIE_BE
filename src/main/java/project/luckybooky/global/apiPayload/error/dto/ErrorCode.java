@@ -1,10 +1,10 @@
-package project.luckybooky.global.error.dto;
+package project.luckybooky.global.apiPayload.error.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
-import project.luckybooky.global.common.status.BaseStatus;
-import project.luckybooky.global.response.ReasonDto;
+import project.luckybooky.global.apiPayload.common.status.BaseStatus;
+import project.luckybooky.global.apiPayload.response.ReasonDto;
 
 @Getter
 @AllArgsConstructor

@@ -1,4 +1,4 @@
-package project.luckybooky.global.response;
+package project.luckybooky.global.apiPayload.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
-import project.luckybooky.global.common.status.BaseStatus;
-import project.luckybooky.global.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.common.status.BaseStatus;
+import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 
 /**
  * 성공/실패를 막론하고

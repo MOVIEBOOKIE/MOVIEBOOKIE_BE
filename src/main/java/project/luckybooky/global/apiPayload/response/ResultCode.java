@@ -1,10 +1,10 @@
-package project.luckybooky.global.response;
+package project.luckybooky.global.apiPayload.response;
 
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
-import project.luckybooky.global.common.status.BaseStatus;
+import project.luckybooky.global.apiPayload.common.status.BaseStatus;
 
 @Getter
 @AllArgsConstructor
