@@ -1,4 +1,4 @@
-package com.example.luckybooky;
+package project.luckybooky.domain;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
