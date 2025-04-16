@@ -29,7 +29,7 @@ public class KakaoUtil {
     private final ObjectMapper objectMapper;
     private final Set<String> allowedRedirectUris = Set.of(
             "http://localhost:3000/login/kakao",
-            "http://api-movie-bookie.shop/"
+            "https://api-movie-bookie.shop/"
     );
 
 
