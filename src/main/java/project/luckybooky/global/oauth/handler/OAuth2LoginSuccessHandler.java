@@ -23,7 +23,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                                         Authentication authentication) throws IOException {
 
         String referer = request.getHeader("Referer");
-        boolean isLocal = (referer != null && referer.contains("localhost:5173"));
+        boolean isLocal = (referer != null && referer.contains("localhost:3000"));
 
         String accessToken = jwtUtil.createAccessToken(authentication.getName());
         String refreshToken = jwtUtil.createRefreshToken(authentication.getName());
@@ -32,7 +32,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         CookieUtil.addCookie(response, "accessToken", accessToken, jwtUtil.getAccessTokenValidity(), isLocal);
         CookieUtil.addCookie(response, "refreshToken", refreshToken, jwtUtil.getRefreshTokenValidity(), isLocal);
 
-        String redirectUrl = isLocal ? "http://localhost:5173" : "https://yeogi.my";
+        String redirectUrl = isLocal ? "http://localhost:3000" : "http://api-movie-bookie.shop/";
         log.info("🔹 로그인 성공! {} 환경으로 리디렉트: {}", isLocal ? "로컬" : "배포", redirectUrl);
 
         getRedirectStrategy().sendRedirect(request, response, redirectUrl + "/login/success");
