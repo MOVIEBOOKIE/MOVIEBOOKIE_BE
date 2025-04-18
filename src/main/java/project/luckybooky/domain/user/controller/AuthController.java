@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import project.luckybooky.domain.user.AuthenticatedUserUtils;
+import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
 import project.luckybooky.domain.user.converter.UserConverter;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO.JoinInfoResultDTO;
@@ -47,29 +47,10 @@ public class AuthController {
         return BaseResponse.onSuccess(UserConverter.toJoinResultDTO(user));
     }
 
-    @Operation(summary = "로그아웃", description = "사용자가 현재 로그인한 계정을 기준으로 리프레시 토큰을 삭제하여 재발급 방지하고 이후 쿠키 삭제를 합니다.")
+    @Operation(summary = "로그아웃", description = "사용자가 로그인한 계정을 기준으로 리프레시 토큰을 삭제하고 쿠키를 제거합니다.")
     @PostMapping("/logout")
-    public BaseResponse<String> logout(HttpServletResponse response, HttpServletRequest request) {
-        String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        // Refresh Token 삭제하여 재발급 방지
-        user.setRefreshToken(null);
-        userRepository.save(user);
-
-        // 환경 판별
-        boolean isLocal = request.getHeader("Referer") != null && request.getHeader("Referer")
-                .contains("localhost:3000");
-
-        // 쿠키 삭제
-        CookieUtil.deleteCookie(response, "accessToken", isLocal);
-        CookieUtil.deleteCookie(response, "refreshToken", isLocal);
-
-        // SecurityContext 초기화
-        SecurityContextHolder.clearContext();
-
-        return BaseResponse.onSuccess("로그아웃 성공");
+    public BaseResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        return authService.logout(request, response);
     }
 
 //    @Operation(summary = "회원탈퇴", description = "회원 정보를 포함한 모든 관련 데이터를 삭제한 후, 계정을 완전히 제거합니다.")

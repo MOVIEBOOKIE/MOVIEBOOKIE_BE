@@ -1,15 +1,20 @@
 package project.luckybooky.domain.user.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.user.converter.AuthConverter;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
+import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
+import project.luckybooky.global.apiPayload.common.BaseResponse;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.jwt.JwtUtil;
 import project.luckybooky.global.oauth.dto.KakaoDTO;
 import project.luckybooky.global.oauth.handler.AuthFailureHandler;
@@ -92,5 +97,37 @@ public class AuthService {
                 .profileImage("mock_profile.jpg")
                 .build();
     }
+
+    @Transactional
+    public BaseResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        // 1. 현재 로그인된 사용자 이메일 조회
+        String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
+
+        // 2. 사용자 엔티티 조회
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 3. Refresh Token 삭제 (DB)
+        user.setRefreshToken(null);
+        userRepository.save(user);
+
+        // 4. 환경 판별 (로컬인지)
+        boolean isLocal = false;
+        String referer = request.getHeader("Referer");
+        if (referer != null && referer.contains("localhost:3000")) {
+            isLocal = true;
+        }
+
+        // 5. 쿠키 삭제
+        CookieUtil.deleteCookie(response, "accessToken", isLocal);
+        CookieUtil.deleteCookie(response, "refreshToken", isLocal);
+
+        // 6. SecurityContext 초기화
+        SecurityContextHolder.clearContext();
+
+        // 7. 성공 응답 반환
+        return BaseResponse.onSuccess("로그아웃 성공");
+    }
+
 
 }
