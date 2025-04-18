@@ -18,7 +18,7 @@ import project.luckybooky.global.oauth.handler.AuthFailureHandler;
 @Component
 public class JwtUtil {
 
-    @Value("${JWT_SECRET}")
+    @Value("${jwt_secret}")
     private String jwtSecret;
 
     @Value("${jwt.access-token-validity}")
