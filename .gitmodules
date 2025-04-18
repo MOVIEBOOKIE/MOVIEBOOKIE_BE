@@ -1,3 +1,4 @@
 [submodule "src/main/resources/secret"]
 	path = src/main/resources/secret
 	url = https://github.com/LUCKYBOOKY/secret.git
+    branch = main
