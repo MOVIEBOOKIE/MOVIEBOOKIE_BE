@@ -1,4 +1,4 @@
-package project.luckybooky.domain.user;
+package project.luckybooky.domain.user.util;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
