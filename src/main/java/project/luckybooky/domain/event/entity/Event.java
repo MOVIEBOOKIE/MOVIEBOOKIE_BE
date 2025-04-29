@@ -18,7 +18,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@DynamicInsert
 public class Event extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,12 +57,12 @@ public class Event extends BaseEntity {
     @Column(name = "poster_image_url", nullable = false)
     private String posterImageUrl;
 
-    @Column(name = "min_participants", columnDefinition = "INT default '0'")
+    @Column(name = "min_participants", nullable = false)
     private Integer minParticipants;
 
-    @Column(name = "max_participants", columnDefinition = "INT default '0'")
+    @Column(name = "max_participants", nullable = false)
     private Integer maxParticipants;
 
-    @Column(name = "current_participants", columnDefinition = "INT default '0'")
+    @Column(name = "current_participants", nullable = false)
     private Integer currentParticipants;
 }
