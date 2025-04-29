@@ -36,7 +36,14 @@ public enum ErrorCode implements BaseStatus {
     USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "USER_401", "로그인 정보가 없습니다."),
     USER_NOT_AUTHENTICATED(HttpStatus.UNAUTHORIZED, "USER_401", "로그인 하지 않았습니다."),
     USER_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "USER_403", "권한이 없습니다."),
-            ;
+
+    // S3 관련
+    FILE_NOT_UPLOADED(HttpStatus.BAD_REQUEST, "S3_401", "이미지를 업로드 할 수 없습니다."),
+    FILE_IS_EMPTY(HttpStatus.BAD_REQUEST, "S3_402", "파일이 비어있습니다."),
+    FILE_NOT_IMAGE(HttpStatus.BAD_REQUEST, "S3_403", "이미지 파일만 업로드 가능합니다."),
+    IO_EXCEPTION_ON_IMAGE_DELETE(HttpStatus.BAD_REQUEST, "S3_404", "삭제 중 에러가 발생했습니다."),
+    INVALID_URL(HttpStatus.BAD_REQUEST, "S3_405", "유효하지 않은 url입니다."),
+    ;
 
     private final HttpStatus httpStatus;
     private final String code;
