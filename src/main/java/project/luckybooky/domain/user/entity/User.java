@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import project.luckybooky.global.apiPayload.common.BaseEntity;
+import project.luckybooky.global.entity.BaseEntity;
 
 @Getter
 @Setter
