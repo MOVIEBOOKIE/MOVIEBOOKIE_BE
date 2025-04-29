@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
+import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.event.entity.type.RecruitmentStatus;
+import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.global.entity.BaseEntity;
 
 import java.time.LocalDate;
@@ -26,6 +28,10 @@ public class Event extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id")
     private Location location;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @Column(name = "title", length = 20, nullable = false)
     private String title;
