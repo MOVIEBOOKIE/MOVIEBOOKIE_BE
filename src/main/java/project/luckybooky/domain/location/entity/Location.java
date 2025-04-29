@@ -1,4 +1,4 @@
-package project.luckybooky.domain.event.entity;
+package project.luckybooky.domain.location.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
