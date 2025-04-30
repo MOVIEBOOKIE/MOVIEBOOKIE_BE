@@ -31,8 +31,11 @@ public class Event extends BaseEntity {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @Column(name = "title", length = 20, nullable = false)
-    private String title;
+    @Column(name = "media_title", length = 20, nullable = false)
+    private String media_title;
+
+    @Column(name = "event_title", length = 20, nullable = false)
+    private String event_title;
 
     @Column(name = "description")
     private String description;
