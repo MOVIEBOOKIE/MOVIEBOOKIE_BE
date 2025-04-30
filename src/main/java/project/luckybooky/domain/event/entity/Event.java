@@ -51,7 +51,7 @@ public class Event extends BaseEntity {
     @Column(name = "recruitment_status", columnDefinition = "VARCHAR(20) default 'IN_PROGRESS'")
     private RecruitmentStatus recruitmentStatus;
 
-    @Column(name = "estimated_status", columnDefinition = "INT default '0'")
+    @Column(name = "estimated_status", nullable = false)
     private Integer estimatedPrice;
 
     @Column(name = "poster_image_url", nullable = false)
