@@ -2,10 +2,13 @@ package project.luckybooky.domain.user.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -40,5 +43,19 @@ public class User extends BaseEntity {
 
     @Column(name = "refresh_token")
     private String refreshToken;
+
+    @Column(name = "host_experience_count", nullable = false)
+    private int hostExperienceCount = 0;
+
+    @Column(name = "participation_experience_count", nullable = false)
+    private int participationExperienceCount = 0;
+
+    @Column(name = "phone_number", length = 20, unique = true)
+    @Pattern(regexp = "^\\+?[0-9\\-]{8,20}$", message = "유효한 전화번호 형식이 아닙니다.")
+    private String phoneNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_tyoe")
+    private UserType userType;
 
 }
