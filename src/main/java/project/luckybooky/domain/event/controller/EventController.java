@@ -9,7 +9,7 @@ import project.luckybooky.domain.event.service.EventService;
 @Tag(name = "Event", description = "이벤트 관련 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/event")
+@RequestMapping("/api/event")
 public class EventController {
     private final EventService eventService;
 }
