@@ -5,9 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.DynamicInsert;
 import project.luckybooky.domain.category.entity.Category;
-import project.luckybooky.domain.event.entity.type.RecruitmentStatus;
+import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.global.entity.BaseEntity;
 
@@ -48,8 +47,8 @@ public class Event extends BaseEntity {
     private LocalDate recruitmentEnd;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "recruitment_status", columnDefinition = "VARCHAR(20) default 'IN_PROGRESS'")
-    private RecruitmentStatus recruitmentStatus;
+    @Column(name = "event_status", columnDefinition = "VARCHAR(20) default 'IN_PROGRESS'")
+    private EventStatus eventStatus;
 
     @Column(name = "estimated_status", nullable = false)
     private Integer estimatedPrice;
