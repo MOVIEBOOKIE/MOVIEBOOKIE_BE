@@ -1,4 +1,4 @@
-package project.luckybooky.global.apiPayload.common;
+package project.luckybooky.global.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
