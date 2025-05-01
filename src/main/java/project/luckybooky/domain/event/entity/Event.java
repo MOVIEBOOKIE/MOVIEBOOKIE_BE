@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.event.entity.type.EventStatus;
+import project.luckybooky.domain.event.entity.type.HostEventStatus;
+import project.luckybooky.domain.event.entity.type.ParticipantEventStatus;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.global.entity.BaseEntity;
 
@@ -50,8 +52,19 @@ public class Event extends BaseEntity {
     private LocalDate recruitmentEnd;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "event_status", columnDefinition = "VARCHAR(20) default 'IN_PROGRESS'")
-    private EventStatus eventStatus;
+    @Column(name = "event_status", length = 20)
+    @Builder.Default
+    private EventStatus eventStatus = EventStatus.RECRUITING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "host_event_status", length = 20)
+    @Builder.Default
+    private HostEventStatus hostEventStatus = HostEventStatus.RECRUITING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "participant_event_status", length = 20)
+    @Builder.Default
+    private ParticipantEventStatus participantEventStatus = ParticipantEventStatus.RECRUITING;
 
     @Column(name = "estimated_status", nullable = false)
     private Integer estimatedPrice;
