@@ -21,4 +21,18 @@ public class UserConverter {
                 user.getProfileImage()
         );
     }
+
+    public static UserResponseDTO.AllInfoDTO toAllInfoDTO(User user) {
+        return new UserResponseDTO.AllInfoDTO(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getProfileImage(),
+                user.getPhoneNumber(),
+                user.getHostExperienceCount(),
+                user.getParticipationExperienceCount(),
+                user.getUserType(),
+                user.getGroupType()
+        );
+    }
 }

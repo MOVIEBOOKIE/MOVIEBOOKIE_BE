@@ -61,14 +61,12 @@ public class AuthController {
 
     @Operation(summary = "유저 정보 조회")
     @GetMapping("/user")
-    public CommonResponse<JoinInfoResultDTO> getUserInfo() {
-
+    public CommonResponse<UserResponseDTO.AllInfoDTO> getUserInfo() {
         String userEmail = AuthenticatedUserUtils.getAuthenticatedUserEmail();
-
-        // 이메일로 사용자 조회 & DTO 변환 (서비스에서 처리)
-        UserResponseDTO.JoinInfoResultDTO result = authService.getUserInfo(userEmail);
-
-        return CommonResponse.of(ResultCode.USER_FETCH_OK, result);
+        return CommonResponse.of(
+                ResultCode.USER_FETCH_OK,
+                authService.getUserInfo(userEmail)
+        );
     }
 
 }
