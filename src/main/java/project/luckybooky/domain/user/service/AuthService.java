@@ -77,7 +77,7 @@ public class AuthService {
         }
     }
 
-    @@Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public UserResponseDTO.AllInfoDTO getUserInfo(String email) {
 
         User user = userRepository.findByEmail(email)
