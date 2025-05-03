@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum Step2Question {
 
     /* -------- Group A: 몰입/분위기형 -------- */
-    STORY     ("📺", "스토리에 푹 빠져서 정주행하는 걸 좋아해요",            GroupType.A),
+    STORY     ("📺", "스토리에 푹 빠져서 정주행하기 좋아해요",            GroupType.A),
     VISUAL    ("🎞", "영상미나 분위기가 예쁘면 끝까지 보게 돼요",          GroupType.A),
     REVIEW    ("🗣", "후기도 꼼꼼히 보고, 평점 높은 거 위주로 봐요",       GroupType.A),
 
