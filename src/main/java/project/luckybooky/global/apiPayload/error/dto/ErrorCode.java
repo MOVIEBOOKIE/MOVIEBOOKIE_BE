@@ -46,7 +46,8 @@ public enum ErrorCode implements BaseStatus {
 
     // UserType Error
     USER_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_TYPE_404", "해당 조합의 UserType이 없습니다."),
-
+    // UserType 관련
+    USER_TYPE_NOT_ASSIGNED(HttpStatus.BAD_REQUEST, "USER_TYPE_400", "아직 유형검사를 완료하지 않았습니다."),
     ;
 
     private final HttpStatus httpStatus;
