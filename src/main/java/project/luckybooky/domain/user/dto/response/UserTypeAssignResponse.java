@@ -10,7 +10,7 @@ import project.luckybooky.domain.user.entity.UserType;
 @AllArgsConstructor
 @Builder
 public class UserTypeAssignResponse {
-    private String     userTypeCode;   // 예) MOVIE_TRENDY_VIEWER
-    private String     userTypeLabel;  // 예) 🍿 핫플릭스만 골라보는 감각 감상러
-    private GroupType  groupType;      // A · B
+    private String userTypeCode;
+    private String userTypeLabel;
+    private String description;
 }
