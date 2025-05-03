@@ -27,21 +27,26 @@ public class UserTypeService {
         User user = userRepo.findByEmail(AuthenticatedUserUtils.getAuthenticatedUserEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        GroupType group = req.getStep2Question().getGroup();               // STEP 2 → 그룹
-        ContentCategory favoriteCategory = req.getFavoriteCategory();                   // STEP 3 → 콘텐츠
+        /* STEP 2 → Group 결정 */
+        GroupType group = req.getStep2Question().getGroup();
 
+        /* STEP 3 × Group → UserType 결정 */
+        ContentCategory favoriteCategory = req.getFavoriteCategory();
         UserType userType = Arrays.stream(UserType.values())
                 .filter(t -> t.getCategory() == favoriteCategory && t.getGroup() == group)
                 .findFirst()
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_TYPE_NOT_FOUND));
 
+        /* ⬇︎ 둘 다 세팅 ⬇︎ */
+        user.setGroupType(group);
         user.setUserType(userType);
         userRepo.save(user);
 
         return new UserTypeAssignResponse(
-                userType.name(),      // "MOVIE_TRENDY_VIEWER"
-                userType.getLabel(),  // "🍿 핫플릭스만 골라보는 감각 감상러"
-                group);
+                userType.name(),
+                userType.getLabel(),
+                group
+        );
     }
 
 }
