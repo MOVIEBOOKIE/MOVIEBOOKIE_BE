@@ -55,7 +55,11 @@ public class User extends BaseEntity {
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_tyoe")
+    @Column(name = "user_type")
     private UserType userType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "group_type")
+    private GroupType groupType;
 
 }

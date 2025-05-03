@@ -43,6 +43,11 @@ public enum ErrorCode implements BaseStatus {
     FILE_NOT_IMAGE(HttpStatus.BAD_REQUEST, "S3_403", "이미지 파일만 업로드 가능합니다."),
     IO_EXCEPTION_ON_IMAGE_DELETE(HttpStatus.BAD_REQUEST, "S3_404", "삭제 중 에러가 발생했습니다."),
     INVALID_URL(HttpStatus.BAD_REQUEST, "S3_405", "유효하지 않은 url입니다."),
+
+    // UserType Error
+    USER_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_TYPE_404", "해당 조합의 UserType이 없습니다."),
+    // UserType 관련
+    USER_TYPE_NOT_ASSIGNED(HttpStatus.BAD_REQUEST, "USER_TYPE_400", "아직 유형검사를 완료하지 않았습니다."),
     ;
 
     private final HttpStatus httpStatus;

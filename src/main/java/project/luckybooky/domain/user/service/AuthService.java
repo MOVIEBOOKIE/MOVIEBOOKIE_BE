@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.user.converter.AuthConverter;
+import project.luckybooky.domain.user.converter.UserConverter;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
@@ -77,16 +78,12 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponseDTO.JoinInfoResultDTO getUserInfo(String email) {
-        // 이메일로 사용자 조회
-        User user = userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    log.warn("사용자를 찾을 수 없음, 기본 목업 데이터 반환");
-                    return createMockUser();
-                });
+    public UserResponseDTO.AllInfoDTO getUserInfo(String email) {
 
-        // User 엔티티 -> DTO 변환
-        return new UserResponseDTO.JoinInfoResultDTO(user.getId(), user.getEmail(), user.getUsername(), user.getProfileImage());
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return UserConverter.toAllInfoDTO(user);
     }
 
     private User createMockUser() {
