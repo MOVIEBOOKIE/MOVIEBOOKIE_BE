@@ -41,7 +41,7 @@ public class UserInitializer implements ApplicationRunner {
                 .profileImage("https://example.com/avatar/guest2.png")
                 .accessToken("")
                 .refreshToken("")
-                .userType(UserType.MOVIE_TRENDY_VIEWER)      // 🍿 핫플릭스만 골라보는 감각 감상러
+                .userType(UserType.MOVIE_DETAIL_COLLECTOR)      // 🍿 핫플릭스만 골라보는 감각 감상러
                 .hostExperienceCount(1)
                 .participationExperienceCount(5)
                 .phoneNumber("+821012300002")
@@ -65,7 +65,7 @@ public class UserInitializer implements ApplicationRunner {
                 .profileImage("https://example.com/avatar/guest4.png")
                 .accessToken("")
                 .refreshToken("")
-                .userType(UserType.DRAMA_HIGHLIGHT_HUNTER)   // 💡 레전드 회차 ‘명장면 추적러’
+                .userType(UserType.SPORTS_FULL_SUPPORTER)   // 💡 레전드 회차 ‘명장면 추적러’
                 .hostExperienceCount(0)
                 .participationExperienceCount(4)
                 .phoneNumber("+821012300004")
