@@ -8,17 +8,14 @@ import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.category.service.CategoryService;
 import project.luckybooky.domain.event.converter.EventConverter;
 import project.luckybooky.domain.event.dto.request.EventRequest;
-import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
-import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.service.S3Service;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
@@ -36,10 +33,16 @@ public class EventService {
         Category category = categoryService.findByName(request.getMediaType());
         Location location = locationService.findOne(request.getLocationId());
         String eventEndTime = toEventEndTime(request.getEventStartTime(), request.getEventProgressTime());
+        Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(), request.getMinParticipants());
 
-        Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime);
+        Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime,estimatedPrice);
         eventRepository.save(event);
         return event.getId();
+    }
+
+    private Integer toEstimatedPrice(Integer eventProgressTime, Integer pricePerHour, Integer minParticipants) {
+        int estimatedPrice = pricePerHour * eventProgressTime / minParticipants;
+        return (int) (Math.round(estimatedPrice / 1000.0) * 1000);
     }
 
     /** 이벤트 종료 시간 생성 (시작 시각 + 진행 시간) **/
