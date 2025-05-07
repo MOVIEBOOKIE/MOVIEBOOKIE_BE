@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import project.luckybooky.domain.location.entity.type.LocationKeyword;
 import project.luckybooky.global.entity.BaseEntity;
 
-import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -32,6 +31,9 @@ public class Location extends BaseEntity {
 
     @Column(name = "price_per_hour", nullable = false)
     private Long pricePerHour;
+
+    @Column(name = "seat_count", nullable = false)
+    private Integer seatCount;
 
     @Column(name = "has_disabled_seat", nullable = false)
     private Boolean hasDisabledSeat;

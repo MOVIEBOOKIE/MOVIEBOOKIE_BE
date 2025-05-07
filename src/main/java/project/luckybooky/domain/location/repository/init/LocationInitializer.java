@@ -37,6 +37,7 @@ public class LocationInitializer implements ApplicationRunner {
                     .address("서울특별시 마포구 상암동 1602 DMC 단지")
                     .pricePerHour(40000L)
                     .locationKeywordList(keywords1)
+                    .seatCount(321)
                     .hasDisabledSeat(Boolean.TRUE)
                     .build();
 
@@ -50,6 +51,7 @@ public class LocationInitializer implements ApplicationRunner {
                     .address("서울 마포구 상암동 1602 DMC 단지")
                     .pricePerHour(20000L)
                     .locationKeywordList(keywords2)
+                    .seatCount(321)
                     .hasDisabledSeat(Boolean.TRUE)
                     .build();
 
