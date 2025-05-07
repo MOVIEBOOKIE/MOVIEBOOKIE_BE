@@ -10,9 +10,12 @@ import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.entity.type.HostEventStatus;
 import project.luckybooky.domain.event.entity.type.ParticipantEventStatus;
 import project.luckybooky.domain.location.entity.Location;
+import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.global.entity.BaseEntity;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Builder
@@ -32,6 +35,9 @@ public class Event extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
+    private List<Participation> participationList = new ArrayList<>();
 
     @Column(name = "media_title", length = 20, nullable = false)
     private String mediaTitle;

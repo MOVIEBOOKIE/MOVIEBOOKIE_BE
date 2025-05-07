@@ -18,6 +18,7 @@ public class EventConverter {
                 .eventEndTime(eventEndTime)
                 .recruitmentStart(request.getRecruitmentStart())
                 .recruitmentEnd(request.getRecruitmentEnd())
+                .estimatedPrice(24000)
                 .posterImageUrl(eventImageUrl)
                 .minParticipants(request.getMinParticipants())
                 .maxParticipants(request.getMaxParticipants())

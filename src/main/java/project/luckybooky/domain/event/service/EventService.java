@@ -13,6 +13,9 @@ import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
+import project.luckybooky.domain.user.entity.User;
+import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.service.S3Service;
 
 import java.time.LocalDate;
@@ -28,7 +31,7 @@ public class EventService {
     private final CategoryService categoryService;
 
     @Transactional
-    public EventResponse.EventCreateResultDTO createEvent(EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
+    public Long createEvent(EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
         String eventImageUrl = s3Service.uploadFile(eventImage);
         Category category = categoryService.findByName(request.getMediaType());
         Location location = locationService.findOne(request.getLocationId());
@@ -36,7 +39,7 @@ public class EventService {
 
         Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime);
         eventRepository.save(event);
-        return EventConverter.toEventCreateResponseDTO(event);
+        return event.getId();
     }
 
     /** 이벤트 종료 시간 생성 (시작 시각 + 진행 시간) **/
@@ -46,5 +49,10 @@ public class EventService {
 
         LocalTime endTime = startTime.plusHours(eventProgressTime);
         return endTime.format(formatter);
+    }
+
+    public Event findOne(Long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 }
