@@ -7,7 +7,7 @@ import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.location.entity.Location;
 
 public class EventConverter {
-    public static Event toEvent(EventRequest.EventCreateRequestDTO request, String eventImageUrl, Category category, Location location, String eventEndTime) {
+    public static Event toEvent(EventRequest.EventCreateRequestDTO request, String eventImageUrl, Category category, Location location, String eventEndTime, Integer estimatedPrice) {
         return Event.builder()
                 .location(location)
                 .category(category)
@@ -18,7 +18,7 @@ public class EventConverter {
                 .eventEndTime(eventEndTime)
                 .recruitmentStart(request.getRecruitmentStart())
                 .recruitmentEnd(request.getRecruitmentEnd())
-                .estimatedPrice(24000)
+                .estimatedPrice(estimatedPrice)
                 .posterImageUrl(eventImageUrl)
                 .minParticipants(request.getMinParticipants())
                 .maxParticipants(request.getMaxParticipants())
