@@ -12,8 +12,9 @@ public class RedisSmsCertificationCache implements SmsCertificationCache {
     private final StringRedisTemplate redis;
 
     @Override
-    public void store(String phone, String code, Duration ttl) {
+    public boolean store(String phone, String code, Duration ttl) {
         redis.opsForValue().set(phone, code, ttl);
+        return false;
     }
 
     @Override
