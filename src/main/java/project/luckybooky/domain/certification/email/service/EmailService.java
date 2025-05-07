@@ -49,7 +49,7 @@ public class EmailService {
     }
 
     private String generate() {
-        return String.format("%06d", random.nextInt(1_000_000));
+        return String.format("%04d", random.nextInt(1_000_000));
     }
 }
 

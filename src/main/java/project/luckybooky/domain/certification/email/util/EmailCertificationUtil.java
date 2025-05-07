@@ -22,11 +22,7 @@ public class EmailCertificationUtil {
 
     @Value("${app.email.from}")
     private String from;
-    /**
-     * 인증번호 메일 발송
-     *  - @Async: HTTP 응답을 빠르게 돌려주고 메일은 백그라운드 전송
-     *  - HTML 본문 사용
-     */
+
     @Async
     public void sendMail(String to, String code) {
         try {
@@ -54,7 +50,6 @@ public class EmailCertificationUtil {
         }
     }
 
-    /** HTML 본문 템플릿 */
     private String buildHtml(String code) {
         return """
                <p>안녕하세요, 무비부키입니다.</p>
