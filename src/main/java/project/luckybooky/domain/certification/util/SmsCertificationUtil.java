@@ -27,11 +27,10 @@ public class SmsCertificationUtil {
         this.messageService = NurigoApp.INSTANCE.initialize(apiKey, apiSecret, "https://api.coolsms.co.kr");
     }
 
-    // 단일 메시지 발송
     public void sendSMS(String to, String certificationCode){
-        Message message = new Message(); // 새 메시지 객체 생성
-        message.setFrom(fromNumber); // 발신자 번호 설정
-        message.setTo(to); // 수신자 번호 설정
+        Message message = new Message();
+        message.setFrom(fromNumber);
+        message.setTo(to);
         message.setText("[무비부키] 본인확인 인증번호는 " + certificationCode + "입니다.");
 
         this.messageService.sendOne(new SingleMessageSendingRequest(message));
