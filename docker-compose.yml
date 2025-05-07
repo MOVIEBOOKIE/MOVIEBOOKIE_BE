@@ -2,7 +2,7 @@ version: "3.9"
 services:
   redis:
     container_name: moviebooky-redis
-    image: redis:lastest
+    image: redis:latest
     ports:
       - "6379:6379"
     command: ["redis-server", "--save", "", "--appendonly", "no"]
