@@ -34,16 +34,22 @@ public class Event extends BaseEntity {
     private Category category;
 
     @Column(name = "media_title", length = 20, nullable = false)
-    private String media_title;
+    private String mediaTitle;
 
     @Column(name = "event_title", length = 20, nullable = false)
-    private String event_title;
+    private String eventTitle;
 
     @Column(name = "description")
     private String description;
 
     @Column(name = "event_date", nullable = false)
     private LocalDate eventDate;
+
+    @Column(name = "event_start_time", nullable = false)
+    private String eventStartTime;
+
+    @Column(name = "event_end_time", nullable = false)
+    private String eventEndTime;
 
     @Column(name = "recruitment_start", nullable = false)
     private LocalDate recruitmentStart;
