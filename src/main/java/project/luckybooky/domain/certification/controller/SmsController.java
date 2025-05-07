@@ -13,7 +13,7 @@ import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
 
 @RestController
-@RequestMapping("/sms")
+@RequestMapping("/api/sms")
 @RequiredArgsConstructor
 public class SmsController {
 
