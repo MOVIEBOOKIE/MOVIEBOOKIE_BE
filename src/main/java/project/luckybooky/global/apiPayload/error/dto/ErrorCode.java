@@ -54,6 +54,9 @@ public enum ErrorCode implements BaseStatus {
 
     // category 관련
     CATEGORY_NOT_FOUND(HttpStatus.BAD_REQUEST, "CATEGORY_401", "카테고리를 찾을 수 없습니다."),
+
+    // event 관련
+    EVENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "EVENT_401", "이벤트를 찾을 수 없습니다."),
     ;
 
     private final HttpStatus httpStatus;
