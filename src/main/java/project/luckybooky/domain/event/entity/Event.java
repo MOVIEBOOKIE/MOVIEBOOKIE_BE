@@ -84,6 +84,7 @@ public class Event extends BaseEntity {
     @Column(name = "max_participants", nullable = false)
     private Integer maxParticipants;
 
+    @Builder.Default
     @Column(name = "current_participants", nullable = false)
-    private Integer currentParticipants;
+    private Integer currentParticipants = 0;
 }
