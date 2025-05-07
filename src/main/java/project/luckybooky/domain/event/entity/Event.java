@@ -10,9 +10,12 @@ import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.entity.type.HostEventStatus;
 import project.luckybooky.domain.event.entity.type.ParticipantEventStatus;
 import project.luckybooky.domain.location.entity.Location;
+import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.global.entity.BaseEntity;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Builder
@@ -33,17 +36,26 @@ public class Event extends BaseEntity {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
+    private List<Participation> participationList = new ArrayList<>();
+
     @Column(name = "media_title", length = 20, nullable = false)
-    private String media_title;
+    private String mediaTitle;
 
     @Column(name = "event_title", length = 20, nullable = false)
-    private String event_title;
+    private String eventTitle;
 
     @Column(name = "description")
     private String description;
 
     @Column(name = "event_date", nullable = false)
     private LocalDate eventDate;
+
+    @Column(name = "event_start_time", nullable = false)
+    private String eventStartTime;
+
+    @Column(name = "event_end_time", nullable = false)
+    private String eventEndTime;
 
     @Column(name = "recruitment_start", nullable = false)
     private LocalDate recruitmentStart;
@@ -78,6 +90,7 @@ public class Event extends BaseEntity {
     @Column(name = "max_participants", nullable = false)
     private Integer maxParticipants;
 
+    @Builder.Default
     @Column(name = "current_participants", nullable = false)
-    private Integer currentParticipants;
+    private Integer currentParticipants = 0;
 }

@@ -49,9 +49,19 @@ public enum ErrorCode implements BaseStatus {
     // UserType 관련
     USER_TYPE_NOT_ASSIGNED(HttpStatus.BAD_REQUEST, "USER_TYPE_400", "아직 유형검사를 완료하지 않았습니다."),
 
+    // location 관련
+    LOCATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "LOCATION_401", "영화관을 찾을 수 없습니다."),
+
+    // category 관련
+    CATEGORY_NOT_FOUND(HttpStatus.BAD_REQUEST, "CATEGORY_401", "카테고리를 찾을 수 없습니다."),
+
+    // event 관련
+    EVENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "EVENT_401", "이벤트를 찾을 수 없습니다."),
+
     // Certification 관련
     CERTIFICATION_EXPIRED(HttpStatus.BAD_REQUEST, "AUTH_001", "인증번호가 만료되었습니다."),
     CERTIFICATION_MISMATCH(HttpStatus.BAD_REQUEST, "AUTH_002", "인증번호가 일치하지 않습니다."),
+
 
     ;
 
