@@ -30,7 +30,7 @@ public class Location extends BaseEntity {
     private String locationImageUrl;
 
     @Column(name = "price_per_hour", nullable = false)
-    private Long pricePerHour;
+    private Integer pricePerHour;
 
     @Column(name = "seat_count", nullable = false)
     private Integer seatCount;
