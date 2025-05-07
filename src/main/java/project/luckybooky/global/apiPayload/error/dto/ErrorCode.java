@@ -57,6 +57,12 @@ public enum ErrorCode implements BaseStatus {
 
     // event 관련
     EVENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "EVENT_401", "이벤트를 찾을 수 없습니다."),
+
+    // Certification 관련
+    CERTIFICATION_EXPIRED(HttpStatus.BAD_REQUEST, "AUTH_001", "인증번호가 만료되었습니다."),
+    CERTIFICATION_MISMATCH(HttpStatus.BAD_REQUEST, "AUTH_002", "인증번호가 일치하지 않습니다."),
+
+
     ;
 
     private final HttpStatus httpStatus;
