@@ -1,4 +1,4 @@
-package project.luckybooky.domain.certification.controller;
+package project.luckybooky.domain.certification.sms.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import project.luckybooky.domain.certification.Service.SmsService;
-import project.luckybooky.domain.certification.dto.request.SmsRequestDTO;
-import project.luckybooky.domain.certification.dto.request.SmsVerifyRequestDTO;
+import project.luckybooky.domain.certification.sms.Service.SmsService;
+import project.luckybooky.domain.certification.sms.dto.request.SmsRequestDTO;
+import project.luckybooky.domain.certification.sms.dto.request.SmsVerifyRequestDTO;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
 

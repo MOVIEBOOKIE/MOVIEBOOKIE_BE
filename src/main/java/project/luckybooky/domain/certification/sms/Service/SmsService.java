@@ -1,13 +1,13 @@
-package project.luckybooky.domain.certification.Service;
+package project.luckybooky.domain.certification.sms.Service;
 
 import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import project.luckybooky.domain.certification.dto.request.SmsRequestDTO;
-import project.luckybooky.domain.certification.dto.request.SmsVerifyRequestDTO;
-import project.luckybooky.domain.certification.util.SmsCertificationUtil;
+import project.luckybooky.domain.certification.sms.dto.request.SmsRequestDTO;
+import project.luckybooky.domain.certification.sms.dto.request.SmsVerifyRequestDTO;
+import project.luckybooky.domain.certification.sms.util.SmsCertificationUtil;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.redis.SmsCertificationCache;

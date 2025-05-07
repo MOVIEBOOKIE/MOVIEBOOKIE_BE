@@ -1,4 +1,4 @@
-package project.luckybooky.domain.certification.dto.request;
+package project.luckybooky.domain.certification.sms.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
