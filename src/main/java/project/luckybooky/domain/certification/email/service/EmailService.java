@@ -49,7 +49,8 @@ public class EmailService {
     }
 
     private String generate() {
-        return String.format("%04d", random.nextInt(1_000_000));
+        int bound = (int) Math.pow(10, CODE_LEN);   // 10 000
+        return String.format("%0" + CODE_LEN + "d", random.nextInt(bound));
     }
 }
 
