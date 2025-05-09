@@ -26,7 +26,7 @@ public class Location extends BaseEntity {
     @Column(name = "address", length = 50, nullable = false)
     private String address;
 
-    @Column(name = "location_image_url")
+    @Column(name = "location_image_url", length = 512)
     private String locationImageUrl;
 
     @Column(name = "price_per_hour", nullable = false)
