@@ -61,6 +61,7 @@ public enum ErrorCode implements BaseStatus {
     // Certification 관련
     CERTIFICATION_EXPIRED(HttpStatus.BAD_REQUEST, "AUTH_001", "인증번호가 만료되었습니다."),
     CERTIFICATION_MISMATCH(HttpStatus.BAD_REQUEST, "AUTH_002", "인증번호가 일치하지 않습니다."),
+    CERTIFICATION_DUPLICATED(HttpStatus.BAD_REQUEST, "AUTH_003", "이미 유효한 인증번호가 발송되었습니다."),
 
 
     ;

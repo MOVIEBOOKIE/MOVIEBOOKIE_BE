@@ -1,4 +1,4 @@
-package project.luckybooky.domain.certification.util;
+package project.luckybooky.domain.certification.sms.util;
 
 import jakarta.annotation.PostConstruct;
 import net.nurigo.sdk.NurigoApp;
