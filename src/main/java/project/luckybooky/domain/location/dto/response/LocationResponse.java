@@ -17,6 +17,7 @@ public class LocationResponse {
         String address;
         String locationImageUrl;
         Set<String> locationKeywordList;
+        Integer pricePerHour;
         Integer seatCount;
         Boolean hasDisabledSeat;
     }

@@ -13,6 +13,7 @@ public class LocationConverter {
                 .address(location.getAddress())
                 .locationImageUrl(location.getLocationImageUrl())
                 .locationKeywordList(keywords)
+                .pricePerHour(location.getPricePerHour())
                 .seatCount(location.getSeatCount())
                 .hasDisabledSeat(location.getHasDisabledSeat())
                 .build();
