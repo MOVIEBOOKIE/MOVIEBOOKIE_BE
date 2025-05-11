@@ -1,6 +1,8 @@
 package project.luckybooky.domain.event.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,7 +10,9 @@ import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.category.service.CategoryService;
 import project.luckybooky.domain.event.converter.EventConverter;
 import project.luckybooky.domain.event.dto.request.EventRequest;
+import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
+import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
@@ -16,8 +20,12 @@ import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.service.S3Service;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,5 +65,31 @@ public class EventService {
     public Event findOne(Long eventId) {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+    }
+
+    public List<EventResponse.EventReadByCategoryResultDTO> readEventListByCategory(String category, Integer page, Integer size) {
+        Page<Event> eventList;
+        switch (category) {
+            case "인기":
+                eventList = eventRepository.findOrderByPopularity(PageRequest.of(page, size));
+                break;
+            case "최신":
+                eventList = eventRepository.findOrderByCreatedAtDesc(PageRequest.of(page, size));
+                break;
+            default:
+                eventList = eventRepository.findByCategoryName(category, PageRequest.of(page, size));
+                break;
+        }
+
+        return eventList.stream().map(
+                e -> {
+                    double percentage = ((double) e.getCurrentParticipants() / e.getMaxParticipants()) * 100;
+                    int rate = Math.round((float) percentage);
+
+                    int d_day = (int) ChronoUnit.DAYS.between(LocalDate.now(), e.getEventDate());
+
+                    return EventConverter.toEventReadByCategoryResultDTO(e, rate, d_day);
+                }
+        ).collect(Collectors.toList());
     }
 }

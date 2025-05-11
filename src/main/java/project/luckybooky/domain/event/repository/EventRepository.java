@@ -1,7 +1,19 @@
 package project.luckybooky.domain.event.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import project.luckybooky.domain.event.entity.Event;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
+    @Query("SELECT e FROM Event e WHERE e.eventStatus='RECRUITING' ORDER BY e.createdAt DESC")
+    Page<Event> findOrderByCreatedAtDesc(Pageable pageable);
+
+    @Query("SELECT e FROM Event e JOIN e.category c WHERE c.categoryName = :categoryName AND e.eventStatus='RECRUITING'")
+    Page<Event> findByCategoryName(@Param("categoryName") String categoryName, Pageable pageable);
+
+    @Query("SELECT e FROM Event e WHERE e.eventStatus='RECRUITING'")
+    Page<Event> findOrderByPopularity(Pageable pageable);
 }
