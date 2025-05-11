@@ -32,7 +32,7 @@ public class Event extends BaseEntity {
     @JoinColumn(name = "location_id")
     private Location location;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
 
