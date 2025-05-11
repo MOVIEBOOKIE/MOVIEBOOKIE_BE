@@ -7,7 +7,14 @@ import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.location.entity.Location;
 
 public class EventConverter {
-    public static Event toEvent(EventRequest.EventCreateRequestDTO request, String eventImageUrl, Category category, Location location, String eventEndTime, Integer estimatedPrice) {
+    public static Event toEvent(
+            EventRequest.EventCreateRequestDTO request,
+            String eventImageUrl,
+            Category category,
+            Location location,
+            String eventEndTime,
+            Integer estimatedPrice
+    ) {
         return Event.builder()
                 .location(location)
                 .category(category)
@@ -46,6 +53,37 @@ public class EventConverter {
                 .locationName(event.getLocation().getLocationName())
                 .posterImageUrl(event.getPosterImageUrl())
                 .build();
+    }
 
+    public static EventResponse.EventReadDetailsResultDTO toEventReadDetailsResultDTO(
+            Event event,
+            String username,
+            Integer recruitment,
+            String recruitmentDate,
+            String d_day,
+            Integer recruitmentRate
+    ) {
+        return EventResponse.EventReadDetailsResultDTO.builder()
+                .mediaType(event.getCategory().getCategoryName())
+                .mediaTitle(event.getMediaTitle())
+                .eventTime(event.getEventTitle())
+                .eventTitle(event.getEventTitle())
+                .description(event.getDescription())
+                .estimatedPrice(event.getEstimatedPrice())
+                .eventDate(event.getEventDate())
+                .eventTime(event.getEventStartTime())
+                .recruitmentDate(recruitmentDate)
+                .d_day(d_day)
+                .minParticipants(event.getMinParticipants())
+                .maxParticipants(event.getMaxParticipants())
+                .currentParticipants(event.getCurrentParticipants())
+                .recruitmentRate(recruitmentRate)
+                .posterImageUrl(event.getPosterImageUrl())
+                .username(username)
+                .recruitment(recruitment)
+                .locationName(event.getLocation().getLocationName())
+                .address(event.getLocation().getAddress())
+                .locationImageUrl(event.getLocation().getLocationImageUrl())
+                .build();
     }
 }
