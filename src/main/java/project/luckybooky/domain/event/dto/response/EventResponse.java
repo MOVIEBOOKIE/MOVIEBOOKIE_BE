@@ -23,7 +23,7 @@ public class EventResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
-    public static class EventReadByCategoryResultDTO {
+    public static class ReadEventListResultDTO {
         String mediaType;
         String mediaTitle;
         String description;
