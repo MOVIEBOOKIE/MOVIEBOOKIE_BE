@@ -54,7 +54,7 @@ public class Location extends BaseEntity {
     private Integer availableTimes;
 
     @Column(name = "is_Start_time_restricted", nullable = false)
-    private Boolean IsStartTimeRestricted;
+    private Boolean isStartTimeRestricted;
 
     @ElementCollection
     @CollectionTable(name = "allowed_Start_time",
