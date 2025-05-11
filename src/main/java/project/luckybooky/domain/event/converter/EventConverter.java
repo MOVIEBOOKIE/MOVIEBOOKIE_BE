@@ -40,8 +40,8 @@ public class EventConverter {
                 .build();
     }
 
-    public static EventResponse.EventReadByCategoryResultDTO toEventReadByCategoryResultDTO(Event event, Integer rate, Integer d_day) {
-        return EventResponse.EventReadByCategoryResultDTO.builder()
+    public static EventResponse.ReadEventListResultDTO toEventListResultDTO(Event event, Integer rate, Integer d_day) {
+        return EventResponse.ReadEventListResultDTO.builder()
                 .mediaType(event.getCategory().getCategoryName())
                 .mediaTitle(event.getMediaTitle())
                 .description(event.getDescription())
