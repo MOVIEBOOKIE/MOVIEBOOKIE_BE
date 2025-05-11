@@ -10,6 +10,7 @@ public class LocationConverter {
     public static LocationResponse.ReadLocationsResultDTO toReadLocationsResultDTO(Location location, Set<String> keywords) {
         return LocationResponse.ReadLocationsResultDTO.builder()
                 .locationName(location.getLocationName())
+                .address(location.getAddress())
                 .locationImageUrl(location.getLocationImageUrl())
                 .locationKeywordList(keywords)
                 .seatCount(location.getSeatCount())
