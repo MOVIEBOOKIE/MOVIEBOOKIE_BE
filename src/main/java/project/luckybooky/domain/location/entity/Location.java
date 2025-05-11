@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import project.luckybooky.domain.location.entity.type.AvailableMediaType;
 import project.luckybooky.domain.location.entity.type.LocationKeyword;
 import project.luckybooky.global.entity.BaseEntity;
 
@@ -44,4 +45,20 @@ public class Location extends BaseEntity {
             joinColumns = @JoinColumn(name = "location_id")
     )
     private Set<LocationKeyword> locationKeywordList;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "available_media_type", nullable = false)
+    private AvailableMediaType availableMediaType;
+
+    @Column(name = "available_times", nullable = false)
+    private Integer availableTimes;
+
+    @Column(name = "is_Start_time_restricted", nullable = false)
+    private Boolean IsStartTimeRestricted;
+
+    @ElementCollection
+    @CollectionTable(name = "allowed_Start_time",
+            joinColumns = @JoinColumn(name = "location_id")
+    )
+    private Set<String> allowedStartTimes;
 }
