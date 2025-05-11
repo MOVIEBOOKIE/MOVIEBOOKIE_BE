@@ -17,7 +17,7 @@ public class LocationController {
     private final LocationService locationService;
 
     @Operation(summary = "이벤트 생성 시 영화관 목록 추천", description = "이벤트에 대한 정보를 Request Body에 넣어주세요!! ")
-    @GetMapping
+    @PostMapping
     public BaseResponse<List<LocationResponse.ReadLocationsResultDTO>> findLocationsByEventOptions(@RequestBody LocationRequest.ReadLocationsRequestDTO request) {
         return BaseResponse.onSuccess(locationService.findLocationsByEventOptions(request));
     }
