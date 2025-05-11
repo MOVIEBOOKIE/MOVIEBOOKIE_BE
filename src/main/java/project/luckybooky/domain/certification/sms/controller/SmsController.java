@@ -31,7 +31,7 @@ public class SmsController {
      **/
     @PostMapping("/verify")
     public CommonResponse<Void> verifySms(@Valid @RequestBody SmsVerifyRequestDTO dto) {
-        smsService.verifyCode(dto);
+        smsService.verifyCertificationCode(dto);
         return CommonResponse.ok(ResultCode.OK);
     }
 }
