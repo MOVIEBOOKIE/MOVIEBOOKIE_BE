@@ -13,6 +13,7 @@ public class EventConverter {
                 .category(category)
                 .mediaTitle(request.getMediaTitle())
                 .eventTitle(request.getEventTitle())
+                .description(request.getDescription())
                 .eventDate(request.getEventDate())
                 .eventStartTime(request.getEventStartTime())
                 .eventEndTime(eventEndTime)
@@ -30,5 +31,21 @@ public class EventConverter {
                 .eventId(event.getId())
                 .createdAt(event.getCreatedAt())
                 .build();
+    }
+
+    public static EventResponse.EventReadByCategoryResultDTO toEventReadByCategoryResultDTO(Event event, Integer rate, Integer d_day) {
+        return EventResponse.EventReadByCategoryResultDTO.builder()
+                .mediaType(event.getCategory().getCategoryName())
+                .mediaTitle(event.getMediaTitle())
+                .description(event.getDescription())
+                .rate(rate)
+                .estimatedPrice(event.getEstimatedPrice())
+                .eventDate(event.getEventDate())
+                .eventStatus(event.getEventStatus().getDescription())
+                .d_day(d_day)
+                .locationName(event.getLocation().getLocationName())
+                .posterImageUrl(event.getPosterImageUrl())
+                .build();
+
     }
 }
