@@ -2,6 +2,7 @@ package project.luckybooky.domain.event.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.query.Page;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,13 @@ public class EventController {
     private final ParticipationService participationService;
     private final AuthService authService;
 
+    /** 로그인 정보로부터 유저 ID 추출 **/
+    private Long toUserId() {
+        String userEmail = AuthenticatedUserUtils.getAuthenticatedUserEmail();
+        UserResponseDTO.AllInfoDTO userInfo = authService.getUserInfo(userEmail);
+        return userInfo.getId();
+    }
+
     @Operation(summary = "이벤트 생성", description = "해당하는 값을 넣어주세요 !")
     @PostMapping
     public BaseResponse<EventResponse.EventCreateResultDTO> createEvent(
@@ -33,9 +41,7 @@ public class EventController {
             @RequestPart(required = false) MultipartFile eventImage
     ) {
         // 유저 ID 가져오기
-        String userEmail = AuthenticatedUserUtils.getAuthenticatedUserEmail();
-        UserResponseDTO.AllInfoDTO userInfo = authService.getUserInfo(userEmail);
-        Long userId = userInfo.getId();
+        Long userId = toUserId();
 
         Long eventId = eventService.createEvent(request, eventImage);
         return BaseResponse.onSuccess(participationService.createParticipation(userId, eventId, Boolean.TRUE));
@@ -51,5 +57,12 @@ public class EventController {
             @RequestParam String category
     ) {
         return BaseResponse.onSuccess(eventService.readEventListByCategory(category, page, size));
+    }
+
+    @Operation(summary = "이벤트 상세 조회", description = "상세 조회를 희망하는 이벤트 ID를 넣어주세요 !!")
+    @GetMapping("/{eventId}")
+    public BaseResponse<EventResponse.EventReadDetailsResultDTO> readEventDetails(@PathVariable("eventId") Long eventId) {
+        Long userId = toUserId();
+        return BaseResponse.onSuccess(eventService.readEventDetails(userId, eventId));
     }
 }

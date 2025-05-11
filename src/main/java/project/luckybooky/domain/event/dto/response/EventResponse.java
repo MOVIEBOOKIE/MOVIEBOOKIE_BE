@@ -35,4 +35,35 @@ public class EventResponse {
         String locationName;
         String posterImageUrl;
     }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class EventReadDetailsResultDTO {
+        /** 이벤트 관련 **/
+        String mediaType;
+        String mediaTitle;
+        String eventTitle;
+        String description;
+        Integer estimatedPrice;
+        LocalDate eventDate;
+        String eventTime;
+        String recruitmentDate;
+        String d_day;
+        Integer minParticipants;
+        Integer maxParticipants;
+        Integer currentParticipants;
+        Integer recruitmentRate;
+        String posterImageUrl;
+
+        /** 주최자 관련 **/
+        String username;
+        Integer recruitment;
+
+        /** 위치 관련 **/
+        String locationName;
+        String address;
+        String locationImageUrl;
+    }
 }
