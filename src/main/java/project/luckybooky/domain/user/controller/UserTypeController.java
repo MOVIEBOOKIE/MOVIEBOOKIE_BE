@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import project.luckybooky.domain.user.dto.request.UserTypeAssignRequest;
 import project.luckybooky.domain.user.dto.response.UserTypeAssignResponse;
+import project.luckybooky.domain.user.dto.response.UserTypeResultDTO;
 import project.luckybooky.domain.user.entity.ContentCategory;
 import project.luckybooky.domain.user.entity.Step1Question;
 import project.luckybooky.domain.user.entity.Step2Question;
@@ -21,7 +22,7 @@ public class UserTypeController {
 
     private final UserTypeService userTypeService;
 
-    @Operation(summary = "사용자 유형·그룹 지정 (쿼리 파라미터 버전)")
+    @Operation(summary = "유형검사 시행")
     @PostMapping
     public CommonResponse<UserTypeAssignResponse> assignUserType(
 
@@ -48,5 +49,11 @@ public class UserTypeController {
 
         UserTypeAssignResponse response = userTypeService.assignCurrentUser(request);
         return CommonResponse.of(ResultCode.OK, response);
+    }
+
+    @Operation(summary = "유형검사 결과 조회")
+    @GetMapping("/result")
+    public CommonResponse<UserTypeResultDTO> getUserTypeResult() {
+        return CommonResponse.of(ResultCode.OK, userTypeService.getCurrentUserType());
     }
 }
