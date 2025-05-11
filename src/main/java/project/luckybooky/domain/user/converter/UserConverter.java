@@ -29,6 +29,7 @@ public class UserConverter {
         return new UserResponseDTO.AllInfoDTO(
                 user.getId(),
                 user.getEmail(),
+                user.getCertificationEmail(),
                 user.getUsername(),
                 user.getProfileImage(),
                 user.getPhoneNumber(),
