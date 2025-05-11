@@ -16,6 +16,8 @@ import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
+import project.luckybooky.domain.user.entity.User;
+import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.service.S3Service;
@@ -29,8 +31,10 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class EventService {
     private final EventRepository eventRepository;
+    private final UserRepository userRepository;
     private final S3Service s3Service;
     private final LocationService locationService;
     private final CategoryService categoryService;
@@ -91,5 +95,33 @@ public class EventService {
                     return EventConverter.toEventReadByCategoryResultDTO(e, rate, d_day);
                 }
         ).collect(Collectors.toList());
+    }
+
+    public EventResponse.EventReadDetailsResultDTO readEventDetails(Long userId, Long eventId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        return EventConverter.toEventReadDetailsResultDTO(
+                event,
+                user.getUsername(),
+                user.getHostExperienceCount(),
+                formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
+                "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),
+                Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100)
+        );
+
+    }
+
+    /** 이벤트 모집기간 출력 포맷팅 **/
+    private static String formatDateRange(LocalDate startDate, LocalDate endDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy. MM. dd");
+
+        String formattedStartDate = startDate.format(formatter);
+        String formattedEndDate = endDate.format(formatter);
+
+        return formattedStartDate + " ~ " + formattedEndDate;
     }
 }
