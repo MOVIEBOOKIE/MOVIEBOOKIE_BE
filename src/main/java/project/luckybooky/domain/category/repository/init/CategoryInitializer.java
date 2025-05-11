@@ -45,7 +45,7 @@ public class CategoryInitializer implements ApplicationRunner {
                     .build();
 
             Category 그외_이벤트 = Category.builder()
-                    .categoryName("그외 이벤트")
+                    .categoryName("기타")
                     .build();
 
             categoryList.add(영화);
