@@ -21,7 +21,7 @@ import project.luckybooky.global.redis.SmsCertificationCache;
 @Slf4j
 public class SmsService {
 
-    private static final int CODE_LEN = 6;
+    private static final int CODE_LEN = 4;
     private static final Duration TTL = Duration.ofMinutes(3);
     private static final String PREFIX = "otp:sms:";
 
