@@ -12,10 +12,12 @@ import project.luckybooky.domain.event.converter.EventConverter;
 import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
+import project.luckybooky.domain.event.entity.type.ParticipantEventButtonState;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
-import project.luckybooky.domain.participation.service.ParticipationService;
+import project.luckybooky.domain.participation.entity.type.ParticipateRole;
+import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
@@ -104,13 +106,34 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
+        /** 현재 유저가 주최자 / 참여자 / 신청x 확인 **/
+        int status = event.getParticipationList().stream()
+                .filter(p -> p.getUser().getId() == userId)
+                .findFirst()
+                .map(p -> p.getParticipateRole().equals(ParticipateRole.HOST) ? 0 : 1)
+                .orElse(2);
+
+        String buttonState;
+        switch (status) {
+            case 0:
+                buttonState = event.getHostEventButtonState().getDescription();
+                break;
+            case 1:
+                buttonState = event.getParticipantEventButtonState().getDescription();
+                break;
+            default:
+                buttonState = event.getAnonymousButtonState().getDescription();
+                break;
+        }
+
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
                 user.getUsername(),
                 user.getHostExperienceCount(),
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
                 "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),
-                Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100)
+                Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100),
+                buttonState
         );
 
     }

@@ -61,7 +61,8 @@ public class EventConverter {
             Integer recruitment,
             String recruitmentDate,
             String d_day,
-            Integer recruitmentRate
+            Integer recruitmentRate,
+            String buttonState
     ) {
         return EventResponse.EventReadDetailsResultDTO.builder()
                 .mediaType(event.getCategory().getCategoryName())
@@ -79,6 +80,7 @@ public class EventConverter {
                 .currentParticipants(event.getCurrentParticipants())
                 .recruitmentRate(recruitmentRate)
                 .posterImageUrl(event.getPosterImageUrl())
+                .buttonState(buttonState)
                 .username(username)
                 .recruitment(recruitment)
                 .locationName(event.getLocation().getLocationName())
