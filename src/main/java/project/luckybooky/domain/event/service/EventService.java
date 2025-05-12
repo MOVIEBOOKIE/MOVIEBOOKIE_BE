@@ -3,6 +3,7 @@ package project.luckybooky.domain.event.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -155,5 +156,24 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
         event.updateCurrentParticipants(type);
+    }
+
+    /** 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직 **/
+    @Scheduled(cron = "0 0 0 * * *") // 매일 자정에 실행
+    @Transactional
+    public void processExpiredEvents() {
+        List<Event> expiredEvents = findExpiredEvents();
+
+        expiredEvents.forEach(event -> {
+            if (event.getCurrentParticipants() < event.getMinParticipants()) {
+                event.recruitCancel();
+            } else {
+                event.recruitDone();
+            }
+        });
+    }
+
+    private List<Event> findExpiredEvents() { // 모집 기간이 지난 이벤트 탐색
+        return eventRepository.findExpiredEvent(LocalDate.now());
     }
 }

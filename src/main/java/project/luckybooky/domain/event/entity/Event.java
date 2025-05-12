@@ -103,4 +103,18 @@ public class Event extends BaseEntity {
     public void updateCurrentParticipants(Boolean isPlus) {
         currentParticipants += isPlus ? 1 : -1;
     }
+
+    /** 모집 취소 **/
+    public void recruitCancel() {
+        eventStatus = EventStatus.RECRUIT_CANCELED;
+        hostEventButtonState = HostEventButtonState.RECRUIT_CANCELLED;
+        participantEventButtonState = ParticipantEventButtonState.RECRUIT_CANCELED;
+    }
+
+    /** 모집 완료 **/
+    public void recruitDone() {
+        eventStatus = EventStatus.RECRUITED;
+        hostEventButtonState = HostEventButtonState.VENUE_RESERVATION;
+        participantEventButtonState = ParticipantEventButtonState.RECRUIT_DONE;
+    }
 }
