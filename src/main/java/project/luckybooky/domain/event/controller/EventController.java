@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.service.EventService;
+import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.participation.service.ParticipationService;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO;
 import project.luckybooky.domain.user.service.AuthService;
@@ -45,6 +46,18 @@ public class EventController {
 
         Long eventId = eventService.createEvent(request, eventImage);
         return BaseResponse.onSuccess(participationService.createParticipation(userId, eventId, Boolean.TRUE));
+    }
+
+    @Operation(summary = "이벤트 신청", description = "신청하고자 하는 이벤트 ID를 넣어주세요 !")
+    @PostMapping("/{eventId}/register")
+    public BaseResponse<String> registerEvent(@PathVariable("eventId") Long eventId) {
+        // 유저 ID 가져오기
+        Long userId = toUserId();
+
+        participationService.createParticipation(userId, eventId, Boolean.FALSE);
+        eventService.registerEvent(eventId);
+
+        return BaseResponse.onSuccess(EventConstants.REGISTER_SUCCESS.getMessage());
     }
 
     @Operation(summary = "카테고리별 이벤트 리스트 조회", description = "조회를 희망하는 카테고리와 page&size를 넣어주세요!! <br><br>" +
