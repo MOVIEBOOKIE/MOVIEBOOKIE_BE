@@ -2,9 +2,7 @@ package project.luckybooky.domain.event.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.query.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import project.luckybooky.domain.event.dto.request.EventRequest;
@@ -55,9 +53,21 @@ public class EventController {
         Long userId = toUserId();
 
         participationService.createParticipation(userId, eventId, Boolean.FALSE);
-        eventService.registerEvent(eventId);
+        eventService.registerEvent(eventId, Boolean.TRUE);
 
         return BaseResponse.onSuccess(EventConstants.REGISTER_SUCCESS.getMessage());
+    }
+
+    @Operation(summary = "이벤트 신청 취소", description = "신청 취소하고자 하는 이벤트 ID를 넣어주세요 !")
+    @DeleteMapping("/{eventId}/register")
+    public BaseResponse<String> cancelRegisterEvent(@PathVariable("eventId") Long eventId) {
+        // 유저 ID 가져오기
+        Long userId = toUserId();
+
+        participationService.deleteParticipation(userId, eventId);
+        eventService.registerEvent(eventId,Boolean.FALSE);
+
+        return BaseResponse.onSuccess(EventConstants.REGISTER_CANCEL_SUCCESS.getMessage());
     }
 
     @Operation(summary = "카테고리별 이벤트 리스트 조회", description = "조회를 희망하는 카테고리와 page&size를 넣어주세요!! <br><br>" +
