@@ -148,12 +148,12 @@ public class EventService {
         return formattedStartDate + " ~ " + formattedEndDate;
     }
 
-    /** 이벤트 신청 **/
+    /** 이벤트 신청 혹은 취소 **/
     @Transactional
-    public void registerEvent(Long eventId) {
+    public void registerEvent(Long eventId, Boolean type) {
         // 참여인원 추가
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
-        event.updateCurrentParticipants(Boolean.TRUE);
+        event.updateCurrentParticipants(type);
     }
 }
