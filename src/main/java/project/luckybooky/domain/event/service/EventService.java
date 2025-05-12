@@ -12,10 +12,10 @@ import project.luckybooky.domain.event.converter.EventConverter;
 import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
-import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
+import project.luckybooky.domain.participation.service.ParticipationService;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
@@ -123,5 +123,14 @@ public class EventService {
         String formattedEndDate = endDate.format(formatter);
 
         return formattedStartDate + " ~ " + formattedEndDate;
+    }
+
+    /** 이벤트 신청 **/
+    @Transactional
+    public void registerEvent(Long eventId) {
+        // 참여인원 추가
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+        event.updateCurrentParticipants(Boolean.TRUE);
     }
 }
