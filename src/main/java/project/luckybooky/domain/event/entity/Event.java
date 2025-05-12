@@ -7,8 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.event.entity.type.EventStatus;
-import project.luckybooky.domain.event.entity.type.HostEventStatus;
-import project.luckybooky.domain.event.entity.type.ParticipantEventStatus;
+import project.luckybooky.domain.event.entity.type.HostEventButtonState;
+import project.luckybooky.domain.event.entity.type.ParticipantEventButtonState;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.global.entity.BaseEntity;
@@ -69,14 +69,14 @@ public class Event extends BaseEntity {
     private EventStatus eventStatus = EventStatus.RECRUITING;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "host_event_status", length = 20)
+    @Column(name = "host_event_button_state", length = 20)
     @Builder.Default
-    private HostEventStatus hostEventStatus = HostEventStatus.RECRUITING;
+    private HostEventButtonState hostEventButtonState = HostEventButtonState.RECRUIT_CANCELLED;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "participant_event_status", length = 20)
+    @Column(name = "participant_event_button_state", length = 20)
     @Builder.Default
-    private ParticipantEventStatus participantEventStatus = ParticipantEventStatus.RECRUITING;
+    private ParticipantEventButtonState participantEventButtonState = ParticipantEventButtonState.REGISTER_CANCELED;
 
     @Column(name = "estimated_status", nullable = false)
     private Integer estimatedPrice;
