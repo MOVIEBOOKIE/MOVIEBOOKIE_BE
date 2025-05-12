@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.luckybooky.domain.category.entity.Category;
+import project.luckybooky.domain.event.entity.type.AnonymousButtonState;
 import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.entity.type.HostEventButtonState;
 import project.luckybooky.domain.event.entity.type.ParticipantEventButtonState;
@@ -77,6 +78,11 @@ public class Event extends BaseEntity {
     @Column(name = "participant_event_button_state", length = 20)
     @Builder.Default
     private ParticipantEventButtonState participantEventButtonState = ParticipantEventButtonState.REGISTER_CANCELED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "anonymous_event_button_state", length = 20)
+    @Builder.Default
+    private AnonymousButtonState anonymousButtonState = AnonymousButtonState.REGISTER;
 
     @Column(name = "estimated_status", nullable = false)
     private Integer estimatedPrice;

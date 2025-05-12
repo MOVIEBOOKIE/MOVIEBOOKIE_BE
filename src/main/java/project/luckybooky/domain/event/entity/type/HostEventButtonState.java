@@ -15,9 +15,9 @@ public enum HostEventButtonState {
     private final String description;
 
     public static HostEventButtonState fromDescription(String description) {
-        for (HostEventButtonState hostEventStatus : HostEventButtonState.values()) {
-            if (hostEventStatus.description.equals(description)) {
-                return hostEventStatus;
+        for (HostEventButtonState hostEventButtonState : HostEventButtonState.values()) {
+            if (hostEventButtonState.description.equals(description)) {
+                return hostEventButtonState;
             }
         }
         throw new IllegalArgumentException("Unknown InvoiceCorrectReason description: " + description);
