@@ -93,4 +93,8 @@ public class Event extends BaseEntity {
     @Builder.Default
     @Column(name = "current_participants", nullable = false)
     private Integer currentParticipants = 0;
+
+    public void updateCurrentParticipants(Boolean isPlus) {
+        currentParticipants += isPlus ? 1 : -1;
+    }
 }
