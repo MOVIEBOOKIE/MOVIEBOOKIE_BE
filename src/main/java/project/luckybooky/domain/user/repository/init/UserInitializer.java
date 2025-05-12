@@ -4,17 +4,21 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.entity.UserType;
 import project.luckybooky.domain.user.repository.UserRepository;
+import project.luckybooky.global.jwt.JwtUtil;
 
 @Component
+@Profile("dev")
 @RequiredArgsConstructor
 public class UserInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
+    private final JwtUtil        jwtUtil;
 
     @Override
     @Transactional
@@ -23,54 +27,35 @@ public class UserInitializer implements ApplicationRunner {
         /* 최초 기동 시 한 번만 삽입 */
         if (userRepository.count() > 0) return;
 
-        User guest1 = User.builder()
-                .email("guest1@example.com")
-                .username("게스트1")
-                .profileImage("https://example.com/avatar/guest1.png")
-                .accessToken("")  // 소셜 로그인 토큰 없는 상태
-                .refreshToken("")
-                .userType(UserType.MOVIE_DETAIL_COLLECTOR)   // 🎞 디테일 수집형 영화 덕후러
+        List<User> guests = List.of(
+                buildGuest("guest1@example.com", "게스트1", "+821012300001", UserType.MOVIE_DETAIL_COLLECTOR),
+                buildGuest("guest2@example.com", "게스트2", "+821012300002", UserType.MOVIE_DETAIL_COLLECTOR),
+                buildGuest("guest3@example.com", "게스트3", "+821012300003", UserType.DRAMA_STORY_IMMERSER),
+                buildGuest("guest4@example.com", "게스트4", "+821012300004", UserType.SPORTS_FULL_SUPPORTER)
+        );
+
+        guests.forEach(this::attachJwtTokens);
+        userRepository.saveAll(guests);
+    }
+
+    /** 게스트 회원 기본 빌더 */
+    private User buildGuest(String email, String username, String phone, UserType type) {
+        return User.builder()
+                .email(email)
+                .username(username)
+                .profileImage("https://example.com/avatar/" + username + ".png")
                 .hostExperienceCount(0)
-                .participationExperienceCount(2)
-                .phoneNumber("+821012300001")
+                .participationExperienceCount(0)
+                .phoneNumber(phone)
+                .userType(type)
                 .build();
+    }
 
-        User guest2 = User.builder()
-                .email("guest2@example.com")
-                .username("게스트2")
-                .profileImage("https://example.com/avatar/guest2.png")
-                .accessToken("")
-                .refreshToken("")
-                .userType(UserType.MOVIE_DETAIL_COLLECTOR)      // 🍿 핫플릭스만 골라보는 감각 감상러
-                .hostExperienceCount(1)
-                .participationExperienceCount(5)
-                .phoneNumber("+821012300002")
-                .build();
-
-        User guest3 = User.builder()
-                .email("guest3@example.com")
-                .username("게스트3")
-                .profileImage("https://example.com/avatar/guest3.png")
-                .accessToken("")
-                .refreshToken("")
-                .userType(UserType.DRAMA_STORY_IMMERSER)     // 💜 대사에 숨멎하는 ‘서사 몰입러’
-                .hostExperienceCount(2)
-                .participationExperienceCount(3)
-                .phoneNumber("+821012300003")
-                .build();
-
-        User guest4 = User.builder()
-                .email("guest4@example.com")
-                .username("게스트4")
-                .profileImage("https://example.com/avatar/guest4.png")
-                .accessToken("")
-                .refreshToken("")
-                .userType(UserType.SPORTS_FULL_SUPPORTER)   // 💡 레전드 회차 ‘명장면 추적러’
-                .hostExperienceCount(0)
-                .participationExperienceCount(4)
-                .phoneNumber("+821012300004")
-                .build();
-
-        userRepository.saveAll(List.of(guest1, guest2, guest3, guest4));
+    /** Access / Refresh Token 생성 & 주입 */
+    private void attachJwtTokens(User u) {
+        String accessToken  = jwtUtil.createAccessToken(u.getEmail());     // 15분 만료 등
+        String refreshToken = jwtUtil.createAccessToken(u.getEmail());    // 2주 만료 등
+        u.setAccessToken(accessToken);
+        u.setRefreshToken(refreshToken);
     }
 }
