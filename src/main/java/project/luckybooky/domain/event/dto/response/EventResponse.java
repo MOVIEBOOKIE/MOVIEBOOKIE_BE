@@ -24,6 +24,7 @@ public class EventResponse {
     @AllArgsConstructor
     @Getter
     public static class ReadEventListResultDTO {
+        Long eventId;
         String mediaType;
         String mediaTitle;
         String description;
@@ -42,6 +43,7 @@ public class EventResponse {
     @Getter
     public static class EventReadDetailsResultDTO {
         /** 이벤트 관련 **/
+        Long eventId;
         String mediaType;
         String mediaTitle;
         String eventTitle;

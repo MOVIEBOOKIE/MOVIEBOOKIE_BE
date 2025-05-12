@@ -42,6 +42,7 @@ public class EventConverter {
 
     public static EventResponse.ReadEventListResultDTO toEventListResultDTO(Event event, Integer rate, Integer d_day) {
         return EventResponse.ReadEventListResultDTO.builder()
+                .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
                 .mediaTitle(event.getMediaTitle())
                 .description(event.getDescription())
@@ -64,6 +65,7 @@ public class EventConverter {
             Integer recruitmentRate
     ) {
         return EventResponse.EventReadDetailsResultDTO.builder()
+                .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
                 .mediaTitle(event.getMediaTitle())
                 .eventTime(event.getEventTitle())
