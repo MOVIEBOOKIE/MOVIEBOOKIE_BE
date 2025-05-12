@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum EventStatus {
     RECRUITING("모집 중"),
     RECRUITED("모집 완료"),
-    VENUE_PENDING("대관 검토 중"),
+    RECRUIT_CANCELED("모집 취소"),
+    VENUE_RESERVATION_IN_PROGRESS("대관 진행 중"),
     VENUE_CONFIRMED("대관 확정"),
     CANCELLED("상영 취소"),
     COMPLETED("상영 완료");
