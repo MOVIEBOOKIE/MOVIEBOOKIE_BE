@@ -36,6 +36,7 @@ public enum ErrorCode implements BaseStatus {
     USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "USER_401", "로그인 정보가 없습니다."),
     USER_NOT_AUTHENTICATED(HttpStatus.UNAUTHORIZED, "USER_401", "로그인 하지 않았습니다."),
     USER_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "USER_403", "권한이 없습니다."),
+    PHONE_ALREADY_USED(HttpStatus.CONFLICT, "USER_409", "이미 사용 중인 전화번호입니다."),
 
     // S3 관련
     FILE_NOT_UPLOADED(HttpStatus.BAD_REQUEST, "S3_401", "이미지를 업로드 할 수 없습니다."),

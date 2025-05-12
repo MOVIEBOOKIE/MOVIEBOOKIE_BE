@@ -3,6 +3,8 @@ package project.luckybooky.domain.user.util;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.jwt.JwtAuthenticationToken;
 
 @Component
@@ -18,6 +20,5 @@ public class AuthenticatedUserUtils {
             return (String) authentication.getPrincipal();
         }
 
-        throw new IllegalArgumentException("로그인 정보가 없습니다.");
-    }
+        throw new BusinessException(ErrorCode.UNAUTHORIZED);    }
 }
