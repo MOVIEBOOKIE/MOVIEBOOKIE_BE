@@ -35,4 +35,9 @@ public class ParticipationService {
         participationRepository.save(participation);
         return EventConverter.toEventCreateResponseDTO(event);
     }
+
+    @Transactional
+    public void deleteParticipation(Long userId, Long eventId) {
+        participationRepository.deleteByUserIdAndEventId(userId, eventId);
+    }
 }

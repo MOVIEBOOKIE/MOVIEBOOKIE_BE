@@ -4,4 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import project.luckybooky.domain.participation.entity.Participation;
 
 public interface ParticipationRepository extends JpaRepository<Participation, Long> {
+    void deleteByUserIdAndEventId(Long userId, Long eventId);
 }
