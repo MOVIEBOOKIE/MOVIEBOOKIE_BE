@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import project.luckybooky.domain.event.entity.Event;
 
+import java.time.LocalDate;
+import java.util.List;
+
 public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("SELECT e FROM Event e WHERE e.eventStatus='RECRUITING' ORDER BY e.createdAt DESC")
     Page<Event> findOrderByCreatedAtDesc(Pageable pageable);
@@ -16,4 +19,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     @Query("SELECT e FROM Event e WHERE e.eventStatus='RECRUITING' ORDER BY (e.currentParticipants * 1.0) / e.maxParticipants DESC")
     Page<Event> findOrderByPopularity(Pageable pageable);
+
+    @Query("SELECT e FROM Event e WHERE e.recruitmentEnd < :now")
+    List<Event> findExpiredEvent(@Param("now") LocalDate now);
 }
