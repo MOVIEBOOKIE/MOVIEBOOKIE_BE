@@ -70,6 +70,20 @@ public class EventController {
         return BaseResponse.onSuccess(EventConstants.REGISTER_CANCEL_SUCCESS.getMessage());
     }
 
+    @Operation(summary = "이벤트 모집 취소", description = "모집 취소하고자 하는 이벤트 ID를 넣어주세요 !")
+    @DeleteMapping("/{eventId}/recruit")
+    public BaseResponse<String> cancelRecruitEvent(@PathVariable("eventId") Long eventId) {
+        Long userId = toUserId();
+        return BaseResponse.onSuccess(eventService.cancelRecruitEvent(userId, eventId));
+    }
+
+    @Operation(summary = "이벤트 대관 신청 혹은 취소", description = "신청 혹은 취소 유무를 type에 넣어주세요! <br>" +
+            "type: 0 -> 신청, 1 -> 취소")
+    @PostMapping("/{eventId}/venue")
+    public BaseResponse<String> venueProcess(@PathVariable("eventId") Long eventId, @RequestParam Integer type) {
+        return BaseResponse.onSuccess(eventService.venueProcess(eventId, type));
+    }
+
     @Operation(summary = "카테고리별 이벤트 리스트 조회", description = "조회를 희망하는 카테고리와 page&size를 넣어주세요!! <br><br>" +
             "category: 조회할 카테고리 (ex, 인기, 최신, 영화, 드라마, 스포츠, 예능, 콘서트, 기타 중 1개) <br>" +
             "page: 조회할 페이지 번호 <br> size: 한 페이지에 조회할 이벤트 수")
