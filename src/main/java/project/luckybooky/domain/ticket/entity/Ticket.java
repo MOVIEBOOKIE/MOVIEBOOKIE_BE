@@ -1,4 +1,4 @@
-package project.luckybooky.domain.ticket;
+package project.luckybooky.domain.ticket.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,8 +33,8 @@ public class Ticket {
     @Column(name = "address", length = 50, nullable = false)
     private String address;
 
-    @Column(name = "scheduled_at", nullable = false)
-    private LocalDate scheduledAt;
+    @Column(name = "scheduled_at", length = 50, nullable = false)
+    private String scheduledAt;
 
     @Column(name = "time", length = 20, nullable = false)
     private String time;
