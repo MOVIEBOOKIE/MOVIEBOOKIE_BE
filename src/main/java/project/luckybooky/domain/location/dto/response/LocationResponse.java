@@ -13,6 +13,7 @@ public class LocationResponse {
     @AllArgsConstructor
     @Getter
     public static class ReadLocationsResultDTO {
+        Long locationId;
         String locationName;
         String address;
         String locationImageUrl;

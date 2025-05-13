@@ -22,4 +22,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     @Query("SELECT e FROM Event e WHERE e.recruitmentEnd < :now")
     List<Event> findExpiredEvent(@Param("now") LocalDate now);
+  
+    @Query("SELECT e FROM Event e \n" +
+            "WHERE :content IN (e.category.categoryName) \n" +
+            "   OR e.mediaTitle LIKE CONCAT('%', :content, '%')")
+    Page<Event> findEventsBySearch(@Param("content") String content, Pageable pageable);
 }

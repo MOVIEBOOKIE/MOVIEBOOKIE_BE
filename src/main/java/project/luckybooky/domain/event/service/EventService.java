@@ -78,7 +78,7 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
-    public List<EventResponse.EventReadByCategoryResultDTO> readEventListByCategory(String category, Integer page, Integer size) {
+    public List<EventResponse.ReadEventListResultDTO> readEventListByCategory(String category, Integer page, Integer size) {
         Page<Event> eventList;
         switch (category) {
             case "인기":
@@ -92,6 +92,15 @@ public class EventService {
                 break;
         }
 
+        return toReadEventListResultDTO(eventList);
+    }
+
+    public List<EventResponse.ReadEventListResultDTO> readEventListBySearch(String content, Integer page, Integer size) {
+        Page<Event> eventList = eventRepository.findEventsBySearch(content, PageRequest.of(page, size));
+        return toReadEventListResultDTO(eventList);
+    }
+
+    private List<EventResponse.ReadEventListResultDTO> toReadEventListResultDTO(Page<Event> eventList) {
         return eventList.stream().map(
                 e -> {
                     double percentage = ((double) e.getCurrentParticipants() / e.getMaxParticipants()) * 100;
@@ -99,7 +108,7 @@ public class EventService {
 
                     int d_day = (int) ChronoUnit.DAYS.between(LocalDate.now(), e.getEventDate());
 
-                    return EventConverter.toEventReadByCategoryResultDTO(e, rate, d_day);
+                    return EventConverter.toEventListResultDTO(e, rate, d_day);
                 }
         ).collect(Collectors.toList());
     }
