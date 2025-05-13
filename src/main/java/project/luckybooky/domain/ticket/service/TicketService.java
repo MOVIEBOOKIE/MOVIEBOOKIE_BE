@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.participation.entity.Participation;
+import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.ticket.converter.TicketConverter;
 import project.luckybooky.domain.ticket.entity.Ticket;
 import project.luckybooky.domain.ticket.repository.TicketRepository;
@@ -27,7 +28,7 @@ public class TicketService {
         List<Participation> participationList = event.getParticipationList();
 
         String hostName = participationList.stream()
-                .filter(p -> p.getParticipateRole().equals("HOST"))
+                .filter(p -> p.getParticipateRole().equals(ParticipateRole.HOST))
                 .findFirst()
                 .orElse(null)
                 .getUser()
