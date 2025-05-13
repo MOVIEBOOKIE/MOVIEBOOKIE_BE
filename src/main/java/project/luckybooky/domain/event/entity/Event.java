@@ -117,4 +117,18 @@ public class Event extends BaseEntity {
         hostEventButtonState = HostEventButtonState.VENUE_RESERVATION;
         participantEventButtonState = ParticipantEventButtonState.RECRUIT_DONE;
     }
+
+    /** 대관 신청 **/
+    public void venueRegister() {
+        eventStatus = EventStatus.VENUE_RESERVATION_IN_PROGRESS;
+        hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
+        participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
+    }
+
+    /** 대관 취소 **/
+    public void venueCancel() {
+        eventStatus = EventStatus.VENUE_RESERVATION_CANCELED;
+        hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_CANCELED;
+        participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_CANCELED;
+    }
 }

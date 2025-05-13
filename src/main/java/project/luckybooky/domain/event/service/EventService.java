@@ -15,8 +15,10 @@ import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.entity.type.ParticipantEventButtonState;
 import project.luckybooky.domain.event.repository.EventRepository;
+import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
+import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.user.entity.User;
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final ParticipationRepository participationRepository;
     private final S3Service s3Service;
     private final LocationService locationService;
     private final CategoryService categoryService;
@@ -156,6 +159,39 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
         event.updateCurrentParticipants(type);
+    }
+
+    /**
+     * 이벤트 모집 취소
+     **/
+    @Transactional
+    public String cancelRecruitEvent(Long userId, Long eventId) {
+        // 주최자인지 검증
+        Participation participation = participationRepository.findByUserIdAndEventId(userId, eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+        if (participation.getParticipateRole().equals(ParticipateRole.PARTICIPANT)) {
+            throw new BusinessException(ErrorCode.PARTICIPATION_NOT_ALLOWED);
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+        event.recruitCancel();
+        return EventConstants.RECRUIT_CANCEL_SUCCESS.getMessage();
+    }
+
+    @Transactional
+    public String venueProcess(Long eventId, Integer type) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        if (type == 0) {
+            event.venueRegister();
+            return EventConstants.VENUE_RESERVATION_SUCCESS.getMessage();
+        }
+        else {
+            event.venueCancel();
+            return EventConstants.VENUE_CANCEL_SUCCESS.getMessage();
+        }
     }
 
     /** 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직 **/
