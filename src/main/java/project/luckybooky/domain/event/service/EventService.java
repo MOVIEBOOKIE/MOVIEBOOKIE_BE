@@ -3,6 +3,7 @@ package project.luckybooky.domain.event.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,10 +13,14 @@ import project.luckybooky.domain.event.converter.EventConverter;
 import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
-import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.repository.EventRepository;
+import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
+import project.luckybooky.domain.participation.entity.Participation;
+import project.luckybooky.domain.participation.entity.type.ParticipateRole;
+import project.luckybooky.domain.participation.repository.ParticipationRepository;
+import project.luckybooky.domain.ticket.service.TicketService;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
@@ -35,9 +40,11 @@ import java.util.stream.Collectors;
 public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final ParticipationRepository participationRepository;
     private final S3Service s3Service;
     private final LocationService locationService;
     private final CategoryService categoryService;
+    private final TicketService ticketService;
 
     @Transactional
     public Long createEvent(EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
@@ -71,7 +78,7 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
-    public List<EventResponse.EventReadByCategoryResultDTO> readEventListByCategory(String category, Integer page, Integer size) {
+    public List<EventResponse.ReadEventListResultDTO> readEventListByCategory(String category, Integer page, Integer size) {
         Page<Event> eventList;
         switch (category) {
             case "인기":
@@ -85,6 +92,15 @@ public class EventService {
                 break;
         }
 
+        return toReadEventListResultDTO(eventList);
+    }
+
+    public List<EventResponse.ReadEventListResultDTO> readEventListBySearch(String content, Integer page, Integer size) {
+        Page<Event> eventList = eventRepository.findEventsBySearch(content, PageRequest.of(page, size));
+        return toReadEventListResultDTO(eventList);
+    }
+
+    private List<EventResponse.ReadEventListResultDTO> toReadEventListResultDTO(Page<Event> eventList) {
         return eventList.stream().map(
                 e -> {
                     double percentage = ((double) e.getCurrentParticipants() / e.getMaxParticipants()) * 100;
@@ -92,7 +108,7 @@ public class EventService {
 
                     int d_day = (int) ChronoUnit.DAYS.between(LocalDate.now(), e.getEventDate());
 
-                    return EventConverter.toEventReadByCategoryResultDTO(e, rate, d_day);
+                    return EventConverter.toEventListResultDTO(e, rate, d_day);
                 }
         ).collect(Collectors.toList());
     }
@@ -104,13 +120,34 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
+        /** 현재 유저가 주최자 / 참여자 / 신청x 확인 **/
+        int status = event.getParticipationList().stream()
+                .filter(p -> p.getUser().getId() == userId)
+                .findFirst()
+                .map(p -> p.getParticipateRole().equals(ParticipateRole.HOST) ? 0 : 1)
+                .orElse(2);
+
+        String buttonState;
+        switch (status) {
+            case 0:
+                buttonState = event.getHostEventButtonState().getDescription();
+                break;
+            case 1:
+                buttonState = event.getParticipantEventButtonState().getDescription();
+                break;
+            default:
+                buttonState = event.getAnonymousButtonState().getDescription();
+                break;
+        }
+
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
                 user.getUsername(),
                 user.getHostExperienceCount(),
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
                 "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),
-                Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100)
+                Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100),
+                buttonState
         );
 
     }
@@ -123,5 +160,80 @@ public class EventService {
         String formattedEndDate = endDate.format(formatter);
 
         return formattedStartDate + " ~ " + formattedEndDate;
+    }
+
+    /** 이벤트 신청 혹은 취소 **/
+    @Transactional
+    public void registerEvent(Long eventId, Boolean type) {
+        // 참여인원 추가
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+        event.updateCurrentParticipants(type);
+    }
+
+    /**
+     * 이벤트 모집 취소
+     **/
+    @Transactional
+    public String cancelRecruitEvent(Long userId, Long eventId) {
+        // 주최자인지 검증
+        Participation participation = participationRepository.findByUserIdAndEventId(userId, eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+        if (participation.getParticipateRole().equals(ParticipateRole.PARTICIPANT)) {
+            throw new BusinessException(ErrorCode.PARTICIPATION_NOT_ALLOWED);
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+        event.recruitCancel();
+        return EventConstants.RECRUIT_CANCEL_SUCCESS.getMessage();
+    }
+
+    /** 대관 신청 / 취소 **/
+    @Transactional
+    public String venueProcess(Long eventId, Integer type) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        if (type == 0) {
+            event.venueRegister();
+            return EventConstants.VENUE_RESERVATION_SUCCESS.getMessage();
+        }
+        else {
+            event.venueCancel();
+            return EventConstants.VENUE_CANCEL_SUCCESS.getMessage();
+        }
+    }
+
+    /**
+     * 대관 확정
+     **/
+    @Transactional
+    public String venueConfirmed(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        event.venueConfirmed();
+        ticketService.createTicket(event); // 티켓 생성
+        return EventConstants.VENUE_CONFIRMED.getMessage();
+    }
+
+    /** 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직 **/
+    @Scheduled(cron = "0 0 0 * * *") // 매일 자정에 실행
+    @Transactional
+    public void processExpiredEvents() {
+        List<Event> expiredEvents = findExpiredEvents();
+
+        expiredEvents.forEach(event -> {
+            if (event.getCurrentParticipants() < event.getMinParticipants()) {
+                event.recruitCancel();
+            } else {
+                event.recruitDone();
+            }
+        });
+    }
+
+    private List<Event> findExpiredEvents() { // 모집 기간이 지난 이벤트 탐색
+        return eventRepository.findExpiredEvent(LocalDate.now());
     }
 }

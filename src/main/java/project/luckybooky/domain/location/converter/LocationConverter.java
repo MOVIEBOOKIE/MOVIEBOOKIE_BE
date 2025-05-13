@@ -9,6 +9,7 @@ import java.util.Set;
 public class LocationConverter {
     public static LocationResponse.ReadLocationsResultDTO toReadLocationsResultDTO(Location location, Set<String> keywords) {
         return LocationResponse.ReadLocationsResultDTO.builder()
+                .locationId(location.getId())
                 .locationName(location.getLocationName())
                 .address(location.getAddress())
                 .locationImageUrl(location.getLocationImageUrl())

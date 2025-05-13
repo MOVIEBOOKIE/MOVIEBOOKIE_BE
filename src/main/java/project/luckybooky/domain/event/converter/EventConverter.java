@@ -40,8 +40,9 @@ public class EventConverter {
                 .build();
     }
 
-    public static EventResponse.EventReadByCategoryResultDTO toEventReadByCategoryResultDTO(Event event, Integer rate, Integer d_day) {
-        return EventResponse.EventReadByCategoryResultDTO.builder()
+    public static EventResponse.ReadEventListResultDTO toEventListResultDTO(Event event, Integer rate, Integer d_day) {
+        return EventResponse.ReadEventListResultDTO.builder()
+                .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
                 .mediaTitle(event.getMediaTitle())
                 .description(event.getDescription())
@@ -61,9 +62,11 @@ public class EventConverter {
             Integer recruitment,
             String recruitmentDate,
             String d_day,
-            Integer recruitmentRate
+            Integer recruitmentRate,
+            String buttonState
     ) {
         return EventResponse.EventReadDetailsResultDTO.builder()
+                .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
                 .mediaTitle(event.getMediaTitle())
                 .eventTime(event.getEventTitle())
@@ -79,6 +82,7 @@ public class EventConverter {
                 .currentParticipants(event.getCurrentParticipants())
                 .recruitmentRate(recruitmentRate)
                 .posterImageUrl(event.getPosterImageUrl())
+                .buttonState(buttonState)
                 .username(username)
                 .recruitment(recruitment)
                 .locationName(event.getLocation().getLocationName())
