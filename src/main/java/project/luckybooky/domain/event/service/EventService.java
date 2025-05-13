@@ -13,7 +13,6 @@ import project.luckybooky.domain.event.converter.EventConverter;
 import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
-import project.luckybooky.domain.event.entity.type.ParticipantEventButtonState;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.location.entity.Location;
@@ -179,6 +178,7 @@ public class EventService {
         return EventConstants.RECRUIT_CANCEL_SUCCESS.getMessage();
     }
 
+    /** 대관 신청 / 취소 **/
     @Transactional
     public String venueProcess(Long eventId, Integer type) {
         Event event = eventRepository.findById(eventId)
@@ -192,6 +192,18 @@ public class EventService {
             event.venueCancel();
             return EventConstants.VENUE_CANCEL_SUCCESS.getMessage();
         }
+    }
+
+    /**
+     * 대관 확정
+     **/
+    @Transactional
+    public String venueConfirmed(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        event.venueConfirmed();
+        return EventConstants.VENUE_CONFIRMED.getMessage();
     }
 
     /** 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직 **/

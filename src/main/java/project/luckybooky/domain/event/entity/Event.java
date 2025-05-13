@@ -131,4 +131,11 @@ public class Event extends BaseEntity {
         hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_CANCELED;
         participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_CANCELED;
     }
+
+    /** 대관 확정 **/
+    public void venueConfirmed() {
+        eventStatus = EventStatus.VENUE_CONFIRMED;
+        hostEventButtonState = HostEventButtonState.TO_TICKET;
+        participantEventButtonState = ParticipantEventButtonState.TO_TICKET;
+    }
 }
