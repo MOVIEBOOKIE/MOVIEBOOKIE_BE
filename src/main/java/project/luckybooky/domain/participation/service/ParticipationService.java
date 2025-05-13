@@ -1,7 +1,6 @@
 package project.luckybooky.domain.participation.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.event.converter.EventConverter;
@@ -34,5 +33,10 @@ public class ParticipationService {
         Participation participation = ParticipationConverter.toParticipation(user, event, role);
         participationRepository.save(participation);
         return EventConverter.toEventCreateResponseDTO(event);
+    }
+
+    @Transactional
+    public void deleteParticipation(Long userId, Long eventId) {
+        participationRepository.deleteByUserIdAndEventId(userId, eventId);
     }
 }
