@@ -20,6 +20,7 @@ import project.luckybooky.domain.location.service.LocationService;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
+import project.luckybooky.domain.ticket.service.TicketService;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
@@ -43,6 +44,7 @@ public class EventService {
     private final S3Service s3Service;
     private final LocationService locationService;
     private final CategoryService categoryService;
+    private final TicketService ticketService;
 
     @Transactional
     public Long createEvent(EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
@@ -203,6 +205,7 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
         event.venueConfirmed();
+        ticketService.createTicket(event); // 티켓 생성
         return EventConstants.VENUE_CONFIRMED.getMessage();
     }
 
