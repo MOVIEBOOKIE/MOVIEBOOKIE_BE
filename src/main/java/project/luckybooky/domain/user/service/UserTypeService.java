@@ -70,4 +70,8 @@ public class UserTypeService {
 
         user.updateExperience(type);
     }
+
+    public User findOne(Long userId) {
+        return userRepo.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
 }

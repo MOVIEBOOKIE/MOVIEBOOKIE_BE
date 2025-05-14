@@ -22,7 +22,6 @@ import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.ticket.service.TicketService;
 import project.luckybooky.domain.user.entity.User;
-import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
@@ -40,7 +39,6 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class EventService {
     private final EventRepository eventRepository;
-    private final UserRepository userRepository;
     private final UserTypeService userTypeService;
     private final ParticipationRepository participationRepository;
     private final S3Service s3Service;
@@ -116,8 +114,7 @@ public class EventService {
     }
 
     public EventResponse.EventReadDetailsResultDTO readEventDetails(Long userId, Long eventId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User user = userTypeService.findOne(userId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
