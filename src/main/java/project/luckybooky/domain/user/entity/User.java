@@ -65,4 +65,7 @@ public class User extends BaseEntity {
     @Column(name = "group_type")
     private GroupType groupType;
 
+    @Column(name = "fcm_token")
+    private String fcmToken;
+
 }
