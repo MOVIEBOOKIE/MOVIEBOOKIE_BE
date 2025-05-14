@@ -62,4 +62,12 @@ public class UserTypeService {
 
         return UserConverter.toResultDTO(user);
     }
+
+    @Transactional
+    public void updateUserExperience(Long userId, Integer type) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        user.updateExperience(type);
+    }
 }
