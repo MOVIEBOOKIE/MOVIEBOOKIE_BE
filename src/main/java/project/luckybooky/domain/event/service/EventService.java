@@ -25,7 +25,7 @@ import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
-import project.luckybooky.global.service.S3Service;
+import project.luckybooky.global.service.NCPStorageService;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -41,7 +41,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final UserTypeService userTypeService;
     private final ParticipationRepository participationRepository;
-    private final S3Service s3Service;
+    private final NCPStorageService s3Service;
     private final LocationService locationService;
     private final CategoryService categoryService;
     private final TicketService ticketService;
