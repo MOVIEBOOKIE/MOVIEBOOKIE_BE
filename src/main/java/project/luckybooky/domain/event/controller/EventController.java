@@ -10,10 +10,8 @@ import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.service.EventService;
 import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.participation.service.ParticipationService;
-import project.luckybooky.domain.user.dto.response.UserResponseDTO;
-import project.luckybooky.domain.user.service.AuthService;
-import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
 import project.luckybooky.global.apiPayload.common.BaseResponse;
+import project.luckybooky.global.service.UserContextService;
 
 import java.util.List;
 
@@ -24,14 +22,7 @@ import java.util.List;
 public class EventController {
     private final EventService eventService;
     private final ParticipationService participationService;
-    private final AuthService authService;
-
-    /** 로그인 정보로부터 유저 ID 추출 **/
-    private Long toUserId() {
-        String userEmail = AuthenticatedUserUtils.getAuthenticatedUserEmail();
-        UserResponseDTO.AllInfoDTO userInfo = authService.getUserInfo(userEmail);
-        return userInfo.getId();
-    }
+    private final UserContextService userContextService;
 
     @Operation(summary = "이벤트 생성", description = "해당하는 값을 넣어주세요 !")
     @PostMapping
@@ -39,8 +30,7 @@ public class EventController {
             @RequestPart EventRequest.EventCreateRequestDTO request,
             @RequestPart(required = false) MultipartFile eventImage
     ) {
-        // 유저 ID 가져오기
-        Long userId = toUserId();
+        Long userId = userContextService.getUserId();
 
         Long eventId = eventService.createEvent(request, eventImage);
         return BaseResponse.onSuccess(participationService.createParticipation(userId, eventId, Boolean.TRUE));
@@ -49,8 +39,7 @@ public class EventController {
     @Operation(summary = "이벤트 신청", description = "신청하고자 하는 이벤트 ID를 넣어주세요 !")
     @PostMapping("/{eventId}/register")
     public BaseResponse<String> registerEvent(@PathVariable("eventId") Long eventId) {
-        // 유저 ID 가져오기
-        Long userId = toUserId();
+        Long userId = userContextService.getUserId();
 
         participationService.createParticipation(userId, eventId, Boolean.FALSE);
         eventService.registerEvent(eventId, Boolean.TRUE);
@@ -61,8 +50,7 @@ public class EventController {
     @Operation(summary = "이벤트 신청 취소", description = "신청 취소하고자 하는 이벤트 ID를 넣어주세요 !")
     @DeleteMapping("/{eventId}/register")
     public BaseResponse<String> cancelRegisterEvent(@PathVariable("eventId") Long eventId) {
-        // 유저 ID 가져오기
-        Long userId = toUserId();
+        Long userId = userContextService.getUserId();
 
         participationService.deleteParticipation(userId, eventId);
         eventService.registerEvent(eventId,Boolean.FALSE);
@@ -73,7 +61,7 @@ public class EventController {
     @Operation(summary = "이벤트 모집 취소", description = "모집 취소하고자 하는 이벤트 ID를 넣어주세요 !")
     @DeleteMapping("/{eventId}/recruit")
     public BaseResponse<String> cancelRecruitEvent(@PathVariable("eventId") Long eventId) {
-        Long userId = toUserId();
+        Long userId = userContextService.getUserId();
         return BaseResponse.onSuccess(eventService.cancelRecruitEvent(userId, eventId));
     }
 
@@ -94,7 +82,7 @@ public class EventController {
             "type: 0 -> 완료, 1 -> 취소")
     @PostMapping("/{eventId}/screening")
     public BaseResponse<String> screeningProcess(@PathVariable("eventId") Long eventId, @RequestParam Integer type) {
-        Long userId = toUserId();
+        Long userId = userContextService.getUserId();
         return BaseResponse.onSuccess(eventService.screeningProcess(userId, eventId, type));
     }
 
@@ -125,7 +113,7 @@ public class EventController {
     @Operation(summary = "이벤트 상세 조회", description = "상세 조회를 희망하는 이벤트 ID를 넣어주세요 !!")
     @GetMapping("/{eventId}")
     public BaseResponse<EventResponse.EventReadDetailsResultDTO> readEventDetails(@PathVariable("eventId") Long eventId) {
-        Long userId = toUserId();
+        Long userId = userContextService.getUserId();
         return BaseResponse.onSuccess(eventService.readEventDetails(userId, eventId));
     }
 }
