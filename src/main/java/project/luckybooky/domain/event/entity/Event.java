@@ -138,4 +138,11 @@ public class Event extends BaseEntity {
         hostEventButtonState = HostEventButtonState.TO_TICKET;
         participantEventButtonState = ParticipantEventButtonState.TO_TICKET;
     }
+
+    /**
+     * 상영 완료 혹은 취소 처리
+     **/
+    public void screeningProcess(Integer type) {
+        eventStatus = (type == 0) ? EventStatus.COMPLETED : EventStatus.CANCELLED;
+    }
 }
