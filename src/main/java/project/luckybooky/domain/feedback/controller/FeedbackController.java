@@ -20,7 +20,6 @@ import project.luckybooky.global.service.UserContextService;
 @RequestMapping("/api/feedbacks")
 public class FeedbackController {
     private final FeedbackService feedbackService;
-    private final AuthService authService;
     private final UserContextService userContextService;
 
     @Operation(summary = "피드백 생성", description = "해당하는 값을 넣어주세요 !")

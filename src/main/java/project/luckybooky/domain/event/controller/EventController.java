@@ -10,7 +10,6 @@ import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.service.EventService;
 import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.participation.service.ParticipationService;
-import project.luckybooky.domain.user.service.AuthService;
 import project.luckybooky.global.apiPayload.common.BaseResponse;
 import project.luckybooky.global.service.UserContextService;
 
@@ -23,7 +22,6 @@ import java.util.List;
 public class EventController {
     private final EventService eventService;
     private final ParticipationService participationService;
-    private final AuthService authService;
     private final UserContextService userContextService;
 
     @Operation(summary = "이벤트 생성", description = "해당하는 값을 넣어주세요 !")
