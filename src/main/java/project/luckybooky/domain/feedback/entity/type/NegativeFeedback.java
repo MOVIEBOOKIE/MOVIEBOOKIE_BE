@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum NegativeFeedback {
+    NONE("없음"),
     EVENT_SEARCH_INCONVENIENT("원하는 이벤트를 찾기 불편해요"),
     EVENT_APPLICATION_HARD("이벤트 신청/모집 과정이 어려워요"),
     TOO_LONG_TO_SCREENING("이벤트 상영까지 진행 과정이 너무 길어요"),

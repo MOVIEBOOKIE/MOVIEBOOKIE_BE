@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum PositiveFeedback {
+    NONE("없음"),
     RECOMMEND_PERSONALIZED_EVENT("내게 꼭 맞는 이벤트를 추천해줘요"),
     SIMPLE_EVENT_REGISTRATION("이벤트 신청/모집 과정이 간단해요"),
     DETAILED_EVENT_INFO_AVAILABLE("이벤트 정보를 자세히 확인할 수 있어요"),
