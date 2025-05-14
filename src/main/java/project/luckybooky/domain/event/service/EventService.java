@@ -22,7 +22,7 @@ import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.ticket.service.TicketService;
 import project.luckybooky.domain.user.entity.User;
-import project.luckybooky.domain.user.repository.UserRepository;
+import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.service.S3Service;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class EventService {
     private final EventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final UserTypeService userTypeService;
     private final ParticipationRepository participationRepository;
     private final S3Service s3Service;
     private final LocationService locationService;
@@ -114,8 +114,7 @@ public class EventService {
     }
 
     public EventResponse.EventReadDetailsResultDTO readEventDetails(Long userId, Long eventId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User user = userTypeService.findOne(userId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
@@ -216,6 +215,26 @@ public class EventService {
         event.venueConfirmed();
         ticketService.createTicket(event); // 티켓 생성
         return EventConstants.VENUE_CONFIRMED.getMessage();
+    }
+
+    /**
+     * 상영 완료 혹은 취소
+     **/
+    @Transactional
+    public String screeningProcess(Long userId, Long eventId, Integer type) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+        event.screeningProcess(type);
+
+        if (type == 0) {
+            Participation participation = participationRepository.findByUserIdAndEventId(userId, eventId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+            boolean isHost = participation.getParticipateRole().equals(ParticipateRole.HOST);
+            userTypeService.updateUserExperience(userId, isHost ? 0 : 1);
+            return EventConstants.SCREENING_DONE_SUCCESS.getMessage();
+        }
+        return EventConstants.SCREENING_CANCEL_SUCCESS.getMessage();
     }
 
     /** 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직 **/

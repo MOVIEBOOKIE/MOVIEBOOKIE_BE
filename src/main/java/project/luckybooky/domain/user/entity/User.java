@@ -65,4 +65,20 @@ public class User extends BaseEntity {
     @Column(name = "group_type")
     private GroupType groupType;
 
+    @Column(name = "recruitment", nullable = false)
+    @Builder.Default
+    private Integer recruitment = 0;
+
+    @Column(name = "participation", nullable = false)
+    @Builder.Default
+    private Integer participation = 0;
+
+    public void updateExperience(Integer type) {
+        if (type == 0) {
+            recruitment += 1;
+        }
+        else {
+            participation += 1;
+        }
+    }
 }
