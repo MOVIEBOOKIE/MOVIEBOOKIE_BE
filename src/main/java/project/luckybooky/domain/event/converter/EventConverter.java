@@ -90,4 +90,11 @@ public class EventConverter {
                 .locationImageUrl(event.getLocation().getLocationImageUrl())
                 .build();
     }
+
+    public static EventResponse.EventVenueConfirmedResultDTO toEventVenueConfirmedResultDTO(Long ticketId) {
+        return EventResponse.EventVenueConfirmedResultDTO
+                .builder()
+                .ticketId(ticketId)
+                .build();
+    }
 }

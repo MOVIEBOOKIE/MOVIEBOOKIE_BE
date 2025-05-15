@@ -69,4 +69,12 @@ public class EventResponse {
         String address;
         String locationImageUrl;
     }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class EventVenueConfirmedResultDTO {
+        Long ticketId;
+    }
 }
