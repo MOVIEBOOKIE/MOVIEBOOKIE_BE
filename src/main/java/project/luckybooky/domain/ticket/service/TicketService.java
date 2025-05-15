@@ -7,9 +7,12 @@ import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.ticket.converter.TicketConverter;
+import project.luckybooky.domain.ticket.dto.response.TicketResponse;
 import project.luckybooky.domain.ticket.entity.Ticket;
 import project.luckybooky.domain.ticket.repository.TicketRepository;
 import project.luckybooky.domain.user.entity.User;
+import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -42,6 +45,12 @@ public class TicketService {
         ticketRepository.save(ticket);
 
         return ticket.getId();
+    }
+
+    public TicketResponse.ReadTicketDetailsResultDTO readTicketDetails(Long ticketId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TICKET_NOT_FOUND));
+        return TicketConverter.toReadTicketDetailsResultDTO(ticket);
     }
 
 }
