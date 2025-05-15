@@ -208,13 +208,13 @@ public class EventService {
      * 대관 확정
      **/
     @Transactional
-    public String venueConfirmed(Long eventId) {
+    public EventResponse.EventVenueConfirmedResultDTO venueConfirmed(Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
         event.venueConfirmed();
-        ticketService.createTicket(event); // 티켓 생성
-        return EventConstants.VENUE_CONFIRMED.getMessage();
+        Long ticketId = ticketService.createTicket(event);// 티켓 생성
+        return EventConverter.toEventVenueConfirmedResultDTO(ticketId);
     }
 
     /**

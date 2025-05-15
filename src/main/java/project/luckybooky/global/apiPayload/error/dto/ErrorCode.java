@@ -68,6 +68,8 @@ public enum ErrorCode implements BaseStatus {
     PARTICIPATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "PARTICIPATION_401", "해당 이벤트를 참여하지 않았습니다."),
     PARTICIPATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PARTICIPATION_402", "해당 이벤트의 주최자가 아닙니다."),
 
+    // Ticket 관련
+    TICKET_NOT_FOUND(HttpStatus.BAD_REQUEST, "TICKET_401", "해당 티켓을 찾을 수 없습니다."),
     ;
 
     private final HttpStatus httpStatus;
