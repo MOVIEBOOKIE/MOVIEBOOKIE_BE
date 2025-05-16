@@ -21,7 +21,7 @@ public class FcmConfig {
         try {
             if (FirebaseApp.getApps().isEmpty()) {
                 FileInputStream serviceAccount =
-                        new FileInputStream("src/main/resources/moviebooky-2009d-firebase-adminsdk-fbsvc-1527730d9b.json");
+                        new FileInputStream("src/main/resources/secret/moviebooky-2009d-firebase-adminsdk-fbsvc-1527730d9b.json");
 
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
