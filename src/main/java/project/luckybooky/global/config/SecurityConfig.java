@@ -50,33 +50,34 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration cfg = new CorsConfiguration();
-        // 허용할 출처
-        cfg.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "https://movie-bookie.shop",
-                "https://api-movie-bookie.shop"
-        ));
-        // 허용할 HTTP 메서드
-        cfg.setAllowedMethods(List.of(
-                HttpMethod.GET.name(),
-                HttpMethod.POST.name(),
-                HttpMethod.PUT.name(),
-                HttpMethod.DELETE.name(),
-                HttpMethod.OPTIONS.name()
-        ));
-        // 요청 헤더 허용
-        cfg.setAllowedHeaders(List.of("*"));
-        // 자격증명(쿠키) 허용
-        cfg.setAllowCredentials(true);
-        // 드라이트 경로 설정
-        cfg.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // 모든 경로에 CORS 설정 적용
-        source.registerCorsConfiguration("/**", cfg);
-        return source;
-    }
+//    @Bean
+//    public CorsConfigurationSource corsConfigurationSource() {
+//        CorsConfiguration cfg = new CorsConfiguration();
+//        // 허용할 출처
+//        cfg.setAllowedOrigins(List.of(
+//                "http://localhost:3000",
+//                "https://movie-bookie.shop",
+//                "https://api-movie-bookie.shop",
+//                "https://moviebookie.vercel.app"
+//        ));
+//        // 허용할 HTTP 메서드
+//        cfg.setAllowedMethods(List.of(
+//                HttpMethod.GET.name(),
+//                HttpMethod.POST.name(),
+//                HttpMethod.PUT.name(),
+//                HttpMethod.DELETE.name(),
+//                HttpMethod.OPTIONS.name()
+//        ));
+//        // 요청 헤더 허용
+//        cfg.setAllowedHeaders(List.of("*"));
+//        // 자격증명(쿠키) 허용
+//        cfg.setAllowCredentials(true);
+//        // 드라이트 경로 설정
+//        cfg.setMaxAge(3600L);
+//
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        // 모든 경로에 CORS 설정 적용
+//        source.registerCorsConfiguration("/**", cfg);
+//        return source;
+//    }
 }
