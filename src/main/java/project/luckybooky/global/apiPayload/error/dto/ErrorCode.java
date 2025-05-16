@@ -31,6 +31,9 @@ public enum ErrorCode implements BaseStatus {
     JWT_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "JWT_500", "JWT 토큰 생성 중 오류가 발생했습니다."),
     JWT_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT_401", "유효하지 않은 JWT 토큰입니다."),
     JWT_EXPIRED_TOKEN(HttpStatus.BAD_REQUEST, "JWT_402", "만료된 JWT 토큰입니다."),
+    INVALID_TOKEN_TYPE(HttpStatus.BAD_REQUEST, "AUTH_400", "잘못된 토큰 유형입니다."),
+    MULTI_ENV_LOGIN(HttpStatus.UNAUTHORIZED, "AUTH_401", "다른 환경에서 로그인되어 세션이 만료되었습니다."),
+
 
     // User Error
     USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "USER_401", "로그인 정보가 없습니다."),
@@ -78,7 +81,7 @@ public enum ErrorCode implements BaseStatus {
 
     // Ticket 관련
     TICKET_NOT_FOUND(HttpStatus.BAD_REQUEST, "TICKET_401", "해당 티켓을 찾을 수 없습니다."),
-    
+
     ;
 
     private final HttpStatus httpStatus;
@@ -86,7 +89,7 @@ public enum ErrorCode implements BaseStatus {
     private final String message;
 
     @Override
-    public ReasonDto getReason(){
+    public ReasonDto getReason() {
         return ReasonDto.builder()
                 .status(httpStatus)
                 .code(this.code)
