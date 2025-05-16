@@ -2,6 +2,7 @@ package project.luckybooky.domain.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
 import project.luckybooky.global.oauth.util.CookieUtil;
 
+@Tag(name = "User", description = "회원가입 · 로그인 API")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor

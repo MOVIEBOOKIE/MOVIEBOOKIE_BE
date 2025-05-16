@@ -1,6 +1,7 @@
 package project.luckybooky.domain.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +11,7 @@ import project.luckybooky.domain.user.service.MypageService;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
 
+@Tag(name = "User", description = "마이페이지 API")
 @RestController
 @RequestMapping("/api/mypage")
 @RequiredArgsConstructor
