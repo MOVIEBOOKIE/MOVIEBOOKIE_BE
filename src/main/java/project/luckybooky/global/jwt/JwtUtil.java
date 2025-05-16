@@ -8,10 +8,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
+import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.util.Date;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.oauth.handler.AuthFailureHandler;
 
@@ -27,36 +26,30 @@ public class JwtUtil {
     @Value("${jwt.refresh-token-validity}")
     private long refreshTokenValidity;
 
-    public String createAccessToken(String email) {
-        try {
-            return generateToken(email, accessTokenValidity);
-        } catch (Exception e) {
-            throw new AuthFailureHandler(ErrorCode.JWT_GENERATION_FAILED);
-        }
-    }
-
-
-    public String createRefreshToken(String email) {
-        return generateToken(email, refreshTokenValidity);
-    }
-
     private Key getSigningKey() {
-        try {
-            byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-            return Keys.hmacShaKeyFor(keyBytes);
-        } catch (Exception e) {
-            throw new AuthFailureHandler(ErrorCode.JWT_GENERATION_FAILED);
-        }
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    private String generateToken(String email, long validity) {
+    public String createAccessToken(String email) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + validity);
         return Jwts.builder()
                 .setSubject(email)
+                .claim("category", "access")
                 .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .setExpiration(new Date(now.getTime() + accessTokenValidity))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    public String createRefreshToken(String email) {
+        Date now = new Date();
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("category", "refresh")
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + refreshTokenValidity))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -71,16 +64,29 @@ public class JwtUtil {
         }
     }
 
+    private Claims parseClaims(String token) {
+        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build()
+                .parseClaimsJws(token).getBody();
+    }
+
     public String extractEmail(String token) {
-        Claims claims = Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
-        return claims.getSubject();
+        return parseClaims(token).getSubject();
+    }
+
+    public String extractCategory(String token) {
+        return parseClaims(token).get("category", String.class);
+    }
+
+    public long getRemainingSeconds(String token) {
+        Date exp = parseClaims(token).getExpiration();
+        return (exp.getTime() - System.currentTimeMillis()) / 1000;
     }
 
     public int getAccessTokenValidity() {
-        return (int) accessTokenValidity;  // 명시적 형변환 추가
+        return (int) accessTokenValidity;
     }
 
     public int getRefreshTokenValidity() {
-        return (int) refreshTokenValidity;  // 명시적 형변환 추가
+        return (int) refreshTokenValidity;
     }
 }
