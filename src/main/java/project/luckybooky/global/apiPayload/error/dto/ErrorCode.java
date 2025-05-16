@@ -76,6 +76,9 @@ public enum ErrorCode implements BaseStatus {
     FCM_TOKEN_REGISTER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_500_2", "FCM 토큰 등록에 실패했습니다."),
     FCM_INITIALIZATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_500_3", "FCM 초기화에 실패했습니다."),
 
+    // Ticket 관련
+    TICKET_NOT_FOUND(HttpStatus.BAD_REQUEST, "TICKET_401", "해당 티켓을 찾을 수 없습니다."),
+    
     ;
 
     private final HttpStatus httpStatus;

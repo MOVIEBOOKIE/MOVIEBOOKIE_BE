@@ -74,7 +74,7 @@ public class EventController {
 
     @Operation(summary = "이벤트 대관 확정", description = "확정하고자 하는 이벤트 ID를 넣어주세요 !")
     @PostMapping("/{eventId}/venue-confirmed")
-    public BaseResponse<String> venueConfirmed(@PathVariable("eventId") Long eventId) {
+    public BaseResponse<EventResponse.EventVenueConfirmedResultDTO> venueConfirmed(@PathVariable("eventId") Long eventId) {
         return BaseResponse.onSuccess(eventService.venueConfirmed(eventId));
     }
 
