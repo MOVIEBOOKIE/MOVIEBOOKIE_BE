@@ -64,6 +64,9 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "group_type")
     private GroupType groupType;
+    
+    @Column(name = "fcm_token")
+    private String fcmToken;
 
     @Column(name = "recruitment", nullable = false)
     @Builder.Default
@@ -81,4 +84,5 @@ public class User extends BaseEntity {
             participation += 1;
         }
     }
+
 }

@@ -3,6 +3,7 @@ package project.luckybooky.domain.user.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import project.luckybooky.domain.user.dto.request.UserTypeAssignRequest;
@@ -15,6 +16,7 @@ import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
 
+@Tag(name = "User", description = "사용자 유형 검사 API")
 @RestController
 @RequestMapping("/api/user-type")
 @RequiredArgsConstructor

@@ -2,31 +2,29 @@ package project.luckybooky.domain.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
 import project.luckybooky.domain.user.converter.UserConverter;
+import project.luckybooky.domain.user.dto.response.ReissueResultDTO;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO;
-import project.luckybooky.domain.user.dto.response.UserResponseDTO.JoinInfoResultDTO;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO.JoinResultDTO;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.service.AuthService;
+import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
 import project.luckybooky.global.apiPayload.common.BaseResponse;
-import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
-import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
-import project.luckybooky.global.oauth.util.CookieUtil;
 
+@Tag(name = "User", description = "회원가입 · 로그인 API")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -67,6 +65,16 @@ public class AuthController {
                 ResultCode.USER_FETCH_OK,
                 authService.getUserInfo(userEmail)
         );
+    }
+
+    @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용해 새 액세스/리프레시 토큰을 발급합니다.")
+    @PostMapping("/reissue")
+    public BaseResponse<ReissueResultDTO> reissue(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        ReissueResultDTO result = authService.reissueTokens(request, response);
+        return BaseResponse.onSuccess(result);
     }
 
 }
