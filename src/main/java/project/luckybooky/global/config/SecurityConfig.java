@@ -3,6 +3,7 @@ package project.luckybooky.global.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,7 +27,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, UserRepository userRepository)
             throws Exception {
         http
-                .cors(cors -> cors.configure(http))  // CORS 설정 활성화
+                .cors(Customizer.withDefaults())  // CORS 설정 활성화
                 .csrf(AbstractHttpConfigurer::disable)  // CSRF 비활성화
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
