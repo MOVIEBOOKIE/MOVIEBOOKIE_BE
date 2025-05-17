@@ -34,6 +34,7 @@ public class KakaoUtil {
     private final Set<String> allowedRedirectUris = Set.of(
             "http://localhost:3000/login/kakao",
             "https://moviebookie-develop.vercel.app/login/kakao",
+            "https://moviebookie-develop.vercel.app/",
             "https://api-movie-bookie.shop",
             "https://api-movie-bookie.shop/login/kakao"
     );
