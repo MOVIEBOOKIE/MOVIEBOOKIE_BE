@@ -19,7 +19,7 @@ public class CorsConfig {
                 "http://localhost:3000",
                 "https://api.movie-bookie.shop",
                 "https://movie-bookie.shop",
-                "https://*.movie-bookie.shop"     // www 도메인 포함
+                "https://www.movie-bookie.shop"
         ));
 
         config.setAllowedMethods(List.of(
