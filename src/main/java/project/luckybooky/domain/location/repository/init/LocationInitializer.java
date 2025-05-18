@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.entity.type.AvailableMediaType;
 import project.luckybooky.domain.location.entity.type.LocationKeyword;
@@ -15,6 +16,7 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 @DummyDataInit
+@Order(1)
 public class LocationInitializer implements ApplicationRunner {
     private final LocationRepository locationRepository;
 

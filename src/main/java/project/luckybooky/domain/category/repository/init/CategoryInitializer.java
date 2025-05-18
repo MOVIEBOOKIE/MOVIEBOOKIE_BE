@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.category.repository.CategoryRepository;
 import project.luckybooky.global.util.DummyDataInit;
@@ -14,6 +15,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @DummyDataInit
+@Order(2)
 public class CategoryInitializer implements ApplicationRunner {
     private final CategoryRepository categoryRepository;
 
@@ -56,6 +58,7 @@ public class CategoryInitializer implements ApplicationRunner {
             categoryList.add(그외_이벤트);
 
             categoryRepository.saveAll(categoryList);
+            categoryRepository.flush();
         }
     }
 }
