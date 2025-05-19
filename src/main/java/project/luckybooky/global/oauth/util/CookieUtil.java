@@ -13,9 +13,13 @@ public class CookieUtil {
         cookie.setDomain("movie-bookie.shop");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);  // 로컬에서는 false, 배포에서는 true
+        cookie.setSecure(!isLocal);  // 로컬에서는 false, 배포에서는 true
         cookie.setMaxAge(maxAge);
-        cookie.setAttribute("SameSite", "None");
+        if (!isLocal) {
+            cookie.setAttribute("SameSite", "None");
+        } else {
+            cookie.setAttribute("SameSite", "Lax");
+        }
         response.addCookie(cookie);
     }
 
