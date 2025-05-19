@@ -204,6 +204,13 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
         event.recruitCancel();
+
+        publisher.publishEvent(new HostNotificationEvent(
+                userId, // hostId
+                HostNotificationType.EVENT_DELETED,
+                event.getEventTitle()
+        ));
+
         return EventConstants.RECRUIT_CANCEL_SUCCESS.getMessage();
     }
 
