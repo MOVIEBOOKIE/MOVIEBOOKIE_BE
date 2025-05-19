@@ -76,6 +76,7 @@ public class AuthService {
         } catch (AuthFailureHandler e) {
             throw e;
         } catch (Exception e) {
+            log.error("🌐 OAuth 로그인 처리 중 예외 발생", e);
             throw new AuthFailureHandler(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
