@@ -10,7 +10,6 @@ public class CookieUtil {
 
     public static void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean isLocal) {
         Cookie cookie = new Cookie(name, value);
-        cookie.setDomain("movie-bookie.shop");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setSecure(!isLocal);  // 로컬에서는 false, 배포에서는 true
@@ -18,7 +17,7 @@ public class CookieUtil {
         if (!isLocal) {
             cookie.setAttribute("SameSite", "None");
         } else {
-            cookie.setAttribute("SameSite", "Lax");
+            cookie.setAttribute("SameSite", "Lax"); // 로컬에서는 기본값 설정
         }
         response.addCookie(cookie);
     }
