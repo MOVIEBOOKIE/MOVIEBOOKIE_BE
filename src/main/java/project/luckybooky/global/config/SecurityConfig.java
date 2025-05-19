@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.jwt.JwtAuthenticationFilter;
 import project.luckybooky.global.jwt.JwtUtil;
@@ -21,12 +22,13 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, UserRepository userRepository)
             throws Exception {
         http
-                .cors(cors -> cors.configure(http))  // CORS 설정 활성화
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)  // CSRF 비활성화
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -6,7 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -29,8 +33,8 @@ public class KakaoUtil {
     private final ObjectMapper objectMapper;
     private final Set<String> allowedRedirectUris = Set.of(
             "http://localhost:3000/login/kakao",
-            "https://api-movie-bookie.shop",
-            "https://api-movie-bookie.shop/login/kakao"
+            "https://movie-bookie.shop/login/kakao",
+            "https://www.movie-bookie.shop/login/kakao"
     );
 
 
