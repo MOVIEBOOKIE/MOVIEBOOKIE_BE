@@ -51,7 +51,7 @@ public class EventController {
             MultipartFile eventImage
     ) {
         Long userId = userContextService.getUserId();
-        Long eventId = eventService.createEvent(request, eventImage);
+        Long eventId = eventService.createEvent(userId, request, eventImage);
         return BaseResponse.onSuccess(
                 participationService.createParticipation(userId, eventId, Boolean.TRUE)
         );

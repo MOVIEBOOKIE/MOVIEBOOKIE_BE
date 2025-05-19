@@ -23,28 +23,6 @@ public class NotificationService {
 
     private final UserRepository userRepository;
 
-    public NotificationResponseDTO sendNotificationToCurrentUser(NotificationRequestDTO requestDTO) {
-        String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        if (user.getFcmToken() == null) {
-            throw new BusinessException(ErrorCode.NOTIFICATION_FCM_TOKEN_NOT_FOUND);
-        }
-
-        Message message = NotificationConverter.toFcmMessage(user, requestDTO);
-
-        try {
-            String response = FirebaseMessaging.getInstance().send(message);
-            log.info("✅ FCM 알림 전송 성공: {}", response);
-            return new NotificationResponseDTO("success", "알림 전송 완료");
-        } catch (Exception e) {
-            log.error("❌ FCM 알림 전송 실패", e);
-            throw new BusinessException(ErrorCode.NOTIFICATION_SEND_FAILED);
-        }
-    }
-
     public FcmTokenResponseDTO registerFcmToken(FcmTokenRequestDTO dto) {
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
 
@@ -59,6 +37,42 @@ public class NotificationService {
             log.error("FCM 토큰 등록 실패", e);
             throw new BusinessException(ErrorCode.FCM_TOKEN_REGISTER_FAILED);
         }
+    }
+
+    public void send(Message message) {
+        try {
+            String resp = FirebaseMessaging.getInstance().send(message);
+            log.info("FCM 전송 성공: {}", resp);
+        } catch (Exception e) {
+            log.error("FCM 전송 실패", e);
+            throw new BusinessException(ErrorCode.NOTIFICATION_SEND_FAILED);
+        }
+    }
+
+    public NotificationResponseDTO sendNotificationToCurrentUser(NotificationRequestDTO requestDTO) {
+        // 1) 현재 로그인한 사용자 조회
+        String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 2) FCM 메시지 객체 생성 (Converter에 위임)
+        Message message = NotificationConverter.toMessage(
+                user,
+                requestDTO.getTitle(),
+                requestDTO.getBody()
+        );
+
+        // 3) 실제 전송
+        try {
+            String resp = FirebaseMessaging.getInstance().send(message);
+            log.info("FCM 전송 성공: {}", resp);
+        } catch (Exception e) {
+            log.error("FCM 전송 실패", e);
+            throw new BusinessException(ErrorCode.NOTIFICATION_SEND_FAILED);
+        }
+
+        // 4) 컨트롤러에 반환할 DTO
+        return new NotificationResponseDTO("success", "알림 전송 완료");
     }
 
 }
