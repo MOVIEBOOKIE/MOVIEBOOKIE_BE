@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.user.entity.User;
@@ -15,6 +16,7 @@ import project.luckybooky.global.jwt.JwtUtil;
 @Component
 @Profile("dev")
 @RequiredArgsConstructor
+@Order(0)
 public class UserInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
