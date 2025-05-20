@@ -49,7 +49,7 @@ public class ParticipationService {
         participationRepository.deleteByUserIdAndEventId(userId, eventId);
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer page, Integer size) {
+    public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer role, Integer page, Integer size) {
         // 진행 중, 확정 이벤트 목록 필터링
         List<EventStatus> statuses = (type == 0)
                 ? List.of(
@@ -64,7 +64,10 @@ public class ParticipationService {
                 EventStatus.RECRUIT_CANCELED,
                 EventStatus.VENUE_RESERVATION_CANCELED
         );
-        Page<Event> eventList = participationRepository.findByUserIdAndEventStatuses(userId, ParticipateRole.PARTICIPANT, statuses, PageRequest.of(page, size));
+
+        // 주최자 / 참여자 판단
+        ParticipateRole participateRole = (role == 0) ? ParticipateRole.PARTICIPANT : ParticipateRole.HOST;
+        Page<Event> eventList = participationRepository.findByUserIdAndEventStatuses(userId, participateRole, statuses, PageRequest.of(page, size));
 
         return toReadEventListResultDTO(eventList);
     }
