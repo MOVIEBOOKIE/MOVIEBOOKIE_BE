@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.user.converter.UserConverter;
+import project.luckybooky.domain.user.dto.response.ReissueResultDTO;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO.JoinResultDTO;
 import project.luckybooky.domain.user.entity.User;
@@ -66,14 +67,14 @@ public class AuthController {
         );
     }
 
-//    @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용해 새 액세스/리프레시 토큰을 발급합니다.")
-//    @PostMapping("/reissue")
-//    public BaseResponse<ReissueResultDTO> reissue(
-//            HttpServletRequest request,
-//            HttpServletResponse response
-//    ) {
-//        ReissueResultDTO result = authService.reissueTokens(request, response);
-//        return BaseResponse.onSuccess(result);
-//    }
+    @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용해 새 액세스/리프레시 토큰을 발급합니다.")
+    @PostMapping("/reissue")
+    public BaseResponse<ReissueResultDTO> reissue(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        ReissueResultDTO result = authService.reissueTokens(request, response);
+        return BaseResponse.onSuccess(result);
+    }
 
 }
