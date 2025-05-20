@@ -52,10 +52,12 @@ public class UserConverter {
     /* 유형검사 조회 DTO */
     public static UserTypeResultDTO toResultDTO(User user) {
         UserType type = user.getUserType();
+
         return UserTypeResultDTO.builder()
                 .username(user.getUsername())
                 .userTypeCode(type.name())
-                .userTypeLabel(type.getLabel())
+                .title(type.getTitle())
+                .label(type.getLabel())
                 .description(type.getDescription())
                 .build();
     }
