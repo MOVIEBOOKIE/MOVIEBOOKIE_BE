@@ -41,6 +41,7 @@ public class EventConverter {
     }
 
     public static EventResponse.ReadEventListResultDTO toEventListResultDTO(Event event, Integer rate, Integer d_day) {
+        d_day = (d_day == -1) ? null : d_day;
         return EventResponse.ReadEventListResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())

@@ -96,7 +96,7 @@ public class EventInitializer implements ApplicationRunner {
         User user2 = userRepository.findById(2L).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         Event event1 = eventRepository.findById(1L).orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
-        Event event2 = eventRepository.findById(1L).orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+        Event event2 = eventRepository.findById(2L).orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
         List<Participation> participationList = new ArrayList<>();
 
