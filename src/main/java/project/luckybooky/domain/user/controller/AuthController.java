@@ -44,13 +44,13 @@ public class AuthController {
         return BaseResponse.onSuccess(UserConverter.toJoinResultDTO(user));
     }
 
-    @Operation(summary = "로그아웃", description = "사용자가 로그인한 계정을 기준으로 리프레시 토큰을 삭제하고 쿠키를 제거합니다.")
+    @Operation(summary = "로그아웃", description = "사용자가 로그인한 계정을 기준으로 리프레시 토큰을 삭제하고 쿠키에 토큰을 삭제합니다.")
     @PostMapping("/logout")
     public BaseResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {
         return authService.logout(request, response);
     }
 
-//    @Operation(summary = "회원탈퇴", description = "회원 정보를 포함한 모든 관련 데이터를 삭제한 후, 계정을 완전히 제거합니다.")
+//    @Operation(summary = "회원탈퇴", description = "회원 정보를 포함한 모든 관련 데이터를 삭제한 후, 계정을 완전히 삭제합니다.")
 //    @DeleteMapping("/delete")
 //    public BaseResponse<String> deleteUser(HttpServletResponse response, boolean isLocal) {
 //        return authService.deleteUser(response, isLocal);
@@ -66,14 +66,13 @@ public class AuthController {
         );
     }
 
-//    @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용해 새 액세스/리프레시 토큰을 발급합니다.")
-//    @PostMapping("/reissue")
-//    public BaseResponse<ReissueResultDTO> reissue(
-//            HttpServletRequest request,
-//            HttpServletResponse response
-//    ) {
-//        ReissueResultDTO result = authService.reissueTokens(request, response);
-//        return BaseResponse.onSuccess(result);
-//    }
+    @Operation(
+            summary = "토큰 재발급",
+            description = "리프레시 토큰을 사용해 새 액세스,리프레시 토큰을 발급합니다")
+    @PostMapping("/reissue")
+    public BaseResponse<Void> reissue(HttpServletRequest request, HttpServletResponse response) {
+        authService.reissueTokens(request, response);
+        return BaseResponse.onSuccess(null);
+    }
 
 }
