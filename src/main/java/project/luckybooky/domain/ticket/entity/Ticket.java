@@ -21,8 +21,14 @@ public class Ticket {
     @Column(name = "ticket_id")
     private Long id;
 
-    @Column(name = "title", length = 50, nullable = false)
-    private String title;
+    @Column(name = "media_title", length = 50, nullable = false)
+    private String mediaTitle;
+
+    @Column(name = "event_title", length = 50, nullable = false)
+    private String eventTitle;
+
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "type", length = 20, nullable = false)
     private String type;

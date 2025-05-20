@@ -10,14 +10,6 @@ public class TicketResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
-    public static class ReadTicketListResultDTO {
-        Long ticketId;
-    }
-
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Getter
     public static class ReadTicketDetailsResultDTO {
         Long ticketId;
         String title;
@@ -29,5 +21,19 @@ public class TicketResponse {
         String time;
         String scheduledAt;
         String address;
+        String eventImageUrl;
+    }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class ReadTicketListResultDTO {
+        Long ticketId;
+        String title;
+        String location;
+        String scheduledAt;
+        String description;
+        String eventImageUrl;
     }
 }

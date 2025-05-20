@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
@@ -41,10 +42,12 @@ public class User extends BaseEntity {
     @Column(name = "profile_image")
     private String profileImage;
 
-    @Column(name = "access_token")
+    @Lob
+    @Column(name = "access_token", columnDefinition = "TEXT")
     private String accessToken;
 
-    @Column(name = "refresh_token")
+    @Lob
+    @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
     @Column(name = "host_experience_count", nullable = false)
@@ -64,7 +67,7 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "group_type")
     private GroupType groupType;
-    
+
     @Column(name = "fcm_token")
     private String fcmToken;
 
@@ -79,8 +82,7 @@ public class User extends BaseEntity {
     public void updateExperience(Integer type) {
         if (type == 0) {
             recruitment += 1;
-        }
-        else {
+        } else {
             participation += 1;
         }
     }
