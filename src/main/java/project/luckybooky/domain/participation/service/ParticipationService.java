@@ -49,7 +49,7 @@ public class ParticipationService {
         participationRepository.deleteByUserIdAndEventId(userId, eventId);
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readRegisteredEventList(Long userId, Integer type, Integer page, Integer size) {
+    public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer page, Integer size) {
         // 진행 중, 확정 이벤트 목록 필터링
         List<EventStatus> statuses = (type == 0)
                 ? List.of(
