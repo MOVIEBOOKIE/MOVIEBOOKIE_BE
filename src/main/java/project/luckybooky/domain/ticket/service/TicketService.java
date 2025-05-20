@@ -1,6 +1,8 @@
 package project.luckybooky.domain.ticket.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.event.entity.Event;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class TicketService {
     private final TicketRepository ticketRepository;
 
@@ -53,4 +56,11 @@ public class TicketService {
         return TicketConverter.toReadTicketDetailsResultDTO(ticket);
     }
 
+    public List<TicketResponse.ReadTicketListResultDTO> readTicketList(Long userId, Integer page, Integer size) {
+        Page<Ticket> ticketList = ticketRepository.findTicketsByUserId(userId, PageRequest.of(page, size));
+
+        return ticketList.stream().map(ticket -> {
+            return TicketConverter.toReadTicketListResultDTO(ticket);
+        }).collect(Collectors.toList());
+    }
 }

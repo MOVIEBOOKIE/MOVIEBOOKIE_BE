@@ -10,7 +10,9 @@ import java.util.List;
 public class TicketConverter {
     public static Ticket toTicket(Event event, List<User> userList, String scheduledAt, String time, String hostName) {
         return Ticket.builder()
-                .title(event.getMediaTitle())
+                .mediaTitle(event.getMediaTitle())
+                .eventTitle(event.getEventTitle())
+                .description(event.getDescription())
                 .type(event.getCategory().getCategoryName())
                 .location(event.getLocation().getLocationName())
                 .address(event.getLocation().getAddress())
@@ -27,7 +29,7 @@ public class TicketConverter {
     public static TicketResponse.ReadTicketDetailsResultDTO toReadTicketDetailsResultDTO(Ticket ticket) {
         return TicketResponse.ReadTicketDetailsResultDTO.builder()
                 .ticketId(ticket.getId())
-                .title(ticket.getTitle())
+                .title(ticket.getMediaTitle())
                 .type(ticket.getType())
                 .location(ticket.getLocation())
                 .price(ticket.getPrice())
@@ -36,6 +38,18 @@ public class TicketConverter {
                 .time(ticket.getTime())
                 .scheduledAt(ticket.getScheduledAt())
                 .address(ticket.getAddress())
+                .eventImageUrl(ticket.getEventImageUrl())
+                .build();
+    }
+
+    public static TicketResponse.ReadTicketListResultDTO toReadTicketListResultDTO(Ticket ticket) {
+        return TicketResponse.ReadTicketListResultDTO.builder()
+                .ticketId(ticket.getId())
+                .title(ticket.getMediaTitle())
+                .location(ticket.getLocation())
+                .description(ticket.getDescription())
+                .scheduledAt(ticket.getScheduledAt())
+                .eventImageUrl(ticket.getEventImageUrl())
                 .build();
     }
 }
