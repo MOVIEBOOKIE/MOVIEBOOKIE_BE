@@ -241,6 +241,19 @@ public class EventService {
 
         event.venueConfirmed();
         Long ticketId = ticketService.createTicket(event);// 티켓 생성
+
+        // 호스트 ID 조회
+        Long hostId = participationRepository
+                .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+        // 4) 대관 확정 알림(호스트)
+        publisher.publishEvent(new HostNotificationEvent(
+                hostId,
+                HostNotificationType.RESERVATION_CONFIRMED,
+                event.getEventTitle()
+        ));
+
         return EventConverter.toEventVenueConfirmedResultDTO(ticketId);
     }
 
@@ -273,22 +286,25 @@ public class EventService {
         List<Event> expiredEvents = findExpiredEvents();
 
         expiredEvents.forEach(event -> {
+            // 이벤트를 생성한 호스트의 userId = hostId로 설정 -> 엔티티 조회가 아닌 userId만 조회
             Long hostId = participationRepository
-                    .findUserIdByEventIdAndRole(event.getId(), ParticipateRole.HOST)
+                    .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
                     .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
             if (event.getCurrentParticipants() < event.getMinParticipants()) {
                 event.recruitCancel();
+                // 인원부족으로 이벤트 취소 시 자동 알림(호스트)
                 publisher.publishEvent(new HostNotificationEvent(
                         hostId,
-                        HostNotificationType.RECRUITMENT_CANCELLED,
+                        HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소
                         event.getEventTitle()
                 ));
             } else {
                 event.recruitDone();
+                // 인원 모집 달성 상태로 모집 기간 끝날 시 자동으로 알림 발송(호스트)
                 publisher.publishEvent(new HostNotificationEvent(
                         hostId,
-                        HostNotificationType.RECRUITMENT_COMPLETED,
+                        HostNotificationType.RECRUITMENT_COMPLETED, // 모집 완료
                         event.getEventTitle()
                 ));
             }
