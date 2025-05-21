@@ -273,10 +273,24 @@ public class EventService {
         List<Event> expiredEvents = findExpiredEvents();
 
         expiredEvents.forEach(event -> {
+            Long hostId = participationRepository
+                    .findUserIdByEventIdAndRole(event.getId(), ParticipateRole.HOST)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
             if (event.getCurrentParticipants() < event.getMinParticipants()) {
                 event.recruitCancel();
+                publisher.publishEvent(new HostNotificationEvent(
+                        hostId,
+                        HostNotificationType.RECRUITMENT_CANCELLED,
+                        event.getEventTitle()
+                ));
             } else {
                 event.recruitDone();
+                publisher.publishEvent(new HostNotificationEvent(
+                        hostId,
+                        HostNotificationType.RECRUITMENT_COMPLETED,
+                        event.getEventTitle()
+                ));
             }
         });
     }
