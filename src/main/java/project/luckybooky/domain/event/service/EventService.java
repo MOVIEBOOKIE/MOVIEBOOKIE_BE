@@ -284,6 +284,19 @@ public class EventService {
 
             boolean isHost = participation.getParticipateRole().equals(ParticipateRole.HOST);
             userTypeService.updateUserExperience(userId, isHost ? 0 : 1);
+
+            // 호스트 조회
+            Long hostId = participationRepository
+                    .findByUserIdAndEventIdAndRole(eventId, ParticipateRole.HOST)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+            // 3) 상영 완료 후기 요청 알림(호스트)
+            publisher.publishEvent(new HostNotificationEvent(
+                    hostId,
+                    HostNotificationType.SCREENING_COMPLETED,
+                    event.getEventTitle()
+            ));
+
             return EventConstants.SCREENING_DONE_SUCCESS.getMessage();
         }
         return EventConstants.SCREENING_CANCEL_SUCCESS.getMessage();
