@@ -1,8 +1,8 @@
-package project.luckybooky.domain.notification.converter;
+package project.luckybooky.domain.notification.push.converter;
 
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
-import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
+import project.luckybooky.domain.notification.push.dto.request.NotificationRequestDTO;
 import project.luckybooky.domain.user.entity.User;
 
 public class NotificationConverter {

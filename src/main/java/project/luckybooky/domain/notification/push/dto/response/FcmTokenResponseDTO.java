@@ -1,13 +1,12 @@
-package project.luckybooky.domain.notification.dto.response;
+package project.luckybooky.domain.notification.push.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class NotificationResponseDTO {
+public class FcmTokenResponseDTO {
     private String status;
     private String message;
 }
-
 

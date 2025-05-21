@@ -1,15 +1,15 @@
-package project.luckybooky.domain.notification.service;
+package project.luckybooky.domain.notification.push.service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import project.luckybooky.domain.notification.converter.NotificationConverter;
-import project.luckybooky.domain.notification.dto.request.FcmTokenRequestDTO;
-import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
-import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
-import project.luckybooky.domain.notification.dto.response.NotificationResponseDTO;
+import project.luckybooky.domain.notification.push.converter.NotificationConverter;
+import project.luckybooky.domain.notification.push.dto.request.FcmTokenRequestDTO;
+import project.luckybooky.domain.notification.push.dto.request.NotificationRequestDTO;
+import project.luckybooky.domain.notification.push.dto.response.FcmTokenResponseDTO;
+import project.luckybooky.domain.notification.push.dto.response.NotificationResponseDTO;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.util.AuthenticatedUserUtils;

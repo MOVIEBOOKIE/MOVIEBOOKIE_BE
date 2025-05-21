@@ -1,4 +1,4 @@
-package project.luckybooky.domain.notification.dto.request;
+package project.luckybooky.domain.notification.push.dto.request;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
