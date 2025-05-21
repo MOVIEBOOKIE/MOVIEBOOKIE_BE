@@ -226,7 +226,19 @@ public class EventService {
             event.venueRegister();
             return EventConstants.VENUE_RESERVATION_SUCCESS.getMessage();
         } else {
+            // 대관 취소(불가) 시 알림 전송(호스트)
             event.venueCancel();
+
+            Long hostId = participationRepository
+                    .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+            publisher.publishEvent(new HostNotificationEvent(
+                    hostId,
+                    HostNotificationType.RESERVATION_DENIED,
+                    event.getEventTitle()
+            ));
+
             return EventConstants.VENUE_CANCEL_SUCCESS.getMessage();
         }
     }
