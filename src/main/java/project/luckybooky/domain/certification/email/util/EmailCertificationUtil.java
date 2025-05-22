@@ -12,6 +12,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
 @Component
 @RequiredArgsConstructor
@@ -38,24 +39,23 @@ public class EmailCertificationUtil {
             helper.setTo(to);
             helper.setFrom(from, "무비부키");   // 표시 이름 포함
             helper.setSubject("[무비부키] 이메일 인증번호");
-            helper.setText(buildHtml(code), true); // true = HTML
+            helper.setText(buildHtml(code), true);
 
             mailSender.send(message);
             log.debug("인증 메일 전송 → {}", to);
 
         } catch (MessagingException | MailException | UnsupportedEncodingException e) {
             log.error("❌ 이메일 전송 실패. to={}, cause={}", to, e.getMessage(), e);
-            // 필요하다면 비즈니스 예외로 감싸 상위 계층에 전달
-            throw new IllegalStateException("이메일 전송에 실패했습니다.", e);
+            throw new BusinessException(ErrorCode.EMAIL_SEND_FAIL);
         }
     }
 
     private String buildHtml(String code) {
         return """
-               <p>안녕하세요, 무비부키입니다.</p>
-               <p>아래 인증번호를 입력해 주세요.</p>
-               <h2 style="letter-spacing:4px">%s</h2>
-               <p>(유효 시간: 3분)</p>
-               """.formatted(code);
+                <p>안녕하세요, 무비부키입니다.</p>
+                <p>아래 인증번호를 입력해 주세요.</p>
+                <h2 style="letter-spacing:4px">%s</h2>
+                <p>(유효 시간: 3분)</p>
+                """.formatted(code);
     }
 }
