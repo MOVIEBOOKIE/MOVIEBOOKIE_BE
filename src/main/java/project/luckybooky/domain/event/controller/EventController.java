@@ -116,4 +116,11 @@ public class EventController {
         Long userId = userContextService.getUserId();
         return BaseResponse.onSuccess(eventService.readEventDetails(userId, eventId));
     }
+
+    @Operation(summary = "홈 화면 맞춤형 콘텐츠 조회", description = "상세 조회를 희망하는 이벤트 ID를 넣어주세요 !!")
+    @GetMapping("/home")
+    public BaseResponse<List<EventResponse.HomeEventListResultDTO>> readHomeEventList() {
+        Long userId = userContextService.getUserId();
+        return BaseResponse.onSuccess(eventService.readHomeEventList(userId));
+    }
 }
