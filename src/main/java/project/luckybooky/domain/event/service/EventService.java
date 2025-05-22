@@ -1,6 +1,7 @@
 package project.luckybooky.domain.event.service;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.ErrorState;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,7 +22,9 @@ import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.ticket.service.TicketService;
+import project.luckybooky.domain.user.entity.ContentCategory;
 import project.luckybooky.domain.user.entity.User;
+import project.luckybooky.domain.user.entity.UserType;
 import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
@@ -254,5 +257,36 @@ public class EventService {
 
     private List<Event> findExpiredEvents() { // 모집 기간이 지난 이벤트 탐색
         return eventRepository.findExpiredEvent(LocalDate.now());
+    }
+
+    public List<EventResponse.HomeEventListResultDTO> readHomeEventList(Long userId) {
+        UserType userType = userTypeService.findUserType(userId);
+        ContentCategory preferCategory = userType.getCategory();
+        Long categoryId;
+        switch (preferCategory) {
+            case MOVIE:
+                categoryId = 1L;
+                break;
+            case DRAMA:
+                categoryId = 2L;
+                break;
+            case SPORTS:
+                categoryId = 3L;
+                break;
+            case VARIETY:
+                categoryId = 4L;
+                break;
+            case CONCERT:
+                categoryId = 5L;
+                break;
+            default:
+                throw new BusinessException(ErrorCode.USER_TYPE_NOT_FOUND);
+        }
+
+        List<Event> eventList = eventRepository.findEventListByUserType(categoryId, PageRequest.of(0, 7));
+        return eventList.stream().map(event -> {
+            String eventDate = event.getEventDate().format(DateTimeFormatter.ofPattern("yyyy. MM. dd"));
+            return EventConverter.toHomeEventListResultDTO(event, eventDate);
+        }).collect(Collectors.toList());
     }
 }
