@@ -74,4 +74,8 @@ public class UserTypeService {
     public User findOne(Long userId) {
         return userRepo.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
+
+    public UserType findUserType(Long userId) {
+        return userRepo.findUserTypeByUserId(userId);
+    }
 }
