@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.user.dto.request.UserTypeAssignRequest;
-import project.luckybooky.domain.user.dto.response.UserTypeAssignResponse;
 import project.luckybooky.domain.user.dto.response.UserTypeResultDTO;
 import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
@@ -27,7 +26,7 @@ public class UserTypeController {
 
     @Operation(summary = "유형검사 시행", description = "STEP1~STEP3 답변을 통해 사용자 유형을 판별하고 저장합니다.")
     @PostMapping
-    public CommonResponse<UserTypeAssignResponse> assignUserType(
+    public CommonResponse<UserTypeResultDTO> assignUserType(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "유형 검사 요청 정보",
                     required = true,
@@ -37,8 +36,8 @@ public class UserTypeController {
             )
             @RequestBody UserTypeAssignRequest request) {
 
-        UserTypeAssignResponse response = userTypeService.assignCurrentUser(request);
-        return CommonResponse.of(ResultCode.OK, response);
+        UserTypeResultDTO result = userTypeService.assignCurrentUser(request);
+        return CommonResponse.of(ResultCode.OK, result);
     }
 
 
