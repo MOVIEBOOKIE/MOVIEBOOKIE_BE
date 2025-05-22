@@ -27,4 +27,11 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "WHERE :content IN (e.category.categoryName) \n" +
             "   OR e.mediaTitle LIKE CONCAT('%', :content, '%')")
     Page<Event> findEventsBySearch(@Param("content") String content, Pageable pageable);
+
+    @Query("SELECT e FROM Event e " +
+            "WHERE e.category.id = :categoryId " +
+            "AND e.eventStatus = 'RECRUITING'" +
+            "ORDER BY (1.0 * e.currentParticipants / e.minParticipants) DESC")
+    List<Event> findEventListByUserType(@Param("categoryId") Long categoryId, Pageable pageable);
+
 }

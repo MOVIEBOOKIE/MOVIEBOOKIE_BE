@@ -77,4 +77,18 @@ public class EventResponse {
     public static class EventVenueConfirmedResultDTO {
         Long ticketId;
     }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class HomeEventListResultDTO{
+        Long eventId;
+        String type;
+        String title;
+        String eventStatus;
+        String eventDate;
+        String locationName;
+        String posterImageUrl;
+    }
 }

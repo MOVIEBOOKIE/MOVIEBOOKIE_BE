@@ -98,4 +98,16 @@ public class EventConverter {
                 .ticketId(ticketId)
                 .build();
     }
+
+    public static EventResponse.HomeEventListResultDTO toHomeEventListResultDTO(Event event, String eventDate) {
+        return EventResponse.HomeEventListResultDTO.builder()
+                .eventId(event.getId())
+                .type(event.getCategory().getCategoryName())
+                .title(event.getMediaTitle())
+                .eventStatus(event.getEventStatus().getDescription())
+                .eventDate(eventDate)
+                .locationName(event.getLocation().getLocationName())
+                .posterImageUrl(event.getPosterImageUrl())
+                .build();
+    }
 }

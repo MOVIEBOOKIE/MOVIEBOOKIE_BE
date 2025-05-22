@@ -40,7 +40,7 @@ public class KakaoUtil {
 
     public KakaoUtil() {
         this.objectMapper = new ObjectMapper();
-        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // 알 수 없는 필드 무시
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public KakaoDTO.OAuthToken requestToken(String accessCode, String redirectUri) {

@@ -20,7 +20,7 @@ public class UserResponseDTO {
     @Getter
     @AllArgsConstructor
     public static class JoinInfoResultDTO {
-        private Long   userId;
+        private Long userId;
         private String email;
         private String nickname;
         private String profileImage;
@@ -30,15 +30,15 @@ public class UserResponseDTO {
     @Getter
     @AllArgsConstructor
     public static class AllInfoDTO {
-        private Long       id;
-        private String     email;               // 주 이메일
-        private String     certificationEmail;  // ✅ 인증이 완료된 이메일(추가)
-        private String     username;
-        private String     profileImage;
-        private String     phoneNumber;
-        private int        hostExperienceCount;
-        private int        participationExperienceCount;
-        private UserType   userType;
-        private GroupType  groupType;
+        private Long id;
+        private String email;               // 주 이메일
+        private String certificationEmail;  // 인증이 완료된 이메일
+        private String username;
+        private String profileImage;
+        private String phoneNumber;
+        private int hostExperienceCount;
+        private int participationExperienceCount;
+        private UserType userType;
+        private GroupType groupType;
     }
 }
