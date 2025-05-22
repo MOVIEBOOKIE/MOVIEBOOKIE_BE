@@ -6,7 +6,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.notification.dto.request.FcmTokenRequestDTO;
 import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
 import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
@@ -41,7 +44,7 @@ public class NotificationController {
     @PostMapping("/send")
     public CommonResponse<NotificationResponseDTO> sendNotification(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "전송할 알림의 제목과 내용을 담은 DTO",
+                    description = "전송할 알림의 제목과 내용을 담은 테스트용 알림 전송",
                     required = true,
                     content = @Content(schema = @Schema(implementation = NotificationRequestDTO.class))
             )

@@ -7,23 +7,35 @@ import project.luckybooky.domain.user.entity.User;
 
 public class NotificationConverter {
 
-    public static Message toFcmMessage(User user, HostNotificationType type, String eventName) {
+    // 호스트 관련 알림 전송 converter
+    public static Message toFcmMessage(User user, HostNotificationType hostType, String eventName) {
+        String token = user.getFcmToken();
+        if (token == null || token.isBlank()) {
+            return null;
+        }
         return Message.builder()
-                .setToken(user.getFcmToken())
+                .setToken(token)
                 .setNotification(Notification.builder()
-                        .setTitle(type.getTitle())
-                        .setBody(type.formatBody(eventName))
+                        .setTitle(hostType.getTitle())
+                        .setBody(hostType.formatBody(eventName))
                         .build())
                 .build();
     }
 
+    // 테스트용 알림 전송 converter
     public static Message toMessage(User user, String title, String body) {
+        String token = user.getFcmToken();
+        if (token == null || token.isBlank()) {
+            return null;
+        }
         return Message.builder()
-                .setToken(user.getFcmToken())
+                .setToken(token)
                 .setNotification(Notification.builder()
                         .setTitle(title)
                         .setBody(body)
                         .build())
                 .build();
     }
+
+
 }
