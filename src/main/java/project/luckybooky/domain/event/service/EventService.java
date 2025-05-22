@@ -1,7 +1,13 @@
 package project.luckybooky.domain.event.service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.ErrorState;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,6 +24,8 @@ import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
+import project.luckybooky.domain.notification.event.HostNotificationEvent;
+import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
@@ -30,13 +38,6 @@ import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.service.NCPStorageService;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -48,17 +49,26 @@ public class EventService {
     private final LocationService locationService;
     private final CategoryService categoryService;
     private final TicketService ticketService;
+    private final ApplicationEventPublisher publisher;
 
     @Transactional
-    public Long createEvent(EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
+    public Long createEvent(Long userId, EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
         String eventImageUrl = s3Service.uploadFile(eventImage);
         Category category = categoryService.findByName(request.getMediaType());
         Location location = locationService.findOne(request.getLocationId());
         String eventEndTime = toEventEndTime(request.getEventStartTime(), request.getEventProgressTime());
-        Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(), request.getMinParticipants());
+        Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(),
+                request.getMinParticipants());
 
-        Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime,estimatedPrice);
+        Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime, estimatedPrice);
         eventRepository.save(event);
+
+        // 호스트 생성 알림
+        publisher.publishEvent(new HostNotificationEvent(
+                userId, // hostId
+                HostNotificationType.EVENT_CREATED,
+                event.getEventTitle()
+        ));
         return event.getId();
     }
 
@@ -67,7 +77,9 @@ public class EventService {
         return (int) (Math.round(estimatedPrice / 1000.0) * 1000);
     }
 
-    /** 이벤트 종료 시간 생성 (시작 시각 + 진행 시간) **/
+    /**
+     * 이벤트 종료 시간 생성 (시작 시각 + 진행 시간)
+     **/
     private String toEventEndTime(String eventStartTime, Integer eventProgressTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         LocalTime startTime = LocalTime.parse(eventStartTime, formatter);
@@ -81,7 +93,8 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readEventListByCategory(String category, Integer page, Integer size) {
+    public List<EventResponse.ReadEventListResultDTO> readEventListByCategory(String category, Integer page,
+                                                                              Integer size) {
         Page<Event> eventList;
         switch (category) {
             case "인기":
@@ -98,7 +111,8 @@ public class EventService {
         return toReadEventListResultDTO(eventList);
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readEventListBySearch(String content, Integer page, Integer size) {
+    public List<EventResponse.ReadEventListResultDTO> readEventListBySearch(String content, Integer page,
+                                                                            Integer size) {
         Page<Event> eventList = eventRepository.findEventsBySearch(content, PageRequest.of(page, size));
         return toReadEventListResultDTO(eventList);
     }
@@ -154,7 +168,9 @@ public class EventService {
 
     }
 
-    /** 이벤트 모집기간 출력 포맷팅 **/
+    /**
+     * 이벤트 모집기간 출력 포맷팅
+     **/
     private static String formatDateRange(LocalDate startDate, LocalDate endDate) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy. MM. dd");
 
@@ -164,7 +180,9 @@ public class EventService {
         return formattedStartDate + " ~ " + formattedEndDate;
     }
 
-    /** 이벤트 신청 혹은 취소 **/
+    /**
+     * 이벤트 신청 혹은 취소
+     **/
     @Transactional
     public void registerEvent(Long eventId, Boolean type) {
         // 참여인원 추가
@@ -188,10 +206,19 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
         event.recruitCancel();
+
+        publisher.publishEvent(new HostNotificationEvent(
+                userId, // hostId
+                HostNotificationType.EVENT_DELETED,
+                event.getEventTitle()
+        ));
+
         return EventConstants.RECRUIT_CANCEL_SUCCESS.getMessage();
     }
 
-    /** 대관 신청 / 취소 **/
+    /**
+     * 대관 신청 / 취소
+     **/
     @Transactional
     public String venueProcess(Long eventId, Integer type) {
         Event event = eventRepository.findById(eventId)
@@ -200,9 +227,20 @@ public class EventService {
         if (type == 0) {
             event.venueRegister();
             return EventConstants.VENUE_RESERVATION_SUCCESS.getMessage();
-        }
-        else {
+        } else {
+            // 대관 취소(불가) 시 알림 전송(호스트)
             event.venueCancel();
+
+            Long hostId = participationRepository
+                    .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+            publisher.publishEvent(new HostNotificationEvent(
+                    hostId,
+                    HostNotificationType.RESERVATION_DENIED,
+                    event.getEventTitle()
+            ));
+
             return EventConstants.VENUE_CANCEL_SUCCESS.getMessage();
         }
     }
@@ -217,6 +255,19 @@ public class EventService {
 
         event.venueConfirmed();
         Long ticketId = ticketService.createTicket(event);// 티켓 생성
+
+        // 호스트 ID 조회
+        Long hostId = participationRepository
+                .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+        // 4) 대관 확정 알림(호스트)
+        publisher.publishEvent(new HostNotificationEvent(
+                hostId,
+                HostNotificationType.RESERVATION_CONFIRMED,
+                event.getEventTitle()
+        ));
+
         return EventConverter.toEventVenueConfirmedResultDTO(ticketId);
     }
 
@@ -235,22 +286,54 @@ public class EventService {
 
             boolean isHost = participation.getParticipateRole().equals(ParticipateRole.HOST);
             userTypeService.updateUserExperience(userId, isHost ? 0 : 1);
+
+            // 호스트 조회
+            Long hostId = participationRepository
+                    .findByUserIdAndEventIdAndRole(eventId, ParticipateRole.HOST)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+            // 3) 상영 완료 후기 요청 알림(호스트)
+            publisher.publishEvent(new HostNotificationEvent(
+                    hostId,
+                    HostNotificationType.SCREENING_COMPLETED,
+                    event.getEventTitle()
+            ));
+
             return EventConstants.SCREENING_DONE_SUCCESS.getMessage();
         }
         return EventConstants.SCREENING_CANCEL_SUCCESS.getMessage();
     }
 
-    /** 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직 **/
+    /**
+     * 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직
+     **/
     @Scheduled(cron = "0 0 0 * * *") // 매일 자정에 실행
     @Transactional
     public void processExpiredEvents() {
         List<Event> expiredEvents = findExpiredEvents();
 
         expiredEvents.forEach(event -> {
+            // 이벤트를 생성한 호스트의 userId = hostId로 설정 -> 엔티티 조회가 아닌 userId만 조회
+            Long hostId = participationRepository
+                    .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
             if (event.getCurrentParticipants() < event.getMinParticipants()) {
                 event.recruitCancel();
+                // 인원부족으로 이벤트 취소 시 자동 알림(호스트)
+                publisher.publishEvent(new HostNotificationEvent(
+                        hostId,
+                        HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소
+                        event.getEventTitle()
+                ));
             } else {
                 event.recruitDone();
+                // 인원 모집 달성 상태로 모집 기간 끝날 시 자동으로 알림 발송(호스트)
+                publisher.publishEvent(new HostNotificationEvent(
+                        hostId,
+                        HostNotificationType.RECRUITMENT_COMPLETED, // 모집 완료
+                        event.getEventTitle()
+                ));
             }
         });
     }

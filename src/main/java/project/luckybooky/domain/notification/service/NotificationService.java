@@ -23,28 +23,6 @@ public class NotificationService {
 
     private final UserRepository userRepository;
 
-    public NotificationResponseDTO sendNotificationToCurrentUser(NotificationRequestDTO requestDTO) {
-        String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        if (user.getFcmToken() == null) {
-            throw new BusinessException(ErrorCode.NOTIFICATION_FCM_TOKEN_NOT_FOUND);
-        }
-
-        Message message = NotificationConverter.toFcmMessage(user, requestDTO);
-
-        try {
-            String response = FirebaseMessaging.getInstance().send(message);
-            log.info("✅ FCM 알림 전송 성공: {}", response);
-            return new NotificationResponseDTO("success", "알림 전송 완료");
-        } catch (Exception e) {
-            log.error("❌ FCM 알림 전송 실패", e);
-            throw new BusinessException(ErrorCode.NOTIFICATION_SEND_FAILED);
-        }
-    }
-
     public FcmTokenResponseDTO registerFcmToken(FcmTokenRequestDTO dto) {
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
 
@@ -59,6 +37,42 @@ public class NotificationService {
             log.error("FCM 토큰 등록 실패", e);
             throw new BusinessException(ErrorCode.FCM_TOKEN_REGISTER_FAILED);
         }
+    }
+
+    public void send(Message message) {
+        try {
+            String resp = FirebaseMessaging.getInstance().send(message);
+            log.info("FCM 전송 성공: {}", resp);
+        } catch (Exception e) {
+            log.error("FCM 전송 중 오류가 발생했지만, 서비스에는 영향을 주지 않습니다.", e);
+        }
+    }
+
+    public NotificationResponseDTO sendNotificationToCurrentUser(NotificationRequestDTO requestDTO) {
+        String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 2) 메시지 생성 (토큰 없으면 null)
+        Message message = NotificationConverter.toMessage(
+                user,
+                requestDTO.getTitle(),
+                requestDTO.getBody()
+        );
+        if (message == null) {
+            log.warn("FCM 토큰이 없어 알림 전송을 건너뜁니다. userEmail={}", email);
+            return new NotificationResponseDTO("skipped", "FCM 토큰이 없어 전송하지 않았습니다.");
+        }
+
+        // 실패해도 예외를 던지지 않음
+        try {
+            String resp = FirebaseMessaging.getInstance().send(message);
+            log.info("FCM 전송 성공: {}", resp);
+        } catch (Exception e) {
+            log.error("FCM 전송 중 오류가 발생했지만, 로직에는 영향을 주지 않습니다.", e);
+        }
+
+        return new NotificationResponseDTO("success", "알림 전송 완료");
     }
 
 }
