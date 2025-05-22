@@ -1,6 +1,13 @@
 package project.luckybooky.domain.event.service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,6 +24,7 @@ import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
+import project.luckybooky.domain.notification.email.event.EventVenueConfirmedEvent;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
@@ -26,13 +34,6 @@ import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.service.NCPStorageService;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +46,8 @@ public class EventService {
     private final LocationService locationService;
     private final CategoryService categoryService;
     private final TicketService ticketService;
+    private final ApplicationEventPublisher publisher;
+
 
     @Transactional
     public Long createEvent(EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
@@ -52,9 +55,10 @@ public class EventService {
         Category category = categoryService.findByName(request.getMediaType());
         Location location = locationService.findOne(request.getLocationId());
         String eventEndTime = toEventEndTime(request.getEventStartTime(), request.getEventProgressTime());
-        Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(), request.getMinParticipants());
+        Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(),
+                request.getMinParticipants());
 
-        Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime,estimatedPrice);
+        Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime, estimatedPrice);
         eventRepository.save(event);
         return event.getId();
     }
@@ -64,7 +68,9 @@ public class EventService {
         return (int) (Math.round(estimatedPrice / 1000.0) * 1000);
     }
 
-    /** 이벤트 종료 시간 생성 (시작 시각 + 진행 시간) **/
+    /**
+     * 이벤트 종료 시간 생성 (시작 시각 + 진행 시간)
+     **/
     private String toEventEndTime(String eventStartTime, Integer eventProgressTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         LocalTime startTime = LocalTime.parse(eventStartTime, formatter);
@@ -78,7 +84,8 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readEventListByCategory(String category, Integer page, Integer size) {
+    public List<EventResponse.ReadEventListResultDTO> readEventListByCategory(String category, Integer page,
+                                                                              Integer size) {
         Page<Event> eventList;
         switch (category) {
             case "인기":
@@ -95,7 +102,8 @@ public class EventService {
         return toReadEventListResultDTO(eventList);
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readEventListBySearch(String content, Integer page, Integer size) {
+    public List<EventResponse.ReadEventListResultDTO> readEventListBySearch(String content, Integer page,
+                                                                            Integer size) {
         Page<Event> eventList = eventRepository.findEventsBySearch(content, PageRequest.of(page, size));
         return toReadEventListResultDTO(eventList);
     }
@@ -151,7 +159,9 @@ public class EventService {
 
     }
 
-    /** 이벤트 모집기간 출력 포맷팅 **/
+    /**
+     * 이벤트 모집기간 출력 포맷팅
+     **/
     private static String formatDateRange(LocalDate startDate, LocalDate endDate) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy. MM. dd");
 
@@ -161,7 +171,9 @@ public class EventService {
         return formattedStartDate + " ~ " + formattedEndDate;
     }
 
-    /** 이벤트 신청 혹은 취소 **/
+    /**
+     * 이벤트 신청 혹은 취소
+     **/
     @Transactional
     public void registerEvent(Long eventId, Boolean type) {
         // 참여인원 추가
@@ -188,7 +200,9 @@ public class EventService {
         return EventConstants.RECRUIT_CANCEL_SUCCESS.getMessage();
     }
 
-    /** 대관 신청 / 취소 **/
+    /**
+     * 대관 신청 / 취소
+     **/
     @Transactional
     public String venueProcess(Long eventId, Integer type) {
         Event event = eventRepository.findById(eventId)
@@ -197,8 +211,7 @@ public class EventService {
         if (type == 0) {
             event.venueRegister();
             return EventConstants.VENUE_RESERVATION_SUCCESS.getMessage();
-        }
-        else {
+        } else {
             event.venueCancel();
             return EventConstants.VENUE_CANCEL_SUCCESS.getMessage();
         }
@@ -214,6 +227,9 @@ public class EventService {
 
         event.venueConfirmed();
         Long ticketId = ticketService.createTicket(event);// 티켓 생성
+
+        publisher.publishEvent(new EventVenueConfirmedEvent(event, ticketId));
+
         return EventConverter.toEventVenueConfirmedResultDTO(ticketId);
     }
 
@@ -237,7 +253,9 @@ public class EventService {
         return EventConstants.SCREENING_CANCEL_SUCCESS.getMessage();
     }
 
-    /** 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직 **/
+    /**
+     * 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직
+     **/
     @Scheduled(cron = "0 0 0 * * *") // 매일 자정에 실행
     @Transactional
     public void processExpiredEvents() {

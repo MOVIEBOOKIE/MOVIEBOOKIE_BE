@@ -1,5 +1,7 @@
 package project.luckybooky.domain.participation.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,11 +20,6 @@ import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
-
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,7 +46,8 @@ public class ParticipationService {
         participationRepository.deleteByUserIdAndEventId(userId, eventId);
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer role, Integer page, Integer size) {
+    public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer role,
+                                                                    Integer page, Integer size) {
         // 진행 중, 확정 이벤트 목록 필터링
         List<EventStatus> statuses = (type == 0)
                 ? List.of(
@@ -58,16 +56,17 @@ public class ParticipationService {
                 EventStatus.VENUE_RESERVATION_IN_PROGRESS
         )
                 : List.of(
-                EventStatus.COMPLETED,
-                EventStatus.CANCELLED,
-                EventStatus.VENUE_CONFIRMED,
-                EventStatus.RECRUIT_CANCELED,
-                EventStatus.VENUE_RESERVATION_CANCELED
-        );
+                        EventStatus.COMPLETED,
+                        EventStatus.CANCELLED,
+                        EventStatus.VENUE_CONFIRMED,
+                        EventStatus.RECRUIT_CANCELED,
+                        EventStatus.VENUE_RESERVATION_CANCELED
+                );
 
         // 주최자 / 참여자 판단
         ParticipateRole participateRole = (role == 0) ? ParticipateRole.PARTICIPANT : ParticipateRole.HOST;
-        Page<Event> eventList = participationRepository.findByUserIdAndEventStatuses(userId, participateRole, statuses, PageRequest.of(page, size));
+        Page<Event> eventList = participationRepository.findByUserIdAndEventStatuses(userId, participateRole, statuses,
+                PageRequest.of(page, size));
 
         return toReadEventListResultDTO(eventList);
     }
@@ -80,5 +79,9 @@ public class ParticipationService {
                     return EventConverter.toEventListResultDTO(e, rate, -1);
                 }
         ).collect(Collectors.toList());
+    }
+
+    public List<String> findAllEmailsByEventId(Long eventId) {
+        return participationRepository.findEmailsByEventId(eventId);
     }
 }
