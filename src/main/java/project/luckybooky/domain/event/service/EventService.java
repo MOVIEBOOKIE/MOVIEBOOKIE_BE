@@ -277,7 +277,7 @@ public class EventService {
         // 4) 대관 확정 알림(호스트)
         publisher.publishEvent(new HostNotificationEvent(
                 hostId,
-                HostNotificationType.RESERVATION_CONFIRMED,
+                HostNotificationType.RESERVATION_CONFIRMED, // 대관 확정 알림 (호스트)
                 event.getEventTitle()
         ));
 
@@ -338,11 +338,11 @@ public class EventService {
                 // 인원부족으로 이벤트 취소 시 자동 알림(호스트)
                 publisher.publishEvent(new HostNotificationEvent(
                         hostId,
-                        HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소
+                        HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소 (호스트)
                         event.getEventTitle()
                 ));
 
-                // 모든 참여자 조회 후 알림
+                // 모든 참여자 조회 후 알림 발송
                 List<Participation> participants = participationRepository
                         .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
                 for (Participation p : participants) {
@@ -358,9 +358,20 @@ public class EventService {
                 // 인원 모집 달성 상태로 모집 기간 끝날 시 자동으로 알림 발송(호스트)
                 publisher.publishEvent(new HostNotificationEvent(
                         hostId,
-                        HostNotificationType.RECRUITMENT_COMPLETED, // 모집 완료
+                        HostNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (호스트)
                         event.getEventTitle()
                 ));
+
+                // 참여자 전원에게 모집 완료 알림 발송
+                List<Participation> participants = participationRepository
+                        .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+                for (Participation p : participants) {
+                    publisher.publishEvent(new ParticipantNotificationEvent(
+                            p.getUser().getId(),
+                            ParticipantNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (참여자)
+                            event.getEventTitle()
+                    ));
+                }
             }
         });
     }
