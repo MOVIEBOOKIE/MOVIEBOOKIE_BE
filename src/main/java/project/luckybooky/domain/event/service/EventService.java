@@ -327,12 +327,23 @@ public class EventService {
                     .findByUserIdAndEventIdAndRole(eventId, ParticipateRole.HOST)
                     .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
-            // 3) 상영 완료 후기 요청 알림(호스트)
+            // 상영 완료 후기 요청 알림(호스트)
             publisher.publishEvent(new HostNotificationEvent(
                     hostId,
                     HostNotificationType.SCREENING_COMPLETED,
                     event.getEventTitle()
             ));
+
+            // 참여자 전원 상영 완료 후기 요청 알림 발송
+            List<Participation> participants = participationRepository
+                    .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+            for (Participation p : participants) {
+                publisher.publishEvent(new ParticipantNotificationEvent(
+                        p.getUser().getId(),
+                        ParticipantNotificationType.SCREENING_COMPLETED, // 상영 완료 후기 요청 알림 (참여자)
+                        event.getEventTitle()
+                ));
+            }
 
             return EventConstants.SCREENING_DONE_SUCCESS.getMessage();
         }
