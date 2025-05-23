@@ -285,12 +285,23 @@ public class EventService {
                 .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
-        // 4) 대관 확정 알림(호스트)
+        //  호스트에게 대관 확정 알림 발송
         publisher.publishEvent(new HostNotificationEvent(
                 hostId,
                 HostNotificationType.RESERVATION_CONFIRMED, // 대관 확정 알림 (호스트)
                 event.getEventTitle()
         ));
+
+        // 참여자 전원에게 대관 확정 알림 발송
+        List<Participation> participants = participationRepository
+                .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+        for (Participation p : participants) {
+            publisher.publishEvent(new ParticipantNotificationEvent(
+                    p.getUser().getId(),
+                    ParticipantNotificationType.RESERVATION_CONFIRMED, // 대관 확정 알림 (참여자)
+                    event.getEventTitle()
+            ));
+        }
 
         return EventConverter.toEventVenueConfirmedResultDTO(ticketId);
     }
