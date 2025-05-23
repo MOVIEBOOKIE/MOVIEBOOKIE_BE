@@ -25,7 +25,9 @@ import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
 import project.luckybooky.domain.notification.event.HostNotificationEvent;
+import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.type.HostNotificationType;
+import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
@@ -212,6 +214,17 @@ public class EventService {
                 HostNotificationType.EVENT_DELETED,
                 event.getEventTitle()
         ));
+
+        // 4) 참여자 전원 조회 → 참여자용 "모집 취소" 알림 발송
+        List<Participation> participants = participationRepository
+                .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+        for (Participation p : participants) {
+            publisher.publishEvent(new ParticipantNotificationEvent(
+                    p.getUser().getId(),
+                    ParticipantNotificationType.RECRUITMENT_CANCELLED,
+                    event.getEventTitle()
+            ));
+        }
 
         return EventConstants.RECRUIT_CANCEL_SUCCESS.getMessage();
     }
