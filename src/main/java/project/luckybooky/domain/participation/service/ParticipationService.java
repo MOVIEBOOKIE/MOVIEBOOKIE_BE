@@ -58,6 +58,22 @@ public class ParticipationService {
 
     @Transactional
     public void deleteParticipation(Long userId, Long eventId) {
+
+        // 참여자 조회
+        Participation participation = participationRepository
+                .findByUserIdAndEventId(userId, eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+        // 2) 참여자인 경우에만 취소
+        if (participation.getParticipateRole() == ParticipateRole.PARTICIPANT) {
+            String eventTitle = participation.getEvent().getEventTitle();
+            publisher.publishEvent(new ParticipantNotificationEvent(
+                    userId,
+                    ParticipantNotificationType.APPLY_CANCEL,
+                    eventTitle
+            ));
+        }
+
         participationRepository.deleteByUserIdAndEventId(userId, eventId);
     }
 
