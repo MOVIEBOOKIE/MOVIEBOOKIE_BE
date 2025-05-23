@@ -241,18 +241,29 @@ public class EventService {
             event.venueRegister();
             return EventConstants.VENUE_RESERVATION_SUCCESS.getMessage();
         } else {
-            // 대관 취소(불가) 시 알림 전송(호스트)
             event.venueCancel();
 
+            // 대관 취소(불가) 시 알림 전송(호스트)
             Long hostId = participationRepository
                     .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
                     .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
             publisher.publishEvent(new HostNotificationEvent(
                     hostId,
-                    HostNotificationType.RESERVATION_DENIED,
+                    HostNotificationType.RESERVATION_DENIED, // 대관 취소 알림 (호스트)
                     event.getEventTitle()
             ));
+
+            // 2) 참여자 전원 대관 취소 알림
+            List<Participation> participants = participationRepository
+                    .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+            for (Participation p : participants) {
+                publisher.publishEvent(new ParticipantNotificationEvent(
+                        p.getUser().getId(),
+                        ParticipantNotificationType.RESERVATION_NOT_APPLIED, // 대관 취소 알림 (참여자)
+                        event.getEventTitle()
+                ));
+            }
 
             return EventConstants.VENUE_CANCEL_SUCCESS.getMessage();
         }
