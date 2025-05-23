@@ -326,6 +326,8 @@ public class EventService {
         List<Event> expiredEvents = findExpiredEvents();
 
         expiredEvents.forEach(event -> {
+            Long eventId = event.getId();
+
             // 이벤트를 생성한 호스트의 userId = hostId로 설정 -> 엔티티 조회가 아닌 userId만 조회
             Long hostId = participationRepository
                     .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
@@ -339,6 +341,18 @@ public class EventService {
                         HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소
                         event.getEventTitle()
                 ));
+
+                // 모든 참여자 조회 후 알림
+                List<Participation> participants = participationRepository
+                        .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+                for (Participation p : participants) {
+                    publisher.publishEvent(new ParticipantNotificationEvent(
+                            p.getUser().getId(),
+                            ParticipantNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 알림 (참여자)
+                            event.getEventTitle()
+                    ));
+                }
+
             } else {
                 event.recruitDone();
                 // 인원 모집 달성 상태로 모집 기간 끝날 시 자동으로 알림 발송(호스트)
