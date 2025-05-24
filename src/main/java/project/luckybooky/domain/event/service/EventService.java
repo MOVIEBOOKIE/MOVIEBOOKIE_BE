@@ -167,6 +167,7 @@ public class EventService {
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
                 user.getUsername(),
+                user.getProfileImage(),
                 user.getHostExperienceCount(),
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
                 "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),
@@ -185,7 +186,7 @@ public class EventService {
         String formattedStartDate = startDate.format(formatter);
         String formattedEndDate = endDate.format(formatter);
 
-        return formattedStartDate + " ~ " + formattedEndDate;
+        return formattedStartDate + " - " + formattedEndDate;
     }
 
     /**

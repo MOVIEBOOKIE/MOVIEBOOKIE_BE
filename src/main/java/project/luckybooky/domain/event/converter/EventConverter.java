@@ -7,6 +7,9 @@ import project.luckybooky.domain.event.dto.response.EventResponse.EventCreateRes
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.location.entity.Location;
 
+import java.time.DayOfWeek;
+import java.time.format.DateTimeFormatter;
+
 public class EventConverter {
     public static Event toEvent(
             EventRequest.EventCreateRequestDTO request,
@@ -61,12 +64,24 @@ public class EventConverter {
     public static EventResponse.EventReadDetailsResultDTO toEventReadDetailsResultDTO(
             Event event,
             String username,
+            String userImageUrl,
             Integer recruitment,
             String recruitmentDate,
             String d_day,
             Integer recruitmentRate,
             String buttonState
     ) {
+        // 요일 구하기 (한글)
+        DayOfWeek dayOfWeek = event.getEventDate().getDayOfWeek();
+        String[] koreanDays = {"월", "화", "수", "목", "금", "토", "일"};
+
+        // LocalDate의 getDayOfWeek().getValue()는 1(월)~7(일)
+        String day = koreanDays[dayOfWeek.getValue() - 1];
+
+        // 날짜 포맷
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        String eventDate = event.getEventDate().format(formatter) + " (" + day + ")";
+
         return EventResponse.EventReadDetailsResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
@@ -75,7 +90,7 @@ public class EventConverter {
                 .eventTitle(event.getEventTitle())
                 .description(event.getDescription())
                 .estimatedPrice(event.getEstimatedPrice())
-                .eventDate(event.getEventDate())
+                .eventDate(eventDate)
                 .eventTime(event.getEventStartTime())
                 .recruitmentDate(recruitmentDate)
                 .d_day(d_day)
@@ -86,6 +101,7 @@ public class EventConverter {
                 .posterImageUrl(event.getPosterImageUrl())
                 .buttonState(buttonState)
                 .username(username)
+                .userImageUrl(userImageUrl)
                 .recruitment(recruitment)
                 .locationName(event.getLocation().getLocationName())
                 .address(event.getLocation().getAddress())
