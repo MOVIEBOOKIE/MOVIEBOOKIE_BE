@@ -1,8 +1,8 @@
 package project.luckybooky.domain.certification.sms.Service;
 
+import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,14 +27,16 @@ public class SmsService {
 
     private final SmsCertificationUtil smsUtil;
     private final SmsCertificationCache cache;
-    private final UserRepository        userRepository;
+    private final UserRepository userRepository;
 
     /* 1) 인증번호 발송 */
     public void sendCertificationCode(SmsRequestDTO dto) {
+        String key = PREFIX + dto.getPhoneNum();
         String code = generate();
-        if (!cache.store(PREFIX + dto.getPhoneNum(), code, TTL)) {
-            throw new BusinessException(ErrorCode.CERTIFICATION_DUPLICATED);
-        }
+
+        cache.remove(key);
+        cache.store(key, code, TTL);
+
         smsUtil.sendSMS(dto.getPhoneNum(), code);
         log.debug("sms code {} → {}", code, dto.getPhoneNum());
     }
@@ -43,13 +45,15 @@ public class SmsService {
     @Transactional
     public void verifyCertificationCode(SmsVerifyRequestDTO dto) {
 
-        String key   = PREFIX + dto.getPhoneNum();
+        String key = PREFIX + dto.getPhoneNum();
         String saved = cache.get(key);
 
-        if (saved == null)
+        if (saved == null) {
             throw new BusinessException(ErrorCode.CERTIFICATION_EXPIRED);
-        if (!saved.equals(dto.getCertificationCode()))
+        }
+        if (!saved.equals(dto.getCertificationCode())) {
             throw new BusinessException(ErrorCode.CERTIFICATION_MISMATCH);
+        }
 
         // 현재 로그인 사용자를 이메일로 식별
         String loginEmail = AuthenticatedUserUtils.getAuthenticatedUserEmail();

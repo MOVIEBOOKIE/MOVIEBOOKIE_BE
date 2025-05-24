@@ -3,6 +3,7 @@ package project.luckybooky.domain.user.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import project.luckybooky.domain.ticket.repository.TicketRepository;
 import project.luckybooky.domain.user.converter.MypageConverter;
 import project.luckybooky.domain.user.dto.response.MypageResponseDTO;
 import project.luckybooky.domain.user.entity.User;
@@ -13,6 +14,7 @@ import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
 @RequiredArgsConstructor
 public class MypageService {
     private final UserRepository userRepository;
+    private final TicketRepository ticketRepository;
 
     @Transactional(readOnly = true)
     public MypageResponseDTO getMyPage() {
@@ -24,7 +26,9 @@ public class MypageService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
+        int ticketCount = (int) ticketRepository.countByUserId(user.getId());
+
         // 3) DTO 변환
-        return MypageConverter.toDto(user);
+        return MypageConverter.toDto(user, ticketCount);
     }
 }

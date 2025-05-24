@@ -68,6 +68,7 @@ public class EventConverter {
             Integer recruitmentRate,
             String buttonState
     ) {
+
         return EventResponse.EventReadDetailsResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
