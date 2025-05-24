@@ -63,6 +63,14 @@ public class EventService {
         Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime, estimatedPrice);
         eventRepository.save(event);
 
+        // 2) 호스트 Participation 저장
+        Participation hostParticipation = Participation.builder()
+                .user(userTypeService.findOne(userId))  // User 엔티티 조회
+                .event(event)
+                .participateRole(ParticipateRole.HOST)
+                .build();
+        participationRepository.save(hostParticipation);
+
         // 호스트 생성 알림
         publisher.publishEvent(new HostNotificationEvent(
                 userId, // hostId
