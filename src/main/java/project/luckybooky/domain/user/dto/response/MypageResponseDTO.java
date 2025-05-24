@@ -11,8 +11,10 @@ public class MypageResponseDTO {
 
     private String profileImage;
     private String username;
-    private String userType;
+    private String userTypeTitle;
     private String certificationEmail;
     private int hostExperienceCount;
     private int participationExperienceCount;
+    private int ticketCount;
+
 }
