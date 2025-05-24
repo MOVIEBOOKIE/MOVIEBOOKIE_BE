@@ -49,7 +49,7 @@ public class EventResponse {
         String eventTitle;
         String description;
         Integer estimatedPrice;
-        LocalDate eventDate;
+        String eventDate;
         String eventTime;
         String recruitmentDate;
         String d_day;
