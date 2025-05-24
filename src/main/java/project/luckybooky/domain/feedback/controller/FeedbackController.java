@@ -3,15 +3,17 @@ package project.luckybooky.domain.feedback.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-import project.luckybooky.domain.event.dto.response.EventResponse;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.feedback.dto.request.FeedbackRequest;
 import project.luckybooky.domain.feedback.dto.response.FeedbackResponse;
+import project.luckybooky.domain.feedback.dto.response.FeedbackResponse.FeedbackCreateResultDTO;
 import project.luckybooky.domain.feedback.service.FeedbackService;
-import project.luckybooky.domain.user.dto.response.UserResponseDTO;
-import project.luckybooky.domain.user.service.AuthService;
-import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
-import project.luckybooky.global.apiPayload.common.BaseResponse;
+import project.luckybooky.global.apiPayload.response.CommonResponse;
+import project.luckybooky.global.apiPayload.response.ResultCode;
 import project.luckybooky.global.service.UserContextService;
 
 @Tag(name = "Feedback", description = "피드백 관련 API")
@@ -24,9 +26,14 @@ public class FeedbackController {
 
     @Operation(summary = "피드백 생성", description = "해당하는 값을 넣어주세요 !")
     @PostMapping("/{eventId}")
-    public BaseResponse<FeedbackResponse.FeedbackCreateResultDTO> createEvent(@PathVariable("eventId") Long eventId, @RequestBody FeedbackRequest.FeedbackCreateRequestDTO request) {
-        // 유저 ID 가져오기
+    public CommonResponse<FeedbackCreateResultDTO> createFeedback(
+            @PathVariable("eventId") Long eventId,
+            @RequestBody FeedbackRequest.FeedbackCreateRequestDTO request
+    ) {
         Long userId = userContextService.getUserId();
-        return BaseResponse.onSuccess(feedbackService.createFeedback(request, userId, eventId));
+        FeedbackResponse.FeedbackCreateResultDTO resultDto =
+                feedbackService.createFeedback(request, userId, eventId);
+
+        return CommonResponse.of(ResultCode.CREATED, resultDto);
     }
 }
