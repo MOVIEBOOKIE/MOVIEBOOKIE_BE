@@ -17,7 +17,7 @@ public class CookieUtil {
         if (!isLocal) {
             cookie.setAttribute("SameSite", "None");
         } else {
-            cookie.setAttribute("SameSite", "Lax"); // 로컬에서는 기본값 설정
+            cookie.setAttribute("SameSite", "None");
         }
         response.addCookie(cookie);
     }
