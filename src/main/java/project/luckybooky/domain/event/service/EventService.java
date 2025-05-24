@@ -161,7 +161,7 @@ public class EventService {
         String formattedStartDate = startDate.format(formatter);
         String formattedEndDate = endDate.format(formatter);
 
-        return formattedStartDate + " ~ " + formattedEndDate;
+        return formattedStartDate + " - " + formattedEndDate;
     }
 
     /** 이벤트 신청 혹은 취소 **/
