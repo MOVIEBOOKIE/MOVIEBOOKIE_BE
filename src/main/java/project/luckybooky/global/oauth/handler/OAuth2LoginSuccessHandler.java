@@ -36,7 +36,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 .httpOnly(true)
                 .secure(!isLocal)                       // 로컬이면 false, 배포면 true
                 .path("/")
-                .maxAge(jwtUtil.getAccessTokenValidity())
+                .maxAge(jwtUtil.getAccessTokenValidity() / 1000)
                 .sameSite("None")                       // ★ 크로스사이트 허용
                 .build();
 
@@ -45,12 +45,11 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 .httpOnly(true)
                 .secure(!isLocal)
                 .path("/")
-                .maxAge(jwtUtil.getRefreshTokenValidity())
+                .maxAge(jwtUtil.getRefreshTokenValidity() / 1000)
                 .sameSite("None")
                 .build();
 
-        // 헤더에 내려주기 (addCookie 대신 setHeader)
-        response.setHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         // 리다이렉트
