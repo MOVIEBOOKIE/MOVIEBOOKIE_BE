@@ -13,10 +13,7 @@ import project.luckybooky.global.oauth.util.CookieUtil;
 
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
     private final JwtUtil jwtUtil;
-
-    // 예외 처리할 API 리스트 (스웨거 및 로그인 관련 요청 제외)
     private static final List<String> EXCLUDED_URLS = List.of(
             "/api/auth/login/kakao", "/swagger-ui", "/v3/api-docs", "/swagger-resources"
     );
@@ -31,66 +28,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String requestURI = request.getRequestURI();
-        log.info("[JWT 필터] 요청 URI: {}", requestURI);
-
-        // 1) Swagger/UI나 로그인 관련 요청은 통과
-        if (isExcluded(requestURI)) {
-            log.info("[JWT 필터] 인증 제외 URL, 그대로 통과: {}", requestURI);
+        String uri = request.getRequestURI();
+        if (EXCLUDED_URLS.stream().anyMatch(uri::startsWith)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // ─────────────────────────────────────────────────────────
-        // ★ 디버깅용: 요청에 담긴 모든 쿠키 로그로 찍기 ★
+        // 디버깅: 쿠키가 정말로 들어오는지
         if (request.getCookies() != null) {
-            for (var cookie : request.getCookies()) {
-                log.debug("[JWT 필터] Request Cookie: {}={}", cookie.getName(), cookie.getValue());
+            for (var c : request.getCookies()) {
+                log.debug("[JWT 필터] Cookie: {}={}", c.getName(), c.getValue());
             }
-        } else {
-            log.debug("[JWT 필터] Request 에 Cookie 자체가 없음");
         }
-        // ─────────────────────────────────────────────────────────
 
-        // 2) 헤더 혹은 쿠키에서 토큰 꺼내기
-        String token = resolveToken(request);
+        // 헤더 우선, 없으면 쿠키에서
+        String bearer = request.getHeader("Authorization");
+        String token = bearer != null && bearer.startsWith("Bearer ")
+                ? bearer.substring(7)
+                : CookieUtil.getCookieValue(request, "accessToken");
+
         log.info("[JWT 필터] 추출한 토큰: {}", token == null ? "없음" : token);
 
-        // 3) 토큰이 없거나 유효하지 않으면 즉시 401
-        if (token == null) {
-            log.warn("[JWT 필터] 토큰 없음 → 401 응답");
+        if (token != null && jwtUtil.validateToken(token)) {
+            String email = jwtUtil.extractEmail(token);
+            SecurityContextHolder.getContext()
+                    .setAuthentication(new JwtAuthenticationToken(email));
+            log.info("[JWT 필터] 인증 성공: {}", email);
+            filterChain.doFilter(request, response);
+        } else {
+            log.warn("[JWT 필터] 인증 실패 → 401");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증이 필요합니다.");
-            return;
         }
-        try {
-            if (!jwtUtil.validateToken(token)) {
-                log.warn("[JWT 필터] 토큰 유효성 검사 실패 → 401 응답");
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증이 필요합니다.");
-                return;
-            }
-        } catch (Exception ex) {
-            log.warn("[JWT 필터] 토큰 검증 중 예외 발생: {}", ex.getMessage());
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증이 필요합니다.");
-            return;
-        }
-
-        // 4) 토큰이 유효하면 SecurityContext에 Authentication 설정
-        String email = jwtUtil.extractEmail(token);
-        log.info("[JWT 필터] 토큰 유효, email={}", email);
-
-        JwtAuthenticationToken authentication = new JwtAuthenticationToken(email);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        log.info("[JWT 필터] SecurityContext에 Authentication 저장: {}",
-                SecurityContextHolder.getContext().getAuthentication());
-
-        // 5) (선택) downstream에서 Authorization 헤더가 필요하면 첨부
-        if (request.getHeader("Authorization") == null) {
-            request.setAttribute("Authorization", "Bearer " + token);
-            log.debug("[JWT 필터] request attribute에 Authorization 헤더 추가");
-        }
-
-        // 6) 다음 필터/컨트롤러로 진행
-        filterChain.doFilter(request, response);
     }
 
     private boolean isExcluded(String requestURI) {
