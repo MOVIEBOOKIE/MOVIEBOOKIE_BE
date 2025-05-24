@@ -34,19 +34,19 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // 1) AccessToken 쿠키
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
-                .secure(!isLocal)                       // 로컬이면 false, 배포면 true
+                .secure(!isLocal)
+                .sameSite(isLocal ? "Lax" : "None")   // ← 여길 이렇게 바꿔주시면,
                 .path("/")
                 .maxAge(jwtUtil.getAccessTokenValidity() / 1000)
-                .sameSite("None")                       // ★ 크로스사이트 허용
                 .build();
 
         // 2) RefreshToken 쿠키
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(!isLocal)
+                .sameSite(isLocal ? "Lax" : "None")   // ← 여길 이렇게 바꿔주시면,
                 .path("/")
                 .maxAge(jwtUtil.getRefreshTokenValidity() / 1000)
-                .sameSite("None")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());

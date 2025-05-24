@@ -17,7 +17,7 @@ public class CookieUtil {
         if (!isLocal) {
             cookie.setAttribute("SameSite", "None");
         } else {
-            cookie.setAttribute("SameSite", "None");
+            cookie.setAttribute("SameSite", "Lax");
         }
         response.addCookie(cookie);
     }
