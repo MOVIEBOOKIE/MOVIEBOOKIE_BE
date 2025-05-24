@@ -62,6 +62,7 @@ public class EventResponse {
 
         /** 주최자 관련 **/
         String username;
+        String userImageUrl;
         Integer recruitment;
 
         /** 위치 관련 **/

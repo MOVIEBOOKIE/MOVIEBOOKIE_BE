@@ -145,6 +145,7 @@ public class EventService {
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
                 user.getUsername(),
+                user.getProfileImage(),
                 user.getHostExperienceCount(),
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
                 "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),

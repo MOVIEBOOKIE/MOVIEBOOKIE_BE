@@ -60,6 +60,7 @@ public class EventConverter {
     public static EventResponse.EventReadDetailsResultDTO toEventReadDetailsResultDTO(
             Event event,
             String username,
+            String userImageUrl,
             Integer recruitment,
             String recruitmentDate,
             String d_day,
@@ -85,6 +86,7 @@ public class EventConverter {
                 .posterImageUrl(event.getPosterImageUrl())
                 .buttonState(buttonState)
                 .username(username)
+                .userImageUrl(userImageUrl)
                 .recruitment(recruitment)
                 .locationName(event.getLocation().getLocationName())
                 .address(event.getLocation().getAddress())
