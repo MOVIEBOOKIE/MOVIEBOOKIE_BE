@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.jwt.JwtAuthenticationFilter;
 import project.luckybooky.global.jwt.JwtUtil;
@@ -39,7 +39,7 @@ public class SecurityConfig {
                         .successHandler(oAuth2LoginSuccessHandler) // OAuth2 로그인 성공 핸들러 추가
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),
-                        UsernamePasswordAuthenticationFilter.class);
+                        AnonymousAuthenticationFilter.class);
         return http.build();
     }
 }

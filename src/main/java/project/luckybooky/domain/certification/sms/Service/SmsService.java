@@ -11,7 +11,6 @@ import project.luckybooky.domain.certification.sms.dto.request.SmsVerifyRequestD
 import project.luckybooky.domain.certification.sms.util.SmsCertificationUtil;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
-import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.redis.SmsCertificationCache;
@@ -43,7 +42,7 @@ public class SmsService {
 
     /* 2) 인증번호 검증 & 전화번호 저장 */
     @Transactional
-    public void verifyCertificationCode(SmsVerifyRequestDTO dto) {
+    public void verifyCertificationCode(SmsVerifyRequestDTO dto, String loginEmail) {
 
         String key = PREFIX + dto.getPhoneNum();
         String saved = cache.get(key);
@@ -56,7 +55,6 @@ public class SmsService {
         }
 
         // 현재 로그인 사용자를 이메일로 식별
-        String loginEmail = AuthenticatedUserUtils.getAuthenticatedUserEmail();
         User user = userRepository.findByEmail(loginEmail)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
