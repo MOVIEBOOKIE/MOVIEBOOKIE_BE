@@ -11,7 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import project.luckybooky.global.oauth.util.CookieUtil;
 
-@Slf4j                                                      // ← 추가
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
@@ -41,6 +41,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // ─────────────────────────────────────────────────────────
+        // ★ 디버깅용: 요청에 담긴 모든 쿠키 로그로 찍기 ★
+        if (request.getCookies() != null) {
+            for (var cookie : request.getCookies()) {
+                log.debug("[JWT 필터] Request Cookie: {}={}", cookie.getName(), cookie.getValue());
+            }
+        } else {
+            log.debug("[JWT 필터] Request 에 Cookie 자체가 없음");
+        }
+        // ─────────────────────────────────────────────────────────
+
         // 2) 헤더 혹은 쿠키에서 토큰 꺼내기
         String token = resolveToken(request);
         log.info("[JWT 필터] 추출한 토큰: {}", token == null ? "없음" : token);
@@ -53,13 +64,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         try {
             if (!jwtUtil.validateToken(token)) {
-                // validateToken 내부에서 예외 던지므로 보통 이 줄은 타지 않습니다.
                 log.warn("[JWT 필터] 토큰 유효성 검사 실패 → 401 응답");
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증이 필요합니다.");
                 return;
             }
         } catch (Exception ex) {
-            // JwtUtil에서 던진 AuthFailureHandler (BusinessException) 잡아서 로그
             log.warn("[JWT 필터] 토큰 검증 중 예외 발생: {}", ex.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증이 필요합니다.");
             return;
