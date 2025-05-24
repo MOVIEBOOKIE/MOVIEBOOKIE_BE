@@ -5,16 +5,18 @@ import project.luckybooky.domain.user.entity.User;
 
 public class MypageConverter {
 
-    public static MypageResponseDTO toDto(User user) {
+    public static MypageResponseDTO toDto(User user, int ticketCount) {
+        String rawTitle = user.getUserType().getTitle();
+        String typeTitle = rawTitle.replace("\n", " ");
+
         return MypageResponseDTO.builder()
                 .profileImage(user.getProfileImage())
                 .username(user.getUsername())
-                .userType(user.getUserType() != null
-                        ? user.getUserType().getLabel()
-                        : null)
+                .userTypeTitle(typeTitle)
                 .certificationEmail(user.getCertificationEmail())
                 .hostExperienceCount(user.getHostExperienceCount())
                 .participationExperienceCount(user.getParticipationExperienceCount())
+                .ticketCount(ticketCount)
                 .build();
     }
 }
