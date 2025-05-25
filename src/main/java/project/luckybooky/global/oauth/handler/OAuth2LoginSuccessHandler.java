@@ -5,11 +5,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import project.luckybooky.global.jwt.JwtUtil;
-import project.luckybooky.global.oauth.util.CookieUtil;
 
 @Component
 @Slf4j
@@ -19,22 +20,44 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private final JwtUtil jwtUtil;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+    public void onAuthenticationSuccess(HttpServletRequest request,
+                                        HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-
+        // 로그인 환경 판단
         String referer = request.getHeader("Referer");
         boolean isLocal = (referer != null && referer.contains("localhost:3000"));
 
+        // 토큰 생성
         String accessToken = jwtUtil.createAccessToken(authentication.getName());
         String refreshToken = jwtUtil.createRefreshToken(authentication.getName());
 
-        // 쿠키 설정 (배포환경에 따라 Secure 및 SameSite 설정)
-        CookieUtil.addCookie(response, "accessToken", accessToken, jwtUtil.getAccessTokenValidity(), isLocal);
-        CookieUtil.addCookie(response, "refreshToken", refreshToken, jwtUtil.getRefreshTokenValidity(), isLocal);
+        // 1) AccessToken 쿠키
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)
+                .secure(!isLocal)
+                .sameSite(isLocal ? "Lax" : "None")   // ← 여길 이렇게 바꿔주시면,
+                .path("/")
+                .maxAge(jwtUtil.getAccessTokenValidity() / 1000)
+                .build();
 
-        String redirectUrl = isLocal ? "http://localhost:3000" : "https://movie-bookie.shop";
+        // 2) RefreshToken 쿠키
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(!isLocal)
+                .sameSite(isLocal ? "Lax" : "None")   // ← 여길 이렇게 바꿔주시면,
+                .path("/")
+                .maxAge(jwtUtil.getRefreshTokenValidity() / 1000)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+        // 리다이렉트
+        String redirectUrl = isLocal
+                ? "http://localhost:3000/agreement"
+                : "https://movie-bookie.shop/agreement";
+
         log.info("🔹 로그인 성공! {} 환경으로 리디렉트: {}", isLocal ? "로컬" : "배포", redirectUrl);
-
-        getRedirectStrategy().sendRedirect(request, response, redirectUrl + "/agreement");
+        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

@@ -65,6 +65,14 @@ public class EventService {
         Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime, estimatedPrice);
         eventRepository.save(event);
 
+        // 2) 호스트 Participation 저장
+        Participation hostParticipation = Participation.builder()
+                .user(userTypeService.findOne(userId))  // User 엔티티 조회
+                .event(event)
+                .participateRole(ParticipateRole.HOST)
+                .build();
+        participationRepository.save(hostParticipation);
+
         // 호스트 생성 알림
         publisher.publishEvent(new HostNotificationEvent(
                 userId, // hostId
@@ -158,10 +166,12 @@ public class EventService {
                 break;
         }
 
+        User host = participationRepository.findHostParticipationByEventId(eventId);
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
-                user.getUsername(),
-                user.getHostExperienceCount(),
+                host.getUsername(),
+                host.getProfileImage(),
+                host.getHostExperienceCount(),
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
                 "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),
                 Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100),
@@ -179,7 +189,7 @@ public class EventService {
         String formattedStartDate = startDate.format(formatter);
         String formattedEndDate = endDate.format(formatter);
 
-        return formattedStartDate + " ~ " + formattedEndDate;
+        return formattedStartDate + " - " + formattedEndDate;
     }
 
     /**

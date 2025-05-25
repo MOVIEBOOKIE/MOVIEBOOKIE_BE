@@ -3,8 +3,13 @@ package project.luckybooky.domain.event.converter;
 import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
+import project.luckybooky.domain.event.dto.response.EventResponse.EventCreateResultDTO;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.location.entity.Location;
+
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 public class EventConverter {
     public static Event toEvent(
@@ -60,12 +65,28 @@ public class EventConverter {
     public static EventResponse.EventReadDetailsResultDTO toEventReadDetailsResultDTO(
             Event event,
             String username,
+            String userImageUrl,
             Integer recruitment,
             String recruitmentDate,
             String d_day,
             Integer recruitmentRate,
             String buttonState
     ) {
+        // 요일 구하기 (한글)
+        DayOfWeek dayOfWeek = event.getEventDate().getDayOfWeek();
+        String[] koreanDays = {"월", "화", "수", "목", "금", "토", "일"};
+
+        // LocalDate의 getDayOfWeek().getValue()는 1(월)~7(일)
+        String day = koreanDays[dayOfWeek.getValue() - 1];
+
+        // 날짜 포맷
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        String eventDate = event.getEventDate().format(formatter) + " (" + day + ")";
+
+        // 시간 포맷
+        LocalTime localTime = LocalTime.parse(event.getEventStartTime(), DateTimeFormatter.ofPattern("HH:mm"));
+        String eventTime = localTime.format(DateTimeFormatter.ofPattern("HH시 mm분"));
+
         return EventResponse.EventReadDetailsResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
@@ -74,8 +95,8 @@ public class EventConverter {
                 .eventTitle(event.getEventTitle())
                 .description(event.getDescription())
                 .estimatedPrice(event.getEstimatedPrice())
-                .eventDate(event.getEventDate())
-                .eventTime(event.getEventStartTime())
+                .eventDate(eventDate)
+                .eventTime(eventTime)
                 .recruitmentDate(recruitmentDate)
                 .d_day(d_day)
                 .minParticipants(event.getMinParticipants())
@@ -85,10 +106,13 @@ public class EventConverter {
                 .posterImageUrl(event.getPosterImageUrl())
                 .buttonState(buttonState)
                 .username(username)
+                .userImageUrl(userImageUrl)
                 .recruitment(recruitment)
                 .locationName(event.getLocation().getLocationName())
                 .address(event.getLocation().getAddress())
                 .locationImageUrl(event.getLocation().getLocationImageUrl())
+                .latitude(event.getLocation().getLatitude())
+                .longitude(event.getLocation().getLongitude())
                 .build();
     }
 
@@ -108,6 +132,12 @@ public class EventConverter {
                 .eventDate(eventDate)
                 .locationName(event.getLocation().getLocationName())
                 .posterImageUrl(event.getPosterImageUrl())
+                .build();
+    }
+
+    public static EventCreateResultDTO toCreateResult(Long eventId) {
+        return EventCreateResultDTO.builder()
+                .eventId(eventId)
                 .build();
     }
 }
