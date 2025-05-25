@@ -3,8 +3,9 @@ package project.luckybooky.domain.notification.listener;
 import com.google.firebase.messaging.Message;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
 import project.luckybooky.domain.notification.event.HostNotificationEvent;
 import project.luckybooky.domain.notification.service.NotificationService;
@@ -20,22 +21,33 @@ public class HostNotificationListener {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onHostNotification(HostNotificationEvent evt) {
+        log.info("▶ 준비된 Host 알림: userId={}, type={}, eventName={}",
+                evt.getHostUserId(), evt.getType(), evt.getEventName());
+
         User host = userRepository.findById(evt.getHostUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 메시지 생성 (토큰 없으면 null)
-        Message msg = NotificationConverter.toFcmMessage(
-                host, evt.getType(), evt.getEventName());
+        Message msg = NotificationConverter.toFcmMessage(host, evt.getType(), evt.getEventName());
 
         if (msg == null) {
-            log.warn("FCM 토큰 미등록으로 알림을 전송하지 않습니다. userId={}", host.getId());
+            log.warn("⚠ FCM 토큰 미등록. (보냈어야 할 메시지) title='{}', body='{}'",
+                    evt.getType().getTitle(),
+                    evt.getType().formatBody(evt.getEventName()));
             return;
         }
 
-        // 전송 시도 (실패해도 예외는 흘려보내지 않음)
-        notificationService.send(msg);
+        try {
+            notificationService.send(msg);
+            log.info("✅ FCM 전송 성공: title='{}'  body='{}'",
+                    evt.getType().getTitle(),
+                    evt.getType().formatBody(evt.getEventName()));
+        } catch (Exception e) {
+            log.error("❌ FCM 전송 실패: title='{}'  body='{}'",
+                    evt.getType().getTitle(),
+                    evt.getType().formatBody(evt.getEventName()),
+                    e);
+        }
     }
 }
-
