@@ -8,6 +8,7 @@ import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.location.entity.Location;
 
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class EventConverter {
@@ -82,6 +83,10 @@ public class EventConverter {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         String eventDate = event.getEventDate().format(formatter) + " (" + day + ")";
 
+        // 시간 포맷
+        LocalTime localTime = LocalTime.parse(event.getEventStartTime(), DateTimeFormatter.ofPattern("HH:mm"));
+        String eventTime = localTime.format(DateTimeFormatter.ofPattern("HH시 mm분"));
+
         return EventResponse.EventReadDetailsResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
@@ -91,7 +96,7 @@ public class EventConverter {
                 .description(event.getDescription())
                 .estimatedPrice(event.getEstimatedPrice())
                 .eventDate(eventDate)
-                .eventTime(event.getEventStartTime())
+                .eventTime(eventTime)
                 .recruitmentDate(recruitmentDate)
                 .d_day(d_day)
                 .minParticipants(event.getMinParticipants())
