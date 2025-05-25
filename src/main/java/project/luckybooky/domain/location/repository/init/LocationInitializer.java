@@ -52,6 +52,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ALL)
                             .availableTimes(0)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.577608)
+                            .longitude(126.889993)
                             .build(),
                     Location.builder()
                             .locationName("한국영상자료원 시네마테크KOFA 2관")
@@ -68,6 +70,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ALL)
                             .availableTimes(0)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.577608)
+                            .longitude(126.889993)
                             .build(),
                     Location.builder()
                             .locationName("코엑스 더 부티크 프라이빗 1관")
@@ -85,6 +89,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ALL)
                             .availableTimes(3)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.511483)
+                            .longitude(127.060337)
                             .build(),
                     Location.builder()
                             .locationName("코엑스 더 부티크 프라이빗 2관")
@@ -102,6 +108,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ALL)
                             .availableTimes(3)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.511483)
+                            .longitude(127.060337)
                             .build(),
                     Location.builder()
                             .locationName("좋은 영화관 - 필름 포럼 1관")
@@ -118,6 +126,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ALL)
                             .availableTimes(0)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.567306)
+                            .longitude(126.943295)
                             .build(),
                     Location.builder()
                             .locationName("좋은 영화관 - 필름 포럼 2관")
@@ -134,6 +144,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ALL)
                             .availableTimes(0)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.567306)
+                            .longitude(126.943295)
                             .build(),
                     Location.builder()
                             .locationName("용산 칠인더시네마")
@@ -151,6 +163,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ALL)
                             .availableTimes(4)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.535444)
+                            .longitude(126.993316)
                             .build(),
                     Location.builder()
                             .locationName("상상 스위트")
@@ -168,6 +182,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ALL)
                             .availableTimes(0)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.551010427488)
+                            .longitude(126.9211403551)
                             .build(),
                     Location.builder()
                             .locationName("을지 영화관")
@@ -185,6 +201,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ALL)
                             .availableTimes(3)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.565864)
+                            .longitude(126.992908)
                             .build(),
                     Location.builder()
                             .locationName("시글루 건대점 ROOM1")
@@ -205,6 +223,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .allowedStartTimes(allowedStartTimes(
                                     "12:00", "09:30", "13:00", "16:30", "20:00"
                             ))
+                            .latitude(37.541855)
+                            .longitude(127.066434)
                             .build(),
                     Location.builder()
                             .locationName("시글루 건대점 ROOM2")
@@ -225,6 +245,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .allowedStartTimes(allowedStartTimes(
                                     "12:00", "10:00", "13:30", "17:00", "20:30"
                             ))
+                            .latitude(37.541855)
+                            .longitude(127.066434)
                             .build(),
                     Location.builder()
                             .locationName("라이크어시네마 석촌점")
@@ -242,6 +264,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ALL)
                             .availableTimes(2)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.502612)
+                            .longitude(127.110684)
                             .build(),
                     Location.builder()
                             .locationName("CGV 골드 클래스 영등포")
@@ -259,6 +283,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ONLY_OTHERS)
                             .availableTimes(0)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.517993)
+                            .longitude(126.904780)
                             .build(),
                     Location.builder()
                             .locationName("CGV 골드 클래스 용산 아이파크몰")
@@ -276,6 +302,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ONLY_OTHERS)
                             .availableTimes(0)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.529129)
+                            .longitude(126.965489)
                             .build(),
                     Location.builder()
                             .locationName("CGV 골드 클래스 왕십리")
@@ -293,6 +321,8 @@ public class LocationInitializer implements ApplicationRunner {
                             .availableMediaType(AvailableMediaType.ONLY_OTHERS)
                             .availableTimes(0)
                             .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.561470)
+                            .longitude(127.037277)
                             .build()
             );
 
