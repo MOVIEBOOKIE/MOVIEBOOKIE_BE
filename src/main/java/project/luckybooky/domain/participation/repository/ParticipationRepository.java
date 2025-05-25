@@ -11,6 +11,7 @@ import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
+import project.luckybooky.domain.user.entity.User;
 
 public interface ParticipationRepository extends JpaRepository<Participation, Long> {
     Optional<Participation> findByUserIdAndEventId(Long userId, Long eventId);
@@ -26,4 +27,8 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
             "WHERE p.event.id = :eventId AND p.participateRole = :role")
     Optional<Long> findByUserIdAndEventIdAndRole(@Param("eventId") Long eventId,
                                                  @Param("role") ParticipateRole role);
+
+    @Query("SELECT p.user FROM Participation p WHERE p.event.id = :eventId AND p.participateRole = 'HOST'")
+    User findHostParticipationByEventId(@Param("eventId") Long eventId);
+
 }
