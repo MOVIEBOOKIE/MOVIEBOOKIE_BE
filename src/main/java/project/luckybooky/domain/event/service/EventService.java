@@ -164,11 +164,12 @@ public class EventService {
                 break;
         }
 
+        User host = participationRepository.findHostParticipationByEventId(eventId);
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
-                user.getUsername(),
-                user.getProfileImage(),
-                user.getHostExperienceCount(),
+                host.getUsername(),
+                host.getProfileImage(),
+                host.getHostExperienceCount(),
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
                 "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),
                 Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100),
