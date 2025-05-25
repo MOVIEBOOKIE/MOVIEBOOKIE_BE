@@ -56,6 +56,12 @@ public class Location extends BaseEntity {
     @Column(name = "is_Start_time_restricted", nullable = false)
     private Boolean isStartTimeRestricted;
 
+    @Column(name = "latitude", nullable = false)
+    private Double latitude;
+
+    @Column(name = "longitude", nullable = false)
+    private Double longitude;
+
     @ElementCollection
     @CollectionTable(name = "allowed_Start_time",
             joinColumns = @JoinColumn(name = "location_id")

@@ -69,6 +69,8 @@ public class EventResponse {
         String locationName;
         String address;
         String locationImageUrl;
+        Double latitude;
+        Double longitude;
     }
 
     @Builder

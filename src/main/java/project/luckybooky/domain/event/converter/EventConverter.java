@@ -106,6 +106,8 @@ public class EventConverter {
                 .locationName(event.getLocation().getLocationName())
                 .address(event.getLocation().getAddress())
                 .locationImageUrl(event.getLocation().getLocationImageUrl())
+                .latitude(event.getLocation().getLatitude())
+                .longitude(event.getLocation().getLongitude())
                 .build();
     }
 
