@@ -68,6 +68,7 @@ public class EventConverter {
             String username,
             String userImageUrl,
             Integer recruitment,
+            String userRole,
             String recruitmentDate,
             String d_day,
             Integer recruitmentRate,
@@ -106,6 +107,8 @@ public class EventConverter {
                 .recruitmentRate(recruitmentRate)
                 .posterImageUrl(event.getPosterImageUrl())
                 .buttonState(buttonState)
+                .eventState(event.getEventStatus().getDescription())
+                .userRole(userRole)
                 .username(username)
                 .userImageUrl(userImageUrl)
                 .recruitment(recruitment)
