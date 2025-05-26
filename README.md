@@ -42,10 +42,10 @@ src
 ```
 ### 기술 스택
 - `Jdk 21`
-- `Spring Boot 3.3.1`, `JPA`
-- `MySQL`, `Redis`
+- `Spring Boot 3.2.5`
+- `MySQL 9.3.0`, `Redis 5.0.7`
 - `NCP Server`, `NCP Object Storage`, `Docker`, `Github Action`
-- `Swagger`, `Spring Security`, `JWT`, `FCM`
+- `JPA`, `Swagger`, `Spring Security`, `JWT`, `FCM`
 
 
 
