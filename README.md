@@ -24,7 +24,8 @@ src
 │   |    |    ├── repository
 │   |    |    ├── service
 │   |    |    └── util
-│   └──  └── ticket
+│   |    └── ticket
+│   |    
 │   ├── global
 │   |    ├── apiPayload
 │   |    ├── config
@@ -34,7 +35,8 @@ src
 │   |    ├── oauth
 │   |    ├── redis
 │   |    ├── service
-│   └──  └── util
+│   |    └── util
+│   |    
 └── resources
     └── application-dev.yml
     └── application-prod.yml
