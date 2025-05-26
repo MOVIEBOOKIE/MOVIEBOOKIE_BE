@@ -6,8 +6,13 @@ import project.luckybooky.domain.user.entity.User;
 public class MypageConverter {
 
     public static MypageResponseDTO toDto(User user, int ticketCount) {
-        String rawTitle = user.getUserType().getTitle();
-        String typeTitle = rawTitle.replace("\n", " ");
+        String rawTitle = user.getUserType() != null
+                ? user.getUserType().getTitle()
+                : null;
+
+        String typeTitle = rawTitle != null
+                ? rawTitle.replace("\n", " ")
+                : null;
 
         return MypageResponseDTO.builder()
                 .profileImage(user.getProfileImage())
