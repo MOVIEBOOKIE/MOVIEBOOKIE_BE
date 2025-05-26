@@ -26,17 +26,17 @@ src
 │   |    |    └── util
 │   |    └── ticket
 │   |    
-│   ├── global
-│   |    ├── apiPayload
-│   |    ├── config
-│   |    ├── entity
-│   |    ├── handler
-│   |    ├── jwt
-│   |    ├── oauth
-│   |    ├── redis
-│   |    ├── service
-│   |    └── util
-│   |    
+│   └── global
+│        ├── apiPayload
+│        ├── config
+│        ├── entity
+│        ├── handler
+│        ├── jwt
+│        ├── oauth
+│        ├── redis
+│        ├── service
+│        └── util
+│       
 └── resources
-    └── application-dev.yml
+    ├── application-dev.yml
     └── application-prod.yml
