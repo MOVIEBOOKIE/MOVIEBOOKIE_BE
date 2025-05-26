@@ -1,7 +1,7 @@
 # MOVIEBOOKIE_BE
 🍿 영화관을 더 쉽고 더 자유롭게, 무비부키
 
-## Project Structure
+### Project Structure
 ```markdown
 src
 ├── main
@@ -40,10 +40,16 @@ src
     ├── application-dev.yml
     └── application-prod.yml
 ```
-## 기술 스택
+### 기술 스택
+- `Jdk 21`
+- `Spring Boot 3.3.1`, `JPA`
+- `MySQL`, `Redis`
+- `NCP Server`, `NCP Object Storage`, `Docker`, `Github Action`
+- `Swagger`, `Spring Security`, `JWT`, `FCM`
 
 
-## 커밋 컨벤션 
+
+### 커밋 컨벤션 
 | 커밋 타입 | 설명 | 예시 |
 | ------- | ---- | ---- |
 | ✨ **Feat** | 새로운 기능 추가 | `[FEAT] #이슈번호: 기능 추가` |
@@ -56,7 +62,7 @@ src
 | 🚚 **Rename** | 파일 또는 폴더명 수정 | `[RENAME] #이슈번호: 폴더명 변경` |
 
 
-## 이슈 템플릿
+### 이슈 템플릿
 ```markdown
 ## Description
 설명 작성
@@ -69,7 +75,7 @@ src
 ## ETC
 ```
 
-## PR 템플릿 
+### PR 템플릿 
 ```markdown
 ## Issue
 
