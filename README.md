@@ -40,6 +40,8 @@ src
     ├── application-dev.yml
     └── application-prod.yml
 ```
+## 기술 스택
+
 
 ## 커밋 컨벤션 
 | 커밋 타입 | 설명 | 예시 |
