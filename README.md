@@ -7,34 +7,34 @@
 src
 ├── main
 │   ├── domain
-│       ├── category
-│       ├── certification
-│       ├── event
-│       ├── feedback
-│       ├── location
-│       ├── notification
-│       ├── participation
-│       ├── user
-│       |    ├── controller
-│       |    ├── converter
-│       |    ├── dto
-│       |    |     ├── request
-│       |    |     └── response
-│       |    ├── entity
-│       |    ├── repository
-│       |    ├── service
-│       |    └── util
-│       └── ticket
+│   |    ├── category
+│   |    ├── certification
+│   |    ├── event
+│   |    ├── feedback
+│   |    ├── location
+│   |    ├── notification
+│   |    ├── participation
+│   |    ├── user
+│   |    |    ├── controller
+│   |    |    ├── converter
+│   |    |    ├── dto
+│   |    |    |     ├── request
+│   |    |    |     └── response
+│   |    |    ├── entity
+│   |    |    ├── repository
+│   |    |    ├── service
+│   |    |    └── util
+│   └──  └── ticket
 │   ├── global
-│       ├── apiPayload
-│       ├── config
-│       ├── entity
-│       ├── handler
-│       ├── jwt
-│       ├── oauth
-│       ├── redis
-│       ├── service
-│       └── util
+│   |    ├── apiPayload
+│   |    ├── config
+│   |    ├── entity
+│   |    ├── handler
+│   |    ├── jwt
+│   |    ├── oauth
+│   |    ├── redis
+│   |    ├── service
+│   └──  └── util
 └── resources
     └── application-dev.yml
     └── application-prod.yml
