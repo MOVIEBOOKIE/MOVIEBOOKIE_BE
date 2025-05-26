@@ -119,14 +119,14 @@ public class EventController {
             "category: 조회할 카테고리 (ex, 인기, 최신, 영화, 드라마, 스포츠, 예능, 콘서트, 기타 중 1개) <br>" +
             "page: 조회할 페이지 번호 <br> size: 한 페이지에 조회할 이벤트 수")
     @GetMapping("/category")
-    public CommonResponse<List<EventResponse.ReadEventListResultDTO>> readEventListByCategory(
+    public CommonResponse<EventResponse.ReadEventListByCategoryResultDTO> readEventListByCategory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam String category
     ) {
-        List<EventResponse.ReadEventListResultDTO> list = eventService.readEventListByCategory(category, page, size);
+        EventResponse.ReadEventListByCategoryResultDTO resultList = eventService.readEventListByCategory(category, page, size);
 
-        return CommonResponse.of(ResultCode.OK, list);
+        return CommonResponse.of(ResultCode.OK, resultList);
     }
 
     @Operation(summary = "이벤트 검색", description = "검색할 content 정보와 page&size를 넣어주세요!! <br><br>" +
