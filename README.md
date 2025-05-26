@@ -1,7 +1,16 @@
 # MOVIEBOOKIE_BE
 🍿 영화관을 더 쉽고 더 자유롭게, 무비부키
 
-### Project Structure
+## ERD
+<img width="800" alt="무비부키 ERD" src="https://github.com/user-attachments/assets/75c7d96b-4853-4284-9c5c-d77272540763" />
+
+## System Architecture
+<img width="700" alt="무비부키 아키텍쳐" src="https://github.com/user-attachments/assets/3e2c150a-8a57-499c-a197-1347baf21147" />
+
+## API Docs
+**노션 링크**: https://waiting-candle-f33.notion.site/API-1cc3e5c872e78094864ccd251d8ea004?pvs=4
+
+## Project Structure
 ```markdown
 src
 ├── main
@@ -40,7 +49,7 @@ src
     ├── application-dev.yml
     └── application-prod.yml
 ```
-### 기술 스택
+## Tech Stack
 - `Jdk 21`
 - `Spring Boot 3.2.5`
 - `MySQL 9.3.0`, `Redis 5.0.7`
@@ -49,7 +58,7 @@ src
 
 
 
-### 커밋 컨벤션 
+### Commit Convention
 | 커밋 타입 | 설명 | 예시 |
 | ------- | ---- | ---- |
 | ✨ **Feat** | 새로운 기능 추가 | `[FEAT] #이슈번호: 기능 추가` |
@@ -62,7 +71,7 @@ src
 | 🚚 **Rename** | 파일 또는 폴더명 수정 | `[RENAME] #이슈번호: 폴더명 변경` |
 
 
-### 이슈 템플릿
+### Issue Template
 ```markdown
 ## Description
 설명 작성
@@ -75,7 +84,7 @@ src
 ## ETC
 ```
 
-### PR 템플릿 
+### PR Template
 ```markdown
 ## Issue
 
