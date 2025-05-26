@@ -14,6 +14,9 @@ public class UserResponseDTO {
         private String email;
         private String nickname;
         private String profileImage;
+        private UserType userType;
+        private String certificationEmail;
+        private String phoneNumber;
     }
 
     /* 회원가입 단계에서 사용자 추가 정보 입력 완료 후 결과 */
