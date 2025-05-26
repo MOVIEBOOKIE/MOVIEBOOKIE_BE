@@ -69,6 +69,8 @@ public class EventResponse {
         Integer recruitmentRate;
         String posterImageUrl;
         String buttonState;
+        String eventState;
+        String userRole;
 
         /** 주최자 관련 **/
         String username;

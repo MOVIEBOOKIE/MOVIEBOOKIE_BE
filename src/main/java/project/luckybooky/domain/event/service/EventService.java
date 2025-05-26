@@ -5,6 +5,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -167,11 +168,19 @@ public class EventService {
         }
 
         User host = participationRepository.findHostParticipationByEventId(eventId);
+
+        // 주최자 / 참여자 / 신청x 체크
+        Optional<ParticipateRole> findRole = participationRepository.findRoleByUser(eventId, user);
+        String userRole = findRole
+                .map(r -> r == ParticipateRole.HOST ? "주최자" : "참여자")
+                .orElse("신청x");
+
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
                 host.getUsername(),
                 host.getProfileImage(),
                 host.getHostExperienceCount(),
+                userRole,
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
                 "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),
                 Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100),
