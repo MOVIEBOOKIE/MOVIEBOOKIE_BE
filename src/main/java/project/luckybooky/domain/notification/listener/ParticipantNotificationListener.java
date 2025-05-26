@@ -31,7 +31,7 @@ public class ParticipantNotificationListener {
         User participant = userRepository.findById(participantId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Message msg = NotificationConverter.toFcmMessage(participant, type, eventName);
+        Message msg = NotificationConverter.toFcmMessageParticipant(participant, type, eventName);
 
         log.info("📨 ParticipantNotification 시도: userId={} title='{}' body='{}'",
                 participantId,

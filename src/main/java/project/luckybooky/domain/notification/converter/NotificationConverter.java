@@ -3,6 +3,7 @@ package project.luckybooky.domain.notification.converter;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import project.luckybooky.domain.notification.type.HostNotificationType;
+import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.user.entity.User;
 
 public class NotificationConverter {
@@ -33,6 +34,19 @@ public class NotificationConverter {
                 .setNotification(Notification.builder()
                         .setTitle(title)
                         .setBody(body)
+                        .build())
+                .build();
+    }
+
+    public static Message toFcmMessageParticipant(User user, ParticipantNotificationType type, String eventName) {
+        if (user.getFcmToken() == null) {
+            return null;
+        }
+        return Message.builder()
+                .setToken(user.getFcmToken())
+                .setNotification(Notification.builder()
+                        .setTitle(type.getTitle())
+                        .setBody(type.formatBody(eventName))
                         .build())
                 .build();
     }
