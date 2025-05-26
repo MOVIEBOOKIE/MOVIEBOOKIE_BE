@@ -155,25 +155,23 @@ public class EventService {
                 .orElse(2);
 
         String buttonState;
+        String userRole;
         switch (status) {
             case 0:
                 buttonState = event.getHostEventButtonState().getDescription();
+                userRole = "주최자";
                 break;
             case 1:
                 buttonState = event.getParticipantEventButtonState().getDescription();
+                userRole = "참여자";
                 break;
             default:
                 buttonState = event.getAnonymousButtonState().getDescription();
+                userRole = "미참여자";
                 break;
         }
 
         User host = participationRepository.findHostParticipationByEventId(eventId);
-
-        // 주최자 / 참여자 / 신청x 체크
-        Optional<ParticipateRole> findRole = participationRepository.findRoleByUser(eventId, user);
-        String userRole = findRole
-                .map(r -> r == ParticipateRole.HOST ? "주최자" : "참여자")
-                .orElse("신청x");
 
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
