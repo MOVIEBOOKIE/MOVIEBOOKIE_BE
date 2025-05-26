@@ -10,6 +10,7 @@ import project.luckybooky.domain.location.entity.Location;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class EventConverter {
     public static Event toEvent(
@@ -138,6 +139,13 @@ public class EventConverter {
     public static EventCreateResultDTO toCreateResult(Long eventId) {
         return EventCreateResultDTO.builder()
                 .eventId(eventId)
+                .build();
+    }
+
+    public static EventResponse.ReadEventListByCategoryResultDTO toReadEventListByCategoryResult(Integer totalPages, List<EventResponse.ReadEventListResultDTO> eventListResultDTOS) {
+        return EventResponse.ReadEventListByCategoryResultDTO.builder()
+                .totalPages(totalPages)
+                .eventList(eventListResultDTOS)
                 .build();
     }
 }
