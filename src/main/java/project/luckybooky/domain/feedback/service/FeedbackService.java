@@ -20,10 +20,9 @@ import project.luckybooky.domain.user.service.UserTypeService;
 public class FeedbackService {
     private final FeedbackRepository feedbackRepository;
     private final UserTypeService userTypeService;
-    private final EventService eventService;
 
     @Transactional
-    public FeedbackResponse.FeedbackCreateResultDTO createFeedback(FeedbackRequest.FeedbackCreateRequestDTO request, Long userId, Long eventId) {
+    public FeedbackResponse.FeedbackCreateResultDTO createFeedback(FeedbackRequest.FeedbackCreateRequestDTO request, Long userId) {
         PositiveFeedback positiveFeedback;
         NegativeFeedback negativeFeedback;
 
@@ -37,9 +36,8 @@ public class FeedbackService {
         }
 
         User user = userTypeService.findOne(userId);
-        Event event = eventService.findOne(eventId);
 
-        Feedback feedback = FeedbackConverter.toFeedback(request, positiveFeedback, negativeFeedback, event, user);
+        Feedback feedback = FeedbackConverter.toFeedback(request, positiveFeedback, negativeFeedback, user);
         feedbackRepository.save(feedback);
 
         return FeedbackConverter.toFeedbackCreateResultDTO(feedback);

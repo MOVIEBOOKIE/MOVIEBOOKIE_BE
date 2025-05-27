@@ -16,7 +16,6 @@ public class FeedbackConverter {
             FeedbackRequest.FeedbackCreateRequestDTO request,
             PositiveFeedback positiveFeedback,
             NegativeFeedback negativeFeedback,
-            Event event,
             User user
     ) {
         return Feedback.builder()
@@ -24,7 +23,6 @@ public class FeedbackConverter {
                 .positiveFeedback(positiveFeedback)
                 .negativeFeedback(negativeFeedback)
                 .comment(request.getComment())
-                .event(event)
                 .user(user)
                 .build();
     }
