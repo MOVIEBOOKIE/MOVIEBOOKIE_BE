@@ -75,7 +75,7 @@ public class EventConverter {
             Integer recruitmentRate,
             String buttonState
     ) {
-        long days = ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
+        long days = ChronoUnit.DAYS.between(LocalDate.now(), event.getRecruitmentEnd());
         String d_day = days < 0 ? null : "D-" + days;
 
         // 요일 구하기 (한글)
