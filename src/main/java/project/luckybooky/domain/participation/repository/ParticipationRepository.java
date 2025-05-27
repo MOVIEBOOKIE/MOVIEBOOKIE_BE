@@ -37,4 +37,7 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
 
     @Query("SELECT p.participateRole FROM Participation p WHERE p.event.id = :eventId AND p.user = :user")
     Optional<ParticipateRole> findRoleByUser(@Param("eventId") Long eventId, @Param("user") User user);
+
+    @Query("SELECT p FROM Participation p JOIN FETCH p.user WHERE p.event.id = :eventId")
+    List<Participation> findAllWithUserByEventId(@Param("eventId") Long eventId);
 }

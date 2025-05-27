@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import project.luckybooky.domain.admin.event.VenueRequestWebhookEvent;
 import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.category.service.CategoryService;
 import project.luckybooky.domain.event.converter.EventConverter;
@@ -259,6 +260,7 @@ public class EventService {
 
         if (type == 0) {
             event.venueRegister();
+            publisher.publishEvent(new VenueRequestWebhookEvent(this, event.getId()));
             return EventConstants.VENUE_RESERVATION_SUCCESS.getMessage();
         } else {
             event.venueCancel();
