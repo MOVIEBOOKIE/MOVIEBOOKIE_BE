@@ -3,12 +3,12 @@ package project.luckybooky.domain.notification.listener;
 import com.google.firebase.messaging.Message;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
-import project.luckybooky.domain.notification.event.HostNotificationEvent;
+import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.service.NotificationService;
+import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
@@ -17,24 +17,34 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class HostNotificationListener {
+public class ParticipantNotificationListener {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onHostNotification(HostNotificationEvent evt) {
-        log.info("▶ 준비된 Host 알림: userId={}, type={}, eventName={}",
-                evt.getHostUserId(), evt.getType(), evt.getEventName());
+    @EventListener
+    public void onParticipantNotification(ParticipantNotificationEvent evt) {
 
-        User host = userRepository.findById(evt.getHostUserId())
+        Long participantId = evt.getUserId();
+        ParticipantNotificationType type = evt.getType();
+        String eventName = evt.getEventName();
+
+        User participant = userRepository.findById(participantId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Message msg = NotificationConverter.toFcmMessage(host, evt.getType(), evt.getEventName(), evt.getEventId());
+        Message msg = NotificationConverter.toFcmMessageParticipant(participant, type, eventName, evt.getEventId());
+
+        log.info("📨 ParticipantNotification 시도: userId={} title='{}' body='{}'",
+                participantId,
+                type.getTitle(),
+                type.formatBody(eventName));
+
+        log.info("📨 ParticipantNotification 시도: userId={} title='{}' body='{}'",
+                participant.getId(),
+                evt.getType().getTitle(),
+                evt.getType().formatBody(evt.getEventName()));
 
         if (msg == null) {
-            log.warn("⚠ FCM 토큰 미등록. (보냈어야 할 메시지) title='{}', body='{}'",
-                    evt.getType().getTitle(),
-                    evt.getType().formatBody(evt.getEventName()));
+            log.warn("⚠️ FCM 토큰 미등록으로 알림을 전송하지 않습니다. userId={}", participant.getId());
             return;
         }
 
