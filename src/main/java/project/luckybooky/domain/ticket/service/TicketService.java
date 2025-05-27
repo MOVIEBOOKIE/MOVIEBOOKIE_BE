@@ -18,6 +18,7 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,6 +59,7 @@ public class TicketService {
 
     public TicketResponse.ReadTicketDetailsResultDTO readTicketDetailsByEvent(Long eventId) {
         Ticket ticket = ticketRepository.findByEventId(eventId);
+        System.out.println(ticket);
         return TicketConverter.toReadTicketDetailsResultDTO(ticket);
     }
 
