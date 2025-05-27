@@ -23,6 +23,7 @@ public class TicketConverter {
                 .eventImageUrl(event.getPosterImageUrl())
                 .participants(event.getCurrentParticipants())
                 .userList(userList)
+                .eventId(event.getId())
                 .build();
     }
 

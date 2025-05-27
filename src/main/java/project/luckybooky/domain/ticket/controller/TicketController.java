@@ -43,4 +43,14 @@ public class TicketController {
                 ticketService.readTicketDetails(ticketId);
         return CommonResponse.of(ResultCode.OK, dto);
     }
+
+    @Operation(summary = "티켓으로 이동", description = "이동을 희망하는 이벤트 ID를 넣어주세요 !!")
+    @GetMapping("/{eventId}/to-ticket")
+    public CommonResponse<TicketResponse.ReadTicketDetailsResultDTO> readTicketDetailsByEvent(
+            @PathVariable("eventId") Long eventId
+    ) {
+        TicketResponse.ReadTicketDetailsResultDTO dto =
+                ticketService.readTicketDetailsByEvent(eventId);
+        return CommonResponse.of(ResultCode.OK, dto);
+    }
 }

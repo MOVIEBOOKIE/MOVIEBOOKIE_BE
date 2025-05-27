@@ -64,6 +64,9 @@ public class Ticket {
     @Column(name = "participants", nullable = false)
     private Integer participants;
 
+    @Column(name = "event_id", nullable = false)
+    private Long eventId;
+
     @ManyToMany
     @JoinTable(
             name = "user_ticket",
