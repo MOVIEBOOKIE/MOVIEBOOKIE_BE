@@ -23,6 +23,10 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
                                              @Param("participateRole") ParticipateRole participateRole,
                                              @Param("statuses") List<EventStatus> statuses, Pageable pageable);
 
+
+    @Query("SELECT p FROM Participation p " + " WHERE p.event.id = :eventId AND p.participateRole = :role")
+    List<Participation> findAllByEventIdAndRole(@Param("eventId") Long eventId, @Param("role") ParticipateRole role);
+
     @Query("SELECT p.user.id FROM Participation p " +
             "WHERE p.event.id = :eventId AND p.participateRole = :role")
     Optional<Long> findByUserIdAndEventIdAndRole(@Param("eventId") Long eventId,
