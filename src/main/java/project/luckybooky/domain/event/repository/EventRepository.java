@@ -31,7 +31,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("SELECT e FROM Event e " +
             "WHERE e.category.id = :categoryId " +
             "AND e.eventStatus = 'RECRUITING'" +
-            "ORDER BY (1.0 * e.currentParticipants / e.minParticipants) DESC")
+            "ORDER BY (1.0 * e.currentParticipants / e.maxParticipants) DESC")
     List<Event> findEventListByUserType(@Param("categoryId") Long categoryId, Pageable pageable);
 
 }
