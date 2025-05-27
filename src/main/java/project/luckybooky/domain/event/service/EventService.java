@@ -5,7 +5,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -76,6 +75,7 @@ public class EventService {
 
         // 호스트 생성 알림
         publisher.publishEvent(new HostNotificationEvent(
+                event.getId(),
                 userId, // hostId
                 HostNotificationType.EVENT_CREATED,
                 event.getEventTitle()
@@ -105,7 +105,7 @@ public class EventService {
     }
 
     public EventResponse.ReadEventListByCategoryResultDTO readEventListByCategory(String category, Integer page,
-                                                                              Integer size) {
+                                                                                  Integer size) {
         Page<Event> eventList;
         switch (category) {
             case "인기":
@@ -228,6 +228,7 @@ public class EventService {
         event.recruitCancel();
 
         publisher.publishEvent(new HostNotificationEvent(
+                event.getId(),
                 userId, // hostId
                 HostNotificationType.EVENT_DELETED,
                 event.getEventTitle()
@@ -238,6 +239,7 @@ public class EventService {
                 .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
         for (Participation p : participants) {
             publisher.publishEvent(new ParticipantNotificationEvent(
+                    event.getId(),        // ← eventId
                     p.getUser().getId(),
                     ParticipantNotificationType.RECRUITMENT_CANCELLED,
                     event.getEventTitle()
@@ -267,6 +269,7 @@ public class EventService {
                     .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
             publisher.publishEvent(new HostNotificationEvent(
+                    event.getId(),
                     hostId,
                     HostNotificationType.RESERVATION_DENIED, // 대관 취소 알림 (호스트)
                     event.getEventTitle()
@@ -277,6 +280,7 @@ public class EventService {
                     .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
             for (Participation p : participants) {
                 publisher.publishEvent(new ParticipantNotificationEvent(
+                        event.getId(),
                         p.getUser().getId(),
                         ParticipantNotificationType.RESERVATION_NOT_APPLIED, // 대관 취소 알림 (참여자)
                         event.getEventTitle()
@@ -305,6 +309,7 @@ public class EventService {
 
         //  호스트에게 대관 확정 알림 발송
         publisher.publishEvent(new HostNotificationEvent(
+                event.getId(),
                 hostId,
                 HostNotificationType.RESERVATION_CONFIRMED, // 대관 확정 알림 (호스트)
                 event.getEventTitle()
@@ -315,6 +320,7 @@ public class EventService {
                 .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
         for (Participation p : participants) {
             publisher.publishEvent(new ParticipantNotificationEvent(
+                    event.getId(),
                     p.getUser().getId(),
                     ParticipantNotificationType.RESERVATION_CONFIRMED, // 대관 확정 알림 (참여자)
                     event.getEventTitle()
@@ -347,6 +353,7 @@ public class EventService {
 
             // 상영 완료 후기 요청 알림(호스트)
             publisher.publishEvent(new HostNotificationEvent(
+                    event.getId(),
                     hostId,
                     HostNotificationType.SCREENING_COMPLETED,
                     event.getEventTitle()
@@ -357,6 +364,7 @@ public class EventService {
                     .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
             for (Participation p : participants) {
                 publisher.publishEvent(new ParticipantNotificationEvent(
+                        event.getId(),
                         p.getUser().getId(),
                         ParticipantNotificationType.SCREENING_COMPLETED, // 상영 완료 후기 요청 알림 (참여자)
                         event.getEventTitle()
@@ -388,6 +396,7 @@ public class EventService {
                 event.recruitCancel();
                 // 인원부족으로 이벤트 취소 시 자동 알림(호스트)
                 publisher.publishEvent(new HostNotificationEvent(
+                        event.getId(),
                         hostId,
                         HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소 (호스트)
                         event.getEventTitle()
@@ -398,6 +407,7 @@ public class EventService {
                         .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
                 for (Participation p : participants) {
                     publisher.publishEvent(new ParticipantNotificationEvent(
+                            event.getId(),
                             p.getUser().getId(),
                             ParticipantNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 알림 (참여자)
                             event.getEventTitle()
@@ -408,6 +418,7 @@ public class EventService {
                 event.recruitDone();
                 // 인원 모집 달성 상태로 모집 기간 끝날 시 자동으로 알림 발송(호스트)
                 publisher.publishEvent(new HostNotificationEvent(
+                        event.getId(),
                         hostId,
                         HostNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (호스트)
                         event.getEventTitle()
@@ -418,6 +429,7 @@ public class EventService {
                         .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
                 for (Participation p : participants) {
                     publisher.publishEvent(new ParticipantNotificationEvent(
+                            event.getId(),
                             p.getUser().getId(),
                             ParticipantNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (참여자)
                             event.getEventTitle()

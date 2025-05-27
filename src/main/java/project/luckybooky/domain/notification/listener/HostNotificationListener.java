@@ -29,7 +29,7 @@ public class HostNotificationListener {
         User host = userRepository.findById(evt.getHostUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Message msg = NotificationConverter.toFcmMessage(host, evt.getType(), evt.getEventName());
+        Message msg = NotificationConverter.toFcmMessage(host, evt.getType(), evt.getEventName(), evt.getEventId());
 
         if (msg == null) {
             log.warn("⚠ FCM 토큰 미등록. (보냈어야 할 메시지) title='{}', body='{}'",

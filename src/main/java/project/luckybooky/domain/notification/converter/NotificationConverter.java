@@ -9,7 +9,7 @@ import project.luckybooky.domain.user.entity.User;
 public class NotificationConverter {
 
     // 호스트 관련 알림 전송 converter
-    public static Message toFcmMessage(User user, HostNotificationType hostType, String eventName) {
+    public static Message toFcmMessage(User user, HostNotificationType hostType, String eventName, Long eventId) {
         String token = user.getFcmToken();
         if (token == null || token.isBlank()) {
             return null;
@@ -20,6 +20,7 @@ public class NotificationConverter {
                         .setTitle(hostType.getTitle())
                         .setBody(hostType.formatBody(eventName))
                         .build())
+                .putData("eventId", String.valueOf(eventId))
                 .build();
     }
 
@@ -38,7 +39,8 @@ public class NotificationConverter {
                 .build();
     }
 
-    public static Message toFcmMessageParticipant(User user, ParticipantNotificationType type, String eventName) {
+    public static Message toFcmMessageParticipant(User user, ParticipantNotificationType type, String eventName,
+                                                  Long eventId) {
         if (user.getFcmToken() == null) {
             return null;
         }
@@ -48,6 +50,7 @@ public class NotificationConverter {
                         .setTitle(type.getTitle())
                         .setBody(type.formatBody(eventName))
                         .build())
+                .putData("eventId", String.valueOf(eventId))
                 .build();
     }
 

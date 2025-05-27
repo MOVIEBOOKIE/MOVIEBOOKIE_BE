@@ -47,6 +47,7 @@ public class ParticipationService {
         // 참여자인 경우 알림 전송
         if (role == ParticipateRole.PARTICIPANT) {
             publisher.publishEvent(new ParticipantNotificationEvent(
+                    eventId,
                     userId,
                     ParticipantNotificationType.APPLY_COMPLETED,
                     event.getEventTitle()
@@ -68,6 +69,7 @@ public class ParticipationService {
         if (participation.getParticipateRole() == ParticipateRole.PARTICIPANT) {
             String eventTitle = participation.getEvent().getEventTitle();
             publisher.publishEvent(new ParticipantNotificationEvent(
+                    eventId,
                     userId,
                     ParticipantNotificationType.APPLY_CANCEL,
                     eventTitle
