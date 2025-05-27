@@ -9,6 +9,8 @@ import project.luckybooky.domain.user.dto.response.MypageResponseDTO;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
+import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
 @Service
 @RequiredArgsConstructor
@@ -19,16 +21,13 @@ public class MypageService {
     @Transactional(readOnly = true)
     public MypageResponseDTO getMyPage() {
 
-        // 1) 현재 로그인한 사용자의 이메일
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
 
-        // 2) DB 조회 (없으면 예외)
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         int ticketCount = ticketRepository.countTicketByUserId(user.getId());
 
-        // 3) DTO 변환
         return MypageConverter.toDto(user, ticketCount);
     }
 }

@@ -86,7 +86,7 @@ public class EventConverter {
         String day = koreanDays[dayOfWeek.getValue() - 1];
 
         // 날짜 포맷
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy. MM. dd");
         String eventDate = event.getEventDate().format(formatter) + " (" + day + ")";
 
         // 시간 포맷

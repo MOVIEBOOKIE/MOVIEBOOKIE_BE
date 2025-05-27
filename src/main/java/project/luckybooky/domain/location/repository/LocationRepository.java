@@ -14,7 +14,7 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
             "AND (l.isStartTimeRestricted = FALSE OR " +
             "    (l.isStartTimeRestricted = TRUE AND :startTime IN (SELECT a FROM l.allowedStartTimes a))) " +
             "AND (l.availableTimes = 0 OR l.availableTimes = :progressTime)" +
-            "ORDER BY l.pricePerHour")
+            "ORDER BY l.seatCount")
     List<Location> findLocationsByEventOptions(
             @Param("min") int min,
             @Param("max") int max,

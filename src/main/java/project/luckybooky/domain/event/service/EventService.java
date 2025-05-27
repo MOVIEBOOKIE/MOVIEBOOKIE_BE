@@ -231,7 +231,7 @@ public class EventService {
         publisher.publishEvent(new HostNotificationEvent(
                 event.getId(),
                 userId, // hostId
-                HostNotificationType.EVENT_DELETED,
+                HostNotificationType.RECRUITMENT_CANCELLED,
                 event.getEventTitle()
         ));
 
