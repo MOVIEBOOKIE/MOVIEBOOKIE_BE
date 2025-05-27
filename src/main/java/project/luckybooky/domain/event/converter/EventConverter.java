@@ -8,8 +8,10 @@ import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.location.entity.Location;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class EventConverter {
@@ -70,10 +72,12 @@ public class EventConverter {
             Integer recruitment,
             String userRole,
             String recruitmentDate,
-            String d_day,
             Integer recruitmentRate,
             String buttonState
     ) {
+        long days = ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
+        String d_day = days < 0 ? null : "D-" + days;
+
         // 요일 구하기 (한글)
         DayOfWeek dayOfWeek = event.getEventDate().getDayOfWeek();
         String[] koreanDays = {"월", "화", "수", "목", "금", "토", "일"};

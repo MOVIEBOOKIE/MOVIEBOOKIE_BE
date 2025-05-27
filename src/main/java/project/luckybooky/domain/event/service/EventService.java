@@ -180,7 +180,6 @@ public class EventService {
                 host.getHostExperienceCount(),
                 userRole,
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
-                "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),
                 Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100),
                 buttonState
         );
