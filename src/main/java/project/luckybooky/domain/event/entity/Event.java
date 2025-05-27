@@ -40,10 +40,10 @@ public class Event extends BaseEntity {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     private List<Participation> participationList = new ArrayList<>();
 
-    @Column(name = "media_title", length = 20, nullable = false)
+    @Column(name = "media_title", length = 50, nullable = false)
     private String mediaTitle;
 
-    @Column(name = "event_title", length = 20, nullable = false)
+    @Column(name = "event_title", nullable = false)
     private String eventTitle;
 
     @Column(name = "description")
