@@ -83,8 +83,7 @@ public class ParticipationService {
         List<EventStatus> statuses = (type == 0)
                 ? List.of(
                 EventStatus.RECRUITING,
-                EventStatus.RECRUITED,
-                EventStatus.VENUE_RESERVATION_IN_PROGRESS
+                EventStatus.RECRUITED
         )
                 : List.of(
                         EventStatus.COMPLETED,

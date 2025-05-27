@@ -84,9 +84,6 @@ public class User extends BaseEntity {
     @Builder.Default
     private Integer participation = 0;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Ticket> tickets = new ArrayList<>();
-
     public void updateExperience(Integer type) {
         if (type == 0) {
             recruitment += 1;

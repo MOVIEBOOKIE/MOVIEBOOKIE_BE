@@ -64,6 +64,9 @@ public class Ticket {
     @Column(name = "participants", nullable = false)
     private Integer participants;
 
+    @Column(name = "event_id", nullable = false)
+    private Long eventId;
+
     @ManyToMany
     @JoinTable(
             name = "user_ticket",
@@ -71,8 +74,4 @@ public class Ticket {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> userList;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
 }

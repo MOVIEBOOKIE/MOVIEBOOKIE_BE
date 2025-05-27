@@ -5,6 +5,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -103,7 +104,7 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readEventListByCategory(String category, Integer page,
+    public EventResponse.ReadEventListByCategoryResultDTO readEventListByCategory(String category, Integer page,
                                                                               Integer size) {
         Page<Event> eventList;
         switch (category) {
@@ -117,8 +118,10 @@ public class EventService {
                 eventList = eventRepository.findByCategoryName(category, PageRequest.of(page, size));
                 break;
         }
+        int totalPages = eventList.getTotalPages();
+        List<EventResponse.ReadEventListResultDTO> eventListResultDTO = toReadEventListResultDTO(eventList);
 
-        return toReadEventListResultDTO(eventList);
+        return EventConverter.toReadEventListByCategoryResult(totalPages, eventListResultDTO);
     }
 
     public List<EventResponse.ReadEventListResultDTO> readEventListBySearch(String content, Integer page,
@@ -154,26 +157,31 @@ public class EventService {
                 .orElse(2);
 
         String buttonState;
+        String userRole;
         switch (status) {
             case 0:
                 buttonState = event.getHostEventButtonState().getDescription();
+                userRole = "주최자";
                 break;
             case 1:
                 buttonState = event.getParticipantEventButtonState().getDescription();
+                userRole = "참여자";
                 break;
             default:
                 buttonState = event.getAnonymousButtonState().getDescription();
+                userRole = "미참여자";
                 break;
         }
 
         User host = participationRepository.findHostParticipationByEventId(eventId);
+
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
                 host.getUsername(),
                 host.getProfileImage(),
                 host.getHostExperienceCount(),
+                userRole,
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
-                "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),
                 Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100),
                 buttonState
         );

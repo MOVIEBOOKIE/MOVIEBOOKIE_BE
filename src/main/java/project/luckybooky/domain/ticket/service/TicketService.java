@@ -56,6 +56,11 @@ public class TicketService {
         return TicketConverter.toReadTicketDetailsResultDTO(ticket);
     }
 
+    public TicketResponse.ReadTicketDetailsResultDTO readTicketDetailsByEvent(Long eventId) {
+        Ticket ticket = ticketRepository.findByEventId(eventId);
+        return TicketConverter.toReadTicketDetailsResultDTO(ticket);
+    }
+
     public List<TicketResponse.ReadTicketListResultDTO> readTicketList(Long userId, Integer page, Integer size) {
         Page<Ticket> ticketList = ticketRepository.findTicketsByUserId(userId, PageRequest.of(page, size));
 

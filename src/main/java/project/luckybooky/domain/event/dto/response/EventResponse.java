@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class EventResponse {
     @Builder
@@ -41,6 +42,15 @@ public class EventResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
+    public static class ReadEventListByCategoryResultDTO {
+        Integer totalPages;
+        List<EventResponse.ReadEventListResultDTO> eventList;
+    }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
     public static class EventReadDetailsResultDTO {
         /** 이벤트 관련 **/
         Long eventId;
@@ -59,6 +69,8 @@ public class EventResponse {
         Integer recruitmentRate;
         String posterImageUrl;
         String buttonState;
+        String eventState;
+        String userRole;
 
         /** 주최자 관련 **/
         String username;
