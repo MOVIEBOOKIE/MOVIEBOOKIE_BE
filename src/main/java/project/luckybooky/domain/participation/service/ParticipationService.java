@@ -1,6 +1,9 @@
 package project.luckybooky.domain.participation.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -10,6 +13,8 @@ import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.service.EventService;
+import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
+import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.participation.converter.ParticipationConverter;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
@@ -19,11 +24,6 @@ import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -31,6 +31,8 @@ public class ParticipationService {
     private final ParticipationRepository participationRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
+    private final ApplicationEventPublisher publisher;
+
 
     @Transactional
     public EventResponse.EventCreateResultDTO createParticipation(Long userId, Long eventId, Boolean isHost) {
@@ -41,33 +43,62 @@ public class ParticipationService {
 
         Participation participation = ParticipationConverter.toParticipation(user, event, role);
         participationRepository.save(participation);
+
+        // 참여자인 경우 알림 전송
+        if (role == ParticipateRole.PARTICIPANT) {
+            publisher.publishEvent(new ParticipantNotificationEvent(
+                    eventId,
+                    userId,
+                    ParticipantNotificationType.APPLY_COMPLETED,
+                    event.getEventTitle()
+            ));
+        }
+
         return EventConverter.toEventCreateResponseDTO(event);
     }
 
     @Transactional
     public void deleteParticipation(Long userId, Long eventId) {
+
+        // 참여자 조회
+        Participation participation = participationRepository
+                .findByUserIdAndEventId(userId, eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+        // 2) 참여자인 경우에만 취소
+        if (participation.getParticipateRole() == ParticipateRole.PARTICIPANT) {
+            String eventTitle = participation.getEvent().getEventTitle();
+            publisher.publishEvent(new ParticipantNotificationEvent(
+                    eventId,
+                    userId,
+                    ParticipantNotificationType.APPLY_CANCEL,
+                    eventTitle
+            ));
+        }
+
         participationRepository.deleteByUserIdAndEventId(userId, eventId);
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer role, Integer page, Integer size) {
+    public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer role,
+                                                                    Integer page, Integer size) {
         // 진행 중, 확정 이벤트 목록 필터링
         List<EventStatus> statuses = (type == 0)
                 ? List.of(
                 EventStatus.RECRUITING,
-                EventStatus.RECRUITED,
-                EventStatus.VENUE_RESERVATION_IN_PROGRESS
+                EventStatus.RECRUITED
         )
                 : List.of(
-                EventStatus.COMPLETED,
-                EventStatus.CANCELLED,
-                EventStatus.VENUE_CONFIRMED,
-                EventStatus.RECRUIT_CANCELED,
-                EventStatus.VENUE_RESERVATION_CANCELED
-        );
+                        EventStatus.COMPLETED,
+                        EventStatus.CANCELLED,
+                        EventStatus.VENUE_CONFIRMED,
+                        EventStatus.RECRUIT_CANCELED,
+                        EventStatus.VENUE_RESERVATION_CANCELED
+                );
 
         // 주최자 / 참여자 판단
         ParticipateRole participateRole = (role == 0) ? ParticipateRole.PARTICIPANT : ParticipateRole.HOST;
-        Page<Event> eventList = participationRepository.findByUserIdAndEventStatuses(userId, participateRole, statuses, PageRequest.of(page, size));
+        Page<Event> eventList = participationRepository.findByUserIdAndEventStatuses(userId, participateRole, statuses,
+                PageRequest.of(page, size));
 
         return toReadEventListResultDTO(eventList);
     }

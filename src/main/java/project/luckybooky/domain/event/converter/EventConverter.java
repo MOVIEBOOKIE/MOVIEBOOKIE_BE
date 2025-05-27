@@ -8,7 +8,11 @@ import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.location.entity.Location;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 public class EventConverter {
     public static Event toEvent(
@@ -66,11 +70,14 @@ public class EventConverter {
             String username,
             String userImageUrl,
             Integer recruitment,
+            String userRole,
             String recruitmentDate,
-            String d_day,
             Integer recruitmentRate,
             String buttonState
     ) {
+        long days = ChronoUnit.DAYS.between(LocalDate.now(), event.getRecruitmentEnd());
+        String d_day = days < 0 ? null : "D-" + days;
+
         // 요일 구하기 (한글)
         DayOfWeek dayOfWeek = event.getEventDate().getDayOfWeek();
         String[] koreanDays = {"월", "화", "수", "목", "금", "토", "일"};
@@ -82,6 +89,10 @@ public class EventConverter {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         String eventDate = event.getEventDate().format(formatter) + " (" + day + ")";
 
+        // 시간 포맷
+        LocalTime localTime = LocalTime.parse(event.getEventStartTime(), DateTimeFormatter.ofPattern("HH:mm"));
+        String eventTime = localTime.format(DateTimeFormatter.ofPattern("HH시 mm분"));
+
         return EventResponse.EventReadDetailsResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
@@ -91,7 +102,7 @@ public class EventConverter {
                 .description(event.getDescription())
                 .estimatedPrice(event.getEstimatedPrice())
                 .eventDate(eventDate)
-                .eventTime(event.getEventStartTime())
+                .eventTime(eventTime)
                 .recruitmentDate(recruitmentDate)
                 .d_day(d_day)
                 .minParticipants(event.getMinParticipants())
@@ -100,6 +111,8 @@ public class EventConverter {
                 .recruitmentRate(recruitmentRate)
                 .posterImageUrl(event.getPosterImageUrl())
                 .buttonState(buttonState)
+                .eventState(event.getEventStatus().getDescription())
+                .userRole(userRole)
                 .username(username)
                 .userImageUrl(userImageUrl)
                 .recruitment(recruitment)
@@ -133,6 +146,13 @@ public class EventConverter {
     public static EventCreateResultDTO toCreateResult(Long eventId) {
         return EventCreateResultDTO.builder()
                 .eventId(eventId)
+                .build();
+    }
+
+    public static EventResponse.ReadEventListByCategoryResultDTO toReadEventListByCategoryResult(Integer totalPages, List<EventResponse.ReadEventListResultDTO> eventListResultDTOS) {
+        return EventResponse.ReadEventListByCategoryResultDTO.builder()
+                .totalPages(totalPages)
+                .eventList(eventListResultDTOS)
                 .build();
     }
 }

@@ -25,7 +25,9 @@ import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
 import project.luckybooky.domain.notification.event.HostNotificationEvent;
+import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.type.HostNotificationType;
+import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
@@ -73,6 +75,7 @@ public class EventService {
 
         // 호스트 생성 알림
         publisher.publishEvent(new HostNotificationEvent(
+                event.getId(),
                 userId, // hostId
                 HostNotificationType.EVENT_CREATED,
                 event.getEventTitle()
@@ -101,8 +104,8 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readEventListByCategory(String category, Integer page,
-                                                                              Integer size) {
+    public EventResponse.ReadEventListByCategoryResultDTO readEventListByCategory(String category, Integer page,
+                                                                                  Integer size) {
         Page<Event> eventList;
         switch (category) {
             case "인기":
@@ -115,8 +118,10 @@ public class EventService {
                 eventList = eventRepository.findByCategoryName(category, PageRequest.of(page, size));
                 break;
         }
+        int totalPages = eventList.getTotalPages();
+        List<EventResponse.ReadEventListResultDTO> eventListResultDTO = toReadEventListResultDTO(eventList);
 
-        return toReadEventListResultDTO(eventList);
+        return EventConverter.toReadEventListByCategoryResult(totalPages, eventListResultDTO);
     }
 
     public List<EventResponse.ReadEventListResultDTO> readEventListBySearch(String content, Integer page,
@@ -152,25 +157,31 @@ public class EventService {
                 .orElse(2);
 
         String buttonState;
+        String userRole;
         switch (status) {
             case 0:
                 buttonState = event.getHostEventButtonState().getDescription();
+                userRole = "주최자";
                 break;
             case 1:
                 buttonState = event.getParticipantEventButtonState().getDescription();
+                userRole = "참여자";
                 break;
             default:
                 buttonState = event.getAnonymousButtonState().getDescription();
+                userRole = "미참여자";
                 break;
         }
 
+        User host = participationRepository.findHostParticipationByEventId(eventId);
+
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
-                user.getUsername(),
-                user.getProfileImage(),
-                user.getHostExperienceCount(),
+                host.getUsername(),
+                host.getProfileImage(),
+                host.getHostExperienceCount(),
+                userRole,
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
-                "D-" + ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate()),
                 Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100),
                 buttonState
         );
@@ -217,10 +228,23 @@ public class EventService {
         event.recruitCancel();
 
         publisher.publishEvent(new HostNotificationEvent(
+                event.getId(),
                 userId, // hostId
                 HostNotificationType.EVENT_DELETED,
                 event.getEventTitle()
         ));
+
+        // 4) 참여자 전원 조회 → 참여자용 "모집 취소" 알림 발송
+        List<Participation> participants = participationRepository
+                .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+        for (Participation p : participants) {
+            publisher.publishEvent(new ParticipantNotificationEvent(
+                    event.getId(),        // ← eventId
+                    p.getUser().getId(),
+                    ParticipantNotificationType.RECRUITMENT_CANCELLED,
+                    event.getEventTitle()
+            ));
+        }
 
         return EventConstants.RECRUIT_CANCEL_SUCCESS.getMessage();
     }
@@ -237,18 +261,31 @@ public class EventService {
             event.venueRegister();
             return EventConstants.VENUE_RESERVATION_SUCCESS.getMessage();
         } else {
-            // 대관 취소(불가) 시 알림 전송(호스트)
             event.venueCancel();
 
+            // 대관 취소(불가) 시 알림 전송(호스트)
             Long hostId = participationRepository
                     .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
                     .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
             publisher.publishEvent(new HostNotificationEvent(
+                    event.getId(),
                     hostId,
-                    HostNotificationType.RESERVATION_DENIED,
+                    HostNotificationType.RESERVATION_DENIED, // 대관 취소 알림 (호스트)
                     event.getEventTitle()
             ));
+
+            // 2) 참여자 전원 대관 취소 알림
+            List<Participation> participants = participationRepository
+                    .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+            for (Participation p : participants) {
+                publisher.publishEvent(new ParticipantNotificationEvent(
+                        event.getId(),
+                        p.getUser().getId(),
+                        ParticipantNotificationType.RESERVATION_NOT_APPLIED, // 대관 취소 알림 (참여자)
+                        event.getEventTitle()
+                ));
+            }
 
             return EventConstants.VENUE_CANCEL_SUCCESS.getMessage();
         }
@@ -270,12 +307,25 @@ public class EventService {
                 .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
-        // 4) 대관 확정 알림(호스트)
+        //  호스트에게 대관 확정 알림 발송
         publisher.publishEvent(new HostNotificationEvent(
+                event.getId(),
                 hostId,
-                HostNotificationType.RESERVATION_CONFIRMED,
+                HostNotificationType.RESERVATION_CONFIRMED, // 대관 확정 알림 (호스트)
                 event.getEventTitle()
         ));
+
+        // 참여자 전원에게 대관 확정 알림 발송
+        List<Participation> participants = participationRepository
+                .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+        for (Participation p : participants) {
+            publisher.publishEvent(new ParticipantNotificationEvent(
+                    event.getId(),
+                    p.getUser().getId(),
+                    ParticipantNotificationType.RESERVATION_CONFIRMED, // 대관 확정 알림 (참여자)
+                    event.getEventTitle()
+            ));
+        }
 
         return EventConverter.toEventVenueConfirmedResultDTO(ticketId);
     }
@@ -301,12 +351,25 @@ public class EventService {
                     .findByUserIdAndEventIdAndRole(eventId, ParticipateRole.HOST)
                     .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
-            // 3) 상영 완료 후기 요청 알림(호스트)
+            // 상영 완료 후기 요청 알림(호스트)
             publisher.publishEvent(new HostNotificationEvent(
+                    event.getId(),
                     hostId,
                     HostNotificationType.SCREENING_COMPLETED,
                     event.getEventTitle()
             ));
+
+            // 참여자 전원 상영 완료 후기 요청 알림 발송
+            List<Participation> participants = participationRepository
+                    .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+            for (Participation p : participants) {
+                publisher.publishEvent(new ParticipantNotificationEvent(
+                        event.getId(),
+                        p.getUser().getId(),
+                        ParticipantNotificationType.SCREENING_COMPLETED, // 상영 완료 후기 요청 알림 (참여자)
+                        event.getEventTitle()
+                ));
+            }
 
             return EventConstants.SCREENING_DONE_SUCCESS.getMessage();
         }
@@ -322,6 +385,8 @@ public class EventService {
         List<Event> expiredEvents = findExpiredEvents();
 
         expiredEvents.forEach(event -> {
+            Long eventId = event.getId();
+
             // 이벤트를 생성한 호스트의 userId = hostId로 설정 -> 엔티티 조회가 아닌 userId만 조회
             Long hostId = participationRepository
                     .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
@@ -331,18 +396,45 @@ public class EventService {
                 event.recruitCancel();
                 // 인원부족으로 이벤트 취소 시 자동 알림(호스트)
                 publisher.publishEvent(new HostNotificationEvent(
+                        event.getId(),
                         hostId,
-                        HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소
+                        HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소 (호스트)
                         event.getEventTitle()
                 ));
+
+                // 모든 참여자 조회 후 알림 발송
+                List<Participation> participants = participationRepository
+                        .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+                for (Participation p : participants) {
+                    publisher.publishEvent(new ParticipantNotificationEvent(
+                            event.getId(),
+                            p.getUser().getId(),
+                            ParticipantNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 알림 (참여자)
+                            event.getEventTitle()
+                    ));
+                }
+
             } else {
                 event.recruitDone();
                 // 인원 모집 달성 상태로 모집 기간 끝날 시 자동으로 알림 발송(호스트)
                 publisher.publishEvent(new HostNotificationEvent(
+                        event.getId(),
                         hostId,
-                        HostNotificationType.RECRUITMENT_COMPLETED, // 모집 완료
+                        HostNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (호스트)
                         event.getEventTitle()
                 ));
+
+                // 참여자 전원에게 모집 완료 알림 발송
+                List<Participation> participants = participationRepository
+                        .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+                for (Participation p : participants) {
+                    publisher.publishEvent(new ParticipantNotificationEvent(
+                            event.getId(),
+                            p.getUser().getId(),
+                            ParticipantNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (참여자)
+                            event.getEventTitle()
+                    ));
+                }
             }
         });
     }
