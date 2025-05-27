@@ -16,5 +16,6 @@ public class MypageResponseDTO {
     private int hostExperienceCount;
     private int participationExperienceCount;
     private int ticketCount;
+    private String phoneNumber;
 
 }
