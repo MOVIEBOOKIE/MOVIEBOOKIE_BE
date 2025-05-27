@@ -22,6 +22,7 @@ public class MypageConverter {
                 .hostExperienceCount(user.getHostExperienceCount())
                 .participationExperienceCount(user.getParticipationExperienceCount())
                 .ticketCount(ticketCount)
+                .phoneNumber(user.getPhoneNumber())
                 .build();
     }
 }
