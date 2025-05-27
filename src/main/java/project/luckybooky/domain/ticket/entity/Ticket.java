@@ -71,8 +71,4 @@ public class Ticket {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> userList;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
 }
