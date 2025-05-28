@@ -7,11 +7,14 @@ import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
@@ -21,6 +24,7 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 public class EmailCertificationUtil {
 
     private final JavaMailSender mailSender;
+    private final SpringTemplateEngine templateEngine;
 
     @Value("${app.email.from}")
     private String from;
@@ -29,18 +33,26 @@ public class EmailCertificationUtil {
     public void sendMail(String to, String code) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-
-            // Spring 6: (mimeMessage, multipartMode, encoding)
+            // true: multipart
             MimeMessageHelper helper = new MimeMessageHelper(
                     message,
-                    MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                    true,
                     StandardCharsets.UTF_8.name()
             );
 
+            // Thymeleaf 렌더링
+            Context ctx = new Context();
+            ctx.setVariable("code", code);
+            String html = templateEngine.process("email-certification", ctx);
+
             helper.setTo(to);
-            helper.setFrom(from, "무비부키");   // 표시 이름 포함
+            helper.setFrom(from, "무비부키");
             helper.setSubject("[무비부키] 이메일 인증번호");
-            helper.setText(buildHtml(code), true);
+            helper.setText(html, true);
+
+            // 로고를 클래스패스 리소스로 inline 첨부 (CID: logoImage)
+            ClassPathResource logo = new ClassPathResource("templates/logo.png");
+            helper.addInline("logoImage", logo);
 
             mailSender.send(message);
             log.debug("인증 메일 전송 → {}", to);
@@ -49,14 +61,5 @@ public class EmailCertificationUtil {
             log.error("❌ 이메일 전송 실패. to={}, cause={}", to, e.getMessage(), e);
             throw new BusinessException(ErrorCode.EMAIL_SEND_FAIL);
         }
-    }
-
-    private String buildHtml(String code) {
-        return """
-                <p>안녕하세요, 무비부키입니다.</p>
-                <p>아래 인증번호를 입력해 주세요.</p>
-                <h2 style="letter-spacing:4px">%s</h2>
-                <p>(유효 시간: 3분)</p>
-                """.formatted(code);
     }
 }
