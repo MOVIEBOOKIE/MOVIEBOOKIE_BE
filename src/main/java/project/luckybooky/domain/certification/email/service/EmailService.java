@@ -21,7 +21,8 @@ import project.luckybooky.global.redis.SmsCertificationCache;
 public class EmailService {
 
     private static final int CODE_LEN = 4;
-    private static final Duration TTL = Duration.ofMinutes(3);
+    private static final Duration CODE_TTL = Duration.ofMinutes(3);
+    private static final Duration LOCK_TTL = Duration.ofSeconds(10);
     private static final String PREFIX = "otp:email:";
 
     private final EmailCertificationUtil mailUtil;
@@ -29,21 +30,35 @@ public class EmailService {
     private final UserRepository userRepository;
     private final SecureRandom random = new SecureRandom();
 
-    /* 1) 인증번호 발송 */
+    /**
+     * 인증번호 발송
+     **/
     public void sendCode(EmailRequestDTO dto) {
-        String code = generate();
-        if (!cache.store(PREFIX + dto.getEmail(), code, TTL)) {
+        String email = dto.getEmail();
+        String lockKey = PREFIX + email + ":lock";
+        String codeKey = PREFIX + email;
+
+        // 10초 동안 중복 요청 제한
+        if (!cache.store(lockKey, "1", LOCK_TTL)) {
             throw new BusinessException(ErrorCode.CERTIFICATION_DUPLICATED);
         }
-        mailUtil.sendMail(dto.getEmail(), code);
-        log.debug("email code {} → {}", code, dto.getEmail());
+
+        cache.remove(codeKey);
+        String code = generate();
+        cache.store(codeKey, code, CODE_TTL);
+
+        mailUtil.sendMail(email, code);
+        log.info("email code {} → {}", code, email);
     }
 
-    /* 2) 인증번호 검증 */
+    /**
+     * 인증번호 검증
+     **/
     @Transactional
     public void verify(EmailVerifyRequestDTO dto, String loginEmail) {
-        String key = PREFIX + dto.getEmail();
-        String saved = cache.get(key);
+        String email = dto.getEmail();
+        String codeKey = PREFIX + email;
+        String saved = cache.get(codeKey);
 
         if (saved == null) {
             throw new BusinessException(ErrorCode.CERTIFICATION_EXPIRED);
@@ -55,10 +70,9 @@ public class EmailService {
         User user = userRepository.findByEmail(loginEmail)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        user.setCertificationEmail(dto.getEmail());
-
-        cache.remove(key);
-        log.debug("✅ {} verified & saved to user {}", dto.getEmail(), loginEmail);
+        user.setCertificationEmail(email);
+        cache.remove(codeKey);
+        log.debug("✅ {} verified & saved to user {}", email, loginEmail);
     }
 
     private String generate() {

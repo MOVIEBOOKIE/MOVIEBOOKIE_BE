@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import project.luckybooky.domain.admin.event.VenueRequestWebhookEvent;
 import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.category.service.CategoryService;
 import project.luckybooky.domain.event.converter.EventConverter;
@@ -146,17 +147,17 @@ public class EventService {
     }
 
     public EventResponse.EventReadDetailsResultDTO readEventDetails(Long userId, Long eventId) {
-        User user = userTypeService.findOne(userId);
-
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
         /** 현재 유저가 주최자 / 참여자 / 신청x 확인 **/
-        int status = event.getParticipationList().stream()
+        int status = (userId != null)
+                ? event.getParticipationList().stream()
                 .filter(p -> p.getUser().getId() == userId)
                 .findFirst()
                 .map(p -> p.getParticipateRole().equals(ParticipateRole.HOST) ? 0 : 1)
-                .orElse(2);
+                .orElse(2)
+                : 2;
 
         String buttonState;
         String userRole;
@@ -261,6 +262,7 @@ public class EventService {
 
         if (type == 0) {
             event.venueRegister();
+            publisher.publishEvent(new VenueRequestWebhookEvent(this, event.getId()));
             return EventConstants.VENUE_RESERVATION_SUCCESS.getMessage();
         } else {
             event.venueCancel();
