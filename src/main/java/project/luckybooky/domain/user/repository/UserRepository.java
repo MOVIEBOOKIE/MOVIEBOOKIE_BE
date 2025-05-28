@@ -9,9 +9,12 @@ import project.luckybooky.domain.user.entity.UserType;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
+
     Optional<User> findByPhoneNumber(String phoneNumber);
 
     @Query("SELECT u.userType FROM User u WHERE u.id = :userId")
     UserType findUserTypeByUserId(@Param("userId") Long userId);
+
+    boolean existsByEmailAndUserTypeIsNull(String email);
 
 }

@@ -10,6 +10,10 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import project.luckybooky.domain.user.entity.User;
+import project.luckybooky.domain.user.repository.UserRepository;
+import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.jwt.JwtUtil;
 
 @Component
@@ -18,6 +22,8 @@ import project.luckybooky.global.jwt.JwtUtil;
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -28,6 +34,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         boolean isLocal = (referer != null && referer.contains("localhost:3000"));
 
         // 토큰 생성
+        String username = authentication.getName();
         String accessToken = jwtUtil.createAccessToken(authentication.getName());
         String refreshToken = jwtUtil.createRefreshToken(authentication.getName());
 
@@ -52,12 +59,19 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        // 리다이렉트
-        String redirectUrl = isLocal
-                ? "http://localhost:3000/agreement"
-                : "https://movie-bookie.shop/agreement";
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        log.info("🔹 로그인 성공! {} 환경으로 리디렉트: {}", isLocal ? "로컬" : "배포", redirectUrl);
-        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+        boolean firstLogin = (user.getUserType() == null);
+
+        //6) 리다이렉트 경로 결정
+        String baseUrl = isLocal ? "http://localhost:3000" : "https://movie-bookie.shop";
+        String targetPath = firstLogin ? "/agreement" : "/";
+
+        String redirectUrl = baseUrl + targetPath;
+        log.info("🔹 로그인 성공! {} 환경, firstLogin={} → 리디렉트: {}", isLocal ? "로컬" : "배포", firstLogin, redirectUrl);
+
+        log.info("[OAuth2] 로그인 성공 (신규유저={}): {}", firstLogin, redirectUrl);
+        getRedirectStrategy().sendRedirect(request, response, baseUrl + targetPath);
     }
 }
