@@ -146,17 +146,17 @@ public class EventService {
     }
 
     public EventResponse.EventReadDetailsResultDTO readEventDetails(Long userId, Long eventId) {
-        User user = userTypeService.findOne(userId);
-
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
         /** 현재 유저가 주최자 / 참여자 / 신청x 확인 **/
-        int status = event.getParticipationList().stream()
+        int status = (userId != null)
+                ? event.getParticipationList().stream()
                 .filter(p -> p.getUser().getId() == userId)
                 .findFirst()
                 .map(p -> p.getParticipateRole().equals(ParticipateRole.HOST) ? 0 : 1)
-                .orElse(2);
+                .orElse(2)
+                : 2;
 
         String buttonState;
         String userRole;
