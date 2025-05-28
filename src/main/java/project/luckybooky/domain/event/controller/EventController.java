@@ -119,28 +119,28 @@ public class EventController {
             "category: 조회할 카테고리 (ex, 인기, 최신, 영화, 드라마, 스포츠, 예능, 콘서트, 기타 중 1개) <br>" +
             "page: 조회할 페이지 번호 <br> size: 한 페이지에 조회할 이벤트 수")
     @GetMapping("/category")
-    public CommonResponse<EventResponse.ReadEventListByCategoryResultDTO> readEventListByCategory(
+    public CommonResponse<EventResponse.ReadEventListWithPageResultDTO> readEventListByCategory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam String category
     ) {
-        EventResponse.ReadEventListByCategoryResultDTO resultList = eventService.readEventListByCategory(category, page, size);
+        EventResponse.ReadEventListWithPageResultDTO result = eventService.readEventListByCategory(category, page, size);
 
-        return CommonResponse.of(ResultCode.OK, resultList);
+        return CommonResponse.of(ResultCode.OK, result);
     }
 
     @Operation(summary = "이벤트 검색", description = "검색할 content 정보와 page&size를 넣어주세요!! <br><br>" +
             "content: 이벤트 제목 (ex, 더 폴: 오디어스와 환상의 문['더 폴'만도 가능]) or 카테고리 (ex, 영화, 드라마, 스포츠, 예능, 콘서트, 기타 중 1개) <br>" +
             "page: 조회할 페이지 번호 <br> size: 한 페이지에 조회할 이벤트 수")
     @GetMapping("/search")
-    public CommonResponse<List<EventResponse.ReadEventListResultDTO>> readEventListBySearch(
+    public CommonResponse<EventResponse.ReadEventListWithPageResultDTO> readEventListBySearch(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam String content
     ) {
-        List<EventResponse.ReadEventListResultDTO> list = eventService.readEventListBySearch(content, page, size);
+        EventResponse.ReadEventListWithPageResultDTO result = eventService.readEventListBySearch(content, page, size);
 
-        return CommonResponse.of(ResultCode.OK, list);
+        return CommonResponse.of(ResultCode.OK, result);
     }
 
     @Operation(summary = "이벤트 상세 조회", description = "상세 조회를 희망하는 이벤트 ID를 넣어주세요 !!")
