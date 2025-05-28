@@ -14,6 +14,16 @@ public class NotificationConverter {
         if (token == null || token.isBlank()) {
             return null;
         }
+
+        if (hostType == HostNotificationType.EVENT_CREATED) {
+            return Message.builder()
+                    .putData("type", hostType.name())
+                    .putData("title", hostType.getTitle())
+                    .putData("body", hostType.formatBody(eventName))
+                    .putData("eventId", String.valueOf(eventId))
+                    .build();
+        }
+
         return Message.builder()
                 .setToken(token)
                 .setNotification(Notification.builder()
