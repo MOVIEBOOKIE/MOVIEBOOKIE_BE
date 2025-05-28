@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>이메일 인증번호</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            max-width: 120px;
+        }
+
+        .code {
+            font-size: 2rem;
+            letter-spacing: 4px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .footer {
+            font-size: 0.8rem;
+            color: #999;
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo">
+        <img src="cid:logoImage" alt="무비부키 로고"/>
+    </div>
+
+    <p>안녕하세요, 무비부키입니다.</p>
+    <p>아래 인증번호를 입력해 주세요.</p>
+    <div class="code" th:text="${code}">1234</div>
+    <p>(유효 시간: 3분)</p>
+
+    <div class="footer">
+        본 메일은 발신 전용 메일입니다.<br/>
+        문의: moviebookie@gmail.com
+    </div>
+</div>
+</body>
+</html>
