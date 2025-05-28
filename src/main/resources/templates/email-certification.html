@@ -4,56 +4,122 @@
     <meta charset="UTF-8"/>
     <title>이메일 인증번호</title>
     <style>
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+
         body {
-            font-family: sans-serif;
-            line-height: 1.5;
-            color: #333;
+            margin: 0;
+            padding: 16px;
+            min-height: 100vh;
+            background-color: #f9fafb;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .container {
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
+            width: 100%;
+            max-width: 448px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            padding: 32px;
         }
 
-        .logo {
-            text-align: center;
-            margin-bottom: 20px;
+        .icon-container {
+            width: fit-content;
+            background-color: #ef4444;
+            padding: 12px;
+            border-radius: 12px;
         }
 
-        .logo img {
-            max-width: 120px;
+        .title {
+            margin-top: 24px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #111827;
         }
 
-        .code {
-            font-size: 2rem;
-            letter-spacing: 4px;
-            text-align: center;
-            margin: 20px 0;
+        .description {
+            margin-top: 24px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        .verification-code {
+            margin: 32px 0;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 0.05em;
+            color: #111827;
+            padding: 16px 32px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            width: fit-content;
         }
 
         .footer {
-            font-size: 0.8rem;
-            color: #999;
-            text-align: center;
-            margin-top: 30px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .username {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .contact-info {
+            margin-top: 16px;
+            color: #6b7280;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .email {
+            color: #374151;
+        }
+
+        .copyright {
+            margin-top: 16px;
+            color: #9ca3af;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="logo">
-        <img src="cid:logoImage" alt="무비부키 로고"/>
-    </div>
+    <img
+            src="cid:logoImage"
+            alt="무비부키 로고"
+            width="48"
+            height="48"
+    />
 
-    <p>안녕하세요, 무비부키입니다.</p>
-    <p>아래 인증번호를 입력해 주세요.</p>
-    <div class="code" th:text="${code}">1234</div>
-    <p>(유효 시간: 3분)</p>
+    <h1 class="title">이메일 인증번호</h1>
+
+    <p class="description">
+        본 메일은 무비북키의 회원가입을 위한 이메일 인증입니다.<br/>
+        서비스 내 가입화면에서 아래 인증번호를 입력해주세요.
+    </p>
+
+    <div class="verification-code" th:text="${code}">1234</div>
 
     <div class="footer">
-        본 메일은 발신 전용 메일입니다.<br/>
-        문의: moviebookie@gmail.com
+        <!-- <p class="username" th:text="'@' + ${username}">@moviebookie_</p> -->
+        <p class="username">@moviebookie_</p>
+
+        <p class="contact-info">
+            본 메일은 발신 전용 메일입니다.<br/>
+            이용과 관련해서 궁금한 점이 있으시면
+            <span class="email">moviebookie@gmail.com</span> 으로 보내주세요.
+        </p>
+
+        <p class="copyright">
+            Copyright © moviebookie. All Rights Reserved.
+        </p>
     </div>
 </div>
 </body>

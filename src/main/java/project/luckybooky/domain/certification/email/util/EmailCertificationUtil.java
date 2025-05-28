@@ -33,14 +33,12 @@ public class EmailCertificationUtil {
     public void sendMail(String to, String code) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            // true: multipart
             MimeMessageHelper helper = new MimeMessageHelper(
                     message,
                     true,
                     StandardCharsets.UTF_8.name()
             );
 
-            // Thymeleaf 렌더링
             Context ctx = new Context();
             ctx.setVariable("code", code);
             String html = templateEngine.process("email-certification", ctx);
@@ -50,7 +48,6 @@ public class EmailCertificationUtil {
             helper.setSubject("[무비부키] 이메일 인증번호");
             helper.setText(html, true);
 
-            // 로고를 클래스패스 리소스로 inline 첨부 (CID: logoImage)
             ClassPathResource logo = new ClassPathResource("templates/logo.png");
             helper.addInline("logoImage", logo);
 
