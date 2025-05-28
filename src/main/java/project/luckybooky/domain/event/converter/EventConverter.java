@@ -3,7 +3,6 @@ package project.luckybooky.domain.event.converter;
 import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
-import project.luckybooky.domain.event.dto.response.EventResponse.EventCreateResultDTO;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.location.entity.Location;
 
@@ -143,14 +142,8 @@ public class EventConverter {
                 .build();
     }
 
-    public static EventCreateResultDTO toCreateResult(Long eventId) {
-        return EventCreateResultDTO.builder()
-                .eventId(eventId)
-                .build();
-    }
-
-    public static EventResponse.ReadEventListByCategoryResultDTO toReadEventListByCategoryResult(Integer totalPages, List<EventResponse.ReadEventListResultDTO> eventListResultDTOS) {
-        return EventResponse.ReadEventListByCategoryResultDTO.builder()
+    public static EventResponse.ReadEventListWithPageResultDTO toReadEventListWithPageResult(Integer totalPages, List<EventResponse.ReadEventListResultDTO> eventListResultDTOS) {
+        return EventResponse.ReadEventListWithPageResultDTO.builder()
                 .totalPages(totalPages)
                 .eventList(eventListResultDTOS)
                 .build();
