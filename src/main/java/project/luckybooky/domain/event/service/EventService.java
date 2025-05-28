@@ -104,7 +104,7 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
-    public EventResponse.ReadEventListByCategoryResultDTO readEventListByCategory(String category, Integer page,
+    public EventResponse.ReadEventListWithPageResultDTO readEventListByCategory(String category, Integer page,
                                                                                   Integer size) {
         Page<Event> eventList;
         switch (category) {
@@ -121,13 +121,15 @@ public class EventService {
         int totalPages = eventList.getTotalPages();
         List<EventResponse.ReadEventListResultDTO> eventListResultDTO = toReadEventListResultDTO(eventList);
 
-        return EventConverter.toReadEventListByCategoryResult(totalPages, eventListResultDTO);
+        return EventConverter.toReadEventListWithPageResult(totalPages, eventListResultDTO);
     }
 
-    public List<EventResponse.ReadEventListResultDTO> readEventListBySearch(String content, Integer page,
-                                                                            Integer size) {
+    public EventResponse.ReadEventListWithPageResultDTO readEventListBySearch(String content, Integer page, Integer size) {
         Page<Event> eventList = eventRepository.findEventsBySearch(content, PageRequest.of(page, size));
-        return toReadEventListResultDTO(eventList);
+        int totalPages = eventList.getTotalPages();
+        List<EventResponse.ReadEventListResultDTO> eventListResultDTO = toReadEventListResultDTO(eventList);
+
+        return EventConverter.toReadEventListWithPageResult(totalPages, eventListResultDTO);
     }
 
     private List<EventResponse.ReadEventListResultDTO> toReadEventListResultDTO(Page<Event> eventList) {
