@@ -153,6 +153,15 @@ public class EventController {
         return CommonResponse.of(ResultCode.OK, dto);
     }
 
+    @Operation(summary = "이벤트 상세 조회", description = "상세 조회를 희망하는 이벤트 ID를 넣어주세요 !!")
+    @GetMapping("/anonymous/{eventId}")
+    public CommonResponse<EventResponse.EventReadDetailsResultDTO> readEventDetailsForAnonymous(
+            @PathVariable("eventId") Long eventId) {
+        EventResponse.EventReadDetailsResultDTO dto = eventService.readEventDetails(null, eventId);
+
+        return CommonResponse.of(ResultCode.OK, dto);
+    }
+
     @Operation(summary = "홈 화면 맞춤형 콘텐츠 조회", description = "상세 조회를 희망하는 이벤트 ID를 넣어주세요 !!")
     @GetMapping("/home")
     public CommonResponse<List<EventResponse.HomeEventListResultDTO>> readHomeEventList() {
