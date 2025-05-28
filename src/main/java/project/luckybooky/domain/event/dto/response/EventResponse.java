@@ -42,7 +42,7 @@ public class EventResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
-    public static class ReadEventListByCategoryResultDTO {
+    public static class ReadEventListWithPageResultDTO {
         Integer totalPages;
         List<EventResponse.ReadEventListResultDTO> eventList;
     }
