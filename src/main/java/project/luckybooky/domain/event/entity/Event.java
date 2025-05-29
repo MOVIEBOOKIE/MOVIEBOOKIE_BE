@@ -116,10 +116,12 @@ public class Event extends BaseEntity {
         eventStatus = EventStatus.RECRUITED;
         hostEventButtonState = HostEventButtonState.VENUE_RESERVATION;
         participantEventButtonState = ParticipantEventButtonState.RECRUIT_DONE;
+        anonymousButtonState = AnonymousButtonState.RECRUIT_DONE;
     }
 
     /** 대관 신청 **/
     public void venueRegister() {
+        eventStatus = EventStatus.RECRUITED;
         hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
         participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
     }
