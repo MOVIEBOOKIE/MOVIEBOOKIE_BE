@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum AnonymousButtonState {
-    REGISTER("신청하기");
+    REGISTER("신청하기"),
+    RECRUIT_DONE("모집 완료"),
+    ;
 
     private final String description;
 
