@@ -15,9 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.notification.dto.request.FcmTokenRequestDTO;
 import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
 import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
-import project.luckybooky.domain.notification.dto.response.HostNotificationPreviewResponseDTO;
+import project.luckybooky.domain.notification.dto.response.NotificationPreviewDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationResponseDTO;
-import project.luckybooky.domain.notification.dto.response.ParticipantNotificationPreviewDTO;
 import project.luckybooky.domain.notification.service.NotificationService;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
@@ -91,21 +90,19 @@ public class NotificationController {
 
 
     @GetMapping("/notifications/host/preview/{eventId}/{code}")
-    public HostNotificationPreviewResponseDTO previewHostNotification(
+    public NotificationPreviewDTO previewHostNotification(
             @PathVariable Long eventId,
             @PathVariable String code
     ) {
-        Long userId = userContextService.getUserId();
-        return notificationService.previewHostNotification(userId, eventId, code);
+        return notificationService.previewHostNotification(eventId, code);
     }
 
     @GetMapping("/notifications/preview/participant/{eventId}/{code}")
-    public ParticipantNotificationPreviewDTO previewParticipantNotification(
+    public NotificationPreviewDTO previewParticipantNotification(
             @PathVariable Long eventId,
             @PathVariable String code
     ) {
-        Long userId = userContextService.getUserId();
-        return notificationService.previewParticipantNotification(userId, eventId, code);
+        return notificationService.previewParticipantNotification(eventId, code);
     }
 
 }
