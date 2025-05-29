@@ -5,7 +5,7 @@
 <img width="800" alt="무비부키 ERD" src="https://github.com/user-attachments/assets/75c7d96b-4853-4284-9c5c-d77272540763" />
 
 ## System Architecture
-<img width="700" alt="무비부키 아키텍쳐" src="https://github.com/user-attachments/assets/b47b2db0-f2e9-4212-a5fd-2ad650cc47ac" />
+<img width="691" alt="무비부키 아키텍쳐" src="https://github.com/user-attachments/assets/cdf5b772-f516-4c0f-90e0-0dcf928a7117" />
 
 ## API Docs
 **노션 링크**: https://waiting-candle-f33.notion.site/API-1cc3e5c872e78094864ccd251d8ea004?pvs=4
