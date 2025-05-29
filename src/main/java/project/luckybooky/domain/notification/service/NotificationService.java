@@ -2,14 +2,21 @@ package project.luckybooky.domain.notification.service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
+import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import project.luckybooky.domain.event.entity.Event;
+import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
 import project.luckybooky.domain.notification.dto.request.FcmTokenRequestDTO;
 import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
 import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
+import project.luckybooky.domain.notification.dto.response.NotificationPreviewDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationResponseDTO;
+import project.luckybooky.domain.notification.type.HostNotificationType;
+import project.luckybooky.domain.notification.type.ParticipantNotificationType;
+import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
@@ -22,6 +29,8 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 public class NotificationService {
 
     private final UserRepository userRepository;
+    private final EventRepository eventRepository;
+    private final ParticipationRepository participationRepository;
 
     public FcmTokenResponseDTO registerFcmToken(FcmTokenRequestDTO dto) {
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
@@ -73,6 +82,36 @@ public class NotificationService {
         }
 
         return new NotificationResponseDTO("success", "알림 전송 완료");
+    }
+
+    public NotificationPreviewDTO previewHostNotification(Long eventId, String code) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        HostNotificationType type = Arrays.stream(HostNotificationType.values())
+                .filter(t -> t.getCode().equals(code))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOTIFICATION_TYPE_NOT_FOUND));
+
+        return new NotificationPreviewDTO(
+                type.getTitle(),
+                type.formatBody(event.getMediaTitle())
+        );
+    }
+
+    public NotificationPreviewDTO previewParticipantNotification(Long eventId, String code) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        ParticipantNotificationType type = Arrays.stream(ParticipantNotificationType.values())
+                .filter(t -> t.getCode().equals(code))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOTIFICATION_TYPE_NOT_FOUND));
+
+        return new NotificationPreviewDTO(
+                type.getTitle(),
+                type.formatBody(event.getMediaTitle())
+        );
     }
 
 }
