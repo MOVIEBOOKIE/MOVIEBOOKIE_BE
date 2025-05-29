@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,10 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.notification.dto.request.FcmTokenRequestDTO;
 import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
 import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
+import project.luckybooky.domain.notification.dto.response.HostNotificationPreviewResponseDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationResponseDTO;
+import project.luckybooky.domain.notification.dto.response.ParticipantNotificationPreviewDTO;
 import project.luckybooky.domain.notification.service.NotificationService;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
+import project.luckybooky.global.service.UserContextService;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,6 +29,7 @@ import project.luckybooky.global.apiPayload.response.ResultCode;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final UserContextService userContextService;
 
     @Operation(
             summary = "푸시 알림 전송",
@@ -82,4 +88,24 @@ public class NotificationController {
         FcmTokenResponseDTO response = notificationService.registerFcmToken(dto);
         return CommonResponse.of(ResultCode.OK, response);
     }
+
+
+    @GetMapping("/notifications/host/preview/{eventId}/{code}")
+    public HostNotificationPreviewResponseDTO previewHostNotification(
+            @PathVariable Long eventId,
+            @PathVariable String code
+    ) {
+        Long userId = userContextService.getUserId();
+        return notificationService.previewHostNotification(userId, eventId, code);
+    }
+
+    @GetMapping("/notifications/preview/participant/{eventId}/{code}")
+    public ParticipantNotificationPreviewDTO previewParticipantNotification(
+            @PathVariable Long eventId,
+            @PathVariable String code
+    ) {
+        Long userId = userContextService.getUserId();
+        return notificationService.previewParticipantNotification(userId, eventId, code);
+    }
+
 }

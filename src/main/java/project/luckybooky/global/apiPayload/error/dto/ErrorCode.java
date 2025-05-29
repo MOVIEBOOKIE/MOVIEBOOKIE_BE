@@ -83,7 +83,9 @@ public enum ErrorCode implements BaseStatus {
     // Ticket 관련
     TICKET_NOT_FOUND(HttpStatus.BAD_REQUEST, "TICKET_401", "해당 티켓을 찾을 수 없습니다."),
 
-    ;
+    NOTIFICATION_TYPE_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_400", "알림 타입을 찾을 수 없습니다."),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "HOST_403", "접근이 거부되었습니다.");
+
 
     private final HttpStatus httpStatus;
     private final String code;

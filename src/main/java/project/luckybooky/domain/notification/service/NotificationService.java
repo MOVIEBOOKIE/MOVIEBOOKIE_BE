@@ -2,14 +2,24 @@ package project.luckybooky.domain.notification.service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
+import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import project.luckybooky.domain.event.entity.Event;
+import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
 import project.luckybooky.domain.notification.dto.request.FcmTokenRequestDTO;
 import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
 import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
+import project.luckybooky.domain.notification.dto.response.HostNotificationPreviewResponseDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationResponseDTO;
+import project.luckybooky.domain.notification.dto.response.ParticipantNotificationPreviewDTO;
+import project.luckybooky.domain.notification.type.HostNotificationType;
+import project.luckybooky.domain.notification.type.ParticipantNotificationType;
+import project.luckybooky.domain.participation.entity.Participation;
+import project.luckybooky.domain.participation.entity.type.ParticipateRole;
+import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
@@ -22,6 +32,8 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 public class NotificationService {
 
     private final UserRepository userRepository;
+    private final EventRepository eventRepository;
+    private final ParticipationRepository participationRepository;
 
     public FcmTokenResponseDTO registerFcmToken(FcmTokenRequestDTO dto) {
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
@@ -75,4 +87,47 @@ public class NotificationService {
         return new NotificationResponseDTO("success", "알림 전송 완료");
     }
 
+    public HostNotificationPreviewResponseDTO previewHostNotification(
+            Long userId,
+            Long eventId,
+            String notificationCode
+    ) {
+        // 1) 이벤트 조회
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        // 2) 참여 내역에서 HOST 인지 확인
+        Participation hostParticipation = participationRepository
+                .findByUserIdAndEventId(userId, eventId)
+                .filter(p -> p.getParticipateRole() == ParticipateRole.HOST)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ACCESS_DENIED));
+
+        HostNotificationType type = HostNotificationType.fromCode(notificationCode);
+        String title = type.getTitle();
+        String body = type.formatBody(event.getMediaTitle());
+
+        return new HostNotificationPreviewResponseDTO(title, body);
+    }
+
+    public ParticipantNotificationPreviewDTO previewParticipantNotification(
+            Long userId, Long eventId, String code
+    ) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        boolean joined = participationRepository.existsByUserIdAndEventId(userId, eventId);
+        if (!joined) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+
+        ParticipantNotificationType type = Arrays.stream(ParticipantNotificationType.values())
+                .filter(t -> t.getCode().equals(code))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOTIFICATION_TYPE_NOT_FOUND));
+
+        String title = type.getTitle();
+        String body = type.formatBody(event.getMediaTitle());
+
+        return new ParticipantNotificationPreviewDTO(title, body);
+    }
 }
