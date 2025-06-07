@@ -15,7 +15,8 @@ import project.luckybooky.global.oauth.util.CookieUtil;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private static final List<String> EXCLUDED_URLS = List.of(
-            "/api/auth/login/kakao", "/swagger-ui", "/v3/api-docs", "/swagger-resources", "/api/events/anonymous"
+            "/api/auth/login/kakao", "/swagger-ui", "/v3/api-docs", "/swagger-resources", "/api/events/anonymous",
+            "api/test/users/tokens"
     );
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil) {
