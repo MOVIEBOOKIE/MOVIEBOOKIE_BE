@@ -9,7 +9,7 @@ const tokens = new SharedArray('tokens', () => {
 });
 
 export let options = {
-    vus: __ENV.VUS ? parseInt(__ENV.VUS) : 100,
+    vus: __ENV.VUS ? parseInt(__ENV.VUS) : 200,
     duration: __ENV.DURATION || '1m',
     thresholds: {
         http_req_failed: ['rate<0.01'],
