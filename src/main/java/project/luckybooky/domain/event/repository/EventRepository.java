@@ -1,14 +1,16 @@
 package project.luckybooky.domain.event.repository;
 
+import jakarta.persistence.LockModeType;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import project.luckybooky.domain.event.entity.Event;
-
-import java.time.LocalDate;
-import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("SELECT e FROM Event e WHERE e.eventStatus='RECRUITING' ORDER BY e.createdAt DESC")
@@ -22,7 +24,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     @Query("SELECT e FROM Event e WHERE e.recruitmentEnd < :now")
     List<Event> findExpiredEvent(@Param("now") LocalDate now);
-  
+
     @Query("SELECT e FROM Event e \n" +
             "WHERE :content IN (e.category.categoryName) \n" +
             "   OR e.mediaTitle LIKE CONCAT('%', :content, '%')")
@@ -34,4 +36,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "ORDER BY (1.0 * e.currentParticipants / e.maxParticipants) DESC")
     List<Event> findEventListByUserType(@Param("categoryId") Long categoryId, Pageable pageable);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT e FROM Event e WHERE e.id = :id")
+    Optional<Event> findByIdWithLock(@Param("id") Long id);
 }
