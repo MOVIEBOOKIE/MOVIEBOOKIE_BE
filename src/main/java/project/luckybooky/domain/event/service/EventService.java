@@ -106,7 +106,7 @@ public class EventService {
     }
 
     public EventResponse.ReadEventListWithPageResultDTO readEventListByCategory(String category, Integer page,
-                                                                                  Integer size) {
+                                                                                Integer size) {
         Page<Event> eventList;
         switch (category) {
             case "인기":
@@ -125,7 +125,8 @@ public class EventService {
         return EventConverter.toReadEventListWithPageResult(totalPages, eventListResultDTO);
     }
 
-    public EventResponse.ReadEventListWithPageResultDTO readEventListBySearch(String content, Integer page, Integer size) {
+    public EventResponse.ReadEventListWithPageResultDTO readEventListBySearch(String content, Integer page,
+                                                                              Integer size) {
         Page<Event> eventList = eventRepository.findEventsBySearch(content, PageRequest.of(page, size));
         int totalPages = eventList.getTotalPages();
         List<EventResponse.ReadEventListResultDTO> eventListResultDTO = toReadEventListResultDTO(eventList);
@@ -209,7 +210,7 @@ public class EventService {
     @Transactional
     public void registerEvent(Long eventId, Boolean type) {
         // 참여인원 추가
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdWithLock(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
         event.updateCurrentParticipants(type);
     }
