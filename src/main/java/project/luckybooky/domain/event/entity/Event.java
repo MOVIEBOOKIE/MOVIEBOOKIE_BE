@@ -1,6 +1,21 @@
 package project.luckybooky.domain.event.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Version;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,11 +27,9 @@ import project.luckybooky.domain.event.entity.type.HostEventButtonState;
 import project.luckybooky.domain.event.entity.type.ParticipantEventButtonState;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.participation.entity.Participation;
+import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.entity.BaseEntity;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Builder
@@ -100,18 +113,35 @@ public class Event extends BaseEntity {
     @Column(name = "current_participants", nullable = false)
     private Integer currentParticipants = 0;
 
+    @Version
+    private Long version;
+
     public void updateCurrentParticipants(Boolean isPlus) {
+        if (isPlus) {
+            if (this.currentParticipants + 1 > this.maxParticipants) {
+                throw new BusinessException(ErrorCode.EVENT_FULL);
+            }
+            this.currentParticipants++;
+        } else {
+            if (this.currentParticipants <= 0) {
+                throw new BusinessException(ErrorCode.INVALID_OPERATION);
+            }
+        }
         currentParticipants += isPlus ? 1 : -1;
     }
 
-    /** 모집 취소 **/
+    /**
+     * 모집 취소
+     **/
     public void recruitCancel() {
         eventStatus = EventStatus.RECRUIT_CANCELED;
         hostEventButtonState = HostEventButtonState.RECRUIT_CANCELLED;
         participantEventButtonState = ParticipantEventButtonState.RECRUIT_CANCELED;
     }
 
-    /** 모집 완료 **/
+    /**
+     * 모집 완료
+     **/
     public void recruitDone() {
         eventStatus = EventStatus.RECRUITED;
         hostEventButtonState = HostEventButtonState.VENUE_RESERVATION;
@@ -119,21 +149,27 @@ public class Event extends BaseEntity {
         anonymousButtonState = AnonymousButtonState.RECRUIT_DONE;
     }
 
-    /** 대관 신청 **/
+    /**
+     * 대관 신청
+     **/
     public void venueRegister() {
         eventStatus = EventStatus.RECRUITED;
         hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
         participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
     }
 
-    /** 대관 취소 **/
+    /**
+     * 대관 취소
+     **/
     public void venueCancel() {
         eventStatus = EventStatus.VENUE_RESERVATION_CANCELED;
         hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_CANCELED;
         participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_CANCELED;
     }
 
-    /** 대관 확정 **/
+    /**
+     * 대관 확정
+     **/
     public void venueConfirmed() {
         eventStatus = EventStatus.VENUE_CONFIRMED;
         hostEventButtonState = HostEventButtonState.TO_TICKET;
