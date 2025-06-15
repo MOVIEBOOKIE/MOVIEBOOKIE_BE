@@ -17,7 +17,7 @@ export let options = {
 };
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
-const EVENT_ID = __ENV.EVENT_ID || '1';
+const EVENT_ID = __ENV.EVENT_ID || '3';
 
 export default function () {
     // VU별 토큰 할당 (없으면 ENV Fallback)
