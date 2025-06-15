@@ -19,7 +19,9 @@ import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.category.service.CategoryService;
 import project.luckybooky.domain.event.converter.EventConverter;
 import project.luckybooky.domain.event.dto.request.EventRequest;
+import project.luckybooky.domain.event.dto.response.EventParticipantsResponse;
 import project.luckybooky.domain.event.dto.response.EventResponse;
+import project.luckybooky.domain.event.dto.response.ParticipantDTO;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.event.util.EventConstants;
@@ -29,6 +31,7 @@ import project.luckybooky.domain.notification.event.HostNotificationEvent;
 import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
+import project.luckybooky.domain.participation.converter.ParticipationConverter;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
@@ -36,6 +39,7 @@ import project.luckybooky.domain.ticket.service.TicketService;
 import project.luckybooky.domain.user.entity.ContentCategory;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.entity.UserType;
+import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
@@ -53,6 +57,8 @@ public class EventService {
     private final CategoryService categoryService;
     private final TicketService ticketService;
     private final ApplicationEventPublisher publisher;
+    private final UserRepository userRepository;
+
 
     @Transactional
     public Long createEvent(Long userId, EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
@@ -207,12 +213,60 @@ public class EventService {
     /**
      * 이벤트 신청 혹은 취소
      **/
+//    @Transactional
+//    public void registerEvent(Long eventId, Boolean type) {
+//        // 참여인원 추가
+//        Event event = eventRepository.findByIdWithLock(eventId)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+//        event.updateCurrentParticipants(type);
+//    }
+
+    /**
+     * 이벤트 신청
+     **/
     @Transactional
-    public void registerEvent(Long eventId, Boolean type) {
-        // 참여인원 추가
+    public void registerEvent(Long userId, Long eventId) {
         Event event = eventRepository.findByIdWithLock(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
-        event.updateCurrentParticipants(type);
+
+        if (event.getCurrentParticipants() + 1 > event.getMaxParticipants()) {
+            throw new BusinessException(ErrorCode.EVENT_FULL);
+        }
+
+        // 1. 참여 카운트를 먼저 증가
+        event.updateCurrentParticipants(true);
+
+        // 2. 그 후 참여자 앤티티를 생성하고 저장
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        Participation p = ParticipationConverter.toParticipation(
+                user, event, ParticipateRole.PARTICIPANT
+        );
+
+        participationRepository.save(p);
+
+    }
+
+    /**
+     * 이벤트 신청 취소
+     */
+    @Transactional
+    public void cancelEvent(Long userId, Long eventId) {
+        // 1) Pessimistic Lock 으로 이벤트 잠금
+        Event event = eventRepository.findByIdWithLock(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        // 2) Participation 조회
+        Participation p = participationRepository
+                .findByUserIdAndEventId(userId, eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+        // 3) Participation 삭제
+        participationRepository.delete(p);
+
+        // 4) 카운트 먼저 감소 (예외 시 전체 롤백)
+        event.updateCurrentParticipants(false);
     }
 
     /**
@@ -478,4 +532,40 @@ public class EventService {
             return EventConverter.toHomeEventListResultDTO(event, eventDate);
         }).collect(Collectors.toList());
     }
+
+    @Transactional
+    public int cancelAllParticipants(Long eventId) {
+        eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        List<Participation> participants = participationRepository
+                .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+
+        // 일괄 삭제
+        participationRepository.deleteAll(participants);
+
+        eventRepository.findById(eventId).ifPresent(event -> event.resetCurrentParticipants());
+
+        return participants.size();
+    }
+
+    // 특정 이벤트에 참여 중인 사용자 목록 조회
+    public EventParticipantsResponse getEventParticipants(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        List<Participation> list = participationRepository
+                .findAllByEventIdAndParticipateRole(eventId, ParticipateRole.PARTICIPANT);
+
+        List<ParticipantDTO> dtos = list.stream()
+                .map(p -> {
+                    var u = p.getUser();
+                    return new ParticipantDTO(u.getId(), u.getUsername(), u.getProfileImage());
+                })
+                .collect(Collectors.toList());
+
+        int totalCount = event.getCurrentParticipants();
+        return new EventParticipantsResponse(dtos, totalCount);
+    }
+
 }

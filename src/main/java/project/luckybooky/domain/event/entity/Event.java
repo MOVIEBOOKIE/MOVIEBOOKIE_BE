@@ -118,16 +118,17 @@ public class Event extends BaseEntity {
 
     public void updateCurrentParticipants(Boolean isPlus) {
         if (isPlus) {
-            if (this.currentParticipants + 1 > this.maxParticipants) {
+            if (currentParticipants + 1 > maxParticipants) {
                 throw new BusinessException(ErrorCode.EVENT_FULL);
             }
-            this.currentParticipants++;
+            currentParticipants++;
         } else {
-            if (this.currentParticipants <= 0) {
+            if (currentParticipants <= 0) {
                 throw new BusinessException(ErrorCode.INVALID_OPERATION);
             }
+            currentParticipants--;
+
         }
-        currentParticipants += isPlus ? 1 : -1;
     }
 
     /**
@@ -181,5 +182,9 @@ public class Event extends BaseEntity {
      **/
     public void screeningProcess(Integer type) {
         eventStatus = (type == 0) ? EventStatus.COMPLETED : EventStatus.CANCELLED;
+    }
+
+    public void resetCurrentParticipants() {
+        this.currentParticipants = 0;
     }
 }

@@ -63,8 +63,8 @@ public class EventController {
     public CommonResponse<String> registerEvent(@PathVariable("eventId") Long eventId) {
         Long userId = userContextService.getUserId();
 
-        participationService.createParticipation(userId, eventId, Boolean.FALSE);
-        eventService.registerEvent(eventId, Boolean.TRUE);
+        //participationService.createParticipation(userId, eventId, Boolean.FALSE);
+        eventService.registerEvent(userId, eventId);
 
         return CommonResponse.of(ResultCode.OK, EventConstants.REGISTER_SUCCESS.getMessage());
     }
@@ -75,8 +75,9 @@ public class EventController {
         Long userId = userContextService.getUserId();
 
         participationService.deleteParticipation(userId, eventId);
-        eventService.registerEvent(eventId, Boolean.FALSE);
-
+        //eventService.registerEvent(userId, eventId);
+        eventService.cancelEvent(userId, eventId);
+        
         return CommonResponse.of(ResultCode.OK, EventConstants.REGISTER_CANCEL_SUCCESS.getMessage());
     }
 
@@ -124,7 +125,8 @@ public class EventController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam String category
     ) {
-        EventResponse.ReadEventListWithPageResultDTO result = eventService.readEventListByCategory(category, page, size);
+        EventResponse.ReadEventListWithPageResultDTO result = eventService.readEventListByCategory(category, page,
+                size);
 
         return CommonResponse.of(ResultCode.OK, result);
     }
@@ -170,4 +172,5 @@ public class EventController {
 
         return CommonResponse.of(ResultCode.OK, list);
     }
+
 }
