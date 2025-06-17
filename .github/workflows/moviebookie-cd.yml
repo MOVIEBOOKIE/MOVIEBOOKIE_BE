@@ -72,4 +72,4 @@ jobs:
             sudo docker rm -f moviebookie || true
             sudo docker image rm ${{ secrets.DOCKERHUB_USERNAME }}/moviebookie:latest || true
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/moviebookie
-            sudo docker run -d -p 8080:8080 -e TZ=Asia/Seoul --name moviebookie ${{ secrets.DOCKERHUB_USERNAME }}/moviebookie
+            sudo docker run -d -p 8080:8080 -e TZ=Asia/Seoul --name moviebookie -v ./logs:/var/log/spring ${{ secrets.DOCKERHUB_USERNAME }}/moviebookie
