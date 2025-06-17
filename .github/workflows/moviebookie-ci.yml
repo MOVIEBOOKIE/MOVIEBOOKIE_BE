@@ -48,16 +48,3 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean bootJar -x test -Pprofile=prod
         shell: bash
-
-      - name: docker login
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      # Docker 이미지 빌드, 태그 및 레지스트리에 푸시
-      - name: docker image build
-        run: docker build -f Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/moviebookie .
-
-      - name: docker Hub push
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/moviebookie
