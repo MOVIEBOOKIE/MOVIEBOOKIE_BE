@@ -23,8 +23,18 @@
         </format>
     </appender>
 
-    <root level="INFO">
-        <appender-ref ref="LOKI"/>
-        <appender-ref ref="CONSOLE"/>
-    </root>
+    <!-- 배포 환경(prod)일 때만 LOKI와 CONSOLE을 활성화 -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="LOKI"/>
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- prod 프로필이 아닐 때(로컬 등)는 CONSOLE만 활성화 -->
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
 </configuration>
