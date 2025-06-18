@@ -1,4 +1,4 @@
-<configuration debug="true">
+<configuration>
 
     <!-- 콘솔에도 출력 -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
