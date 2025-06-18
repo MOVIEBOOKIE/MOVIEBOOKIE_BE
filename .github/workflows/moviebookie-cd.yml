@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "setting/#140-docker-registry" ]
+    branches: [ "develop" ]
 
 jobs:
   build:
