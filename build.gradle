@@ -69,6 +69,12 @@ dependencies {
     // ssr
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
+    // monitoring
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'com.github.loki4j:loki-logback-appender:1.4.1'
+
+
 }
 
 tasks.named('test') {
