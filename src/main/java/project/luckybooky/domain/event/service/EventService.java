@@ -5,8 +5,11 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -58,6 +61,7 @@ public class EventService {
     private final TicketService ticketService;
     private final ApplicationEventPublisher publisher;
     private final UserRepository userRepository;
+    private final RedissonClient redissonClient;
 
 
     @Transactional
@@ -226,26 +230,42 @@ public class EventService {
      **/
     @Transactional
     public void registerEvent(Long userId, Long eventId) {
-        Event event = eventRepository.findByIdWithLock(eventId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+        String locKey = "event:" + eventId + ":lock";
+        RLock lock = redissonClient.getLock(locKey);
 
-        if (event.getCurrentParticipants() + 1 > event.getMaxParticipants()) {
-            throw new BusinessException(ErrorCode.EVENT_FULL);
+        boolean acquired = false;
+        try {
+            // 최대 5초 대기, 획득 후 10초 뒤 해제
+            acquired = lock.tryLock(5, 10, TimeUnit.SECONDS);
+            if (!acquired) {
+                throw new BusinessException(ErrorCode.SYSTEM_BUSY);
+            }
+            Event event = eventRepository.findByIdWithLock(eventId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+            if (event.getCurrentParticipants() + 1 > event.getMaxParticipants()) {
+                throw new BusinessException(ErrorCode.EVENT_FULL);
+            }
+            // 1. 참여 카운트를 먼저 증가
+            event.updateCurrentParticipants(true);
+
+            // 2. 그 후 참여자 앤티티를 생성하고 저장
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+            Participation p = ParticipationConverter.toParticipation(
+                    user, event, ParticipateRole.PARTICIPANT
+            );
+
+            participationRepository.save(p);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException(ErrorCode.SYSTEM_BUSY);
+        } finally {
+            if (acquired && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
-
-        // 1. 참여 카운트를 먼저 증가
-        event.updateCurrentParticipants(true);
-
-        // 2. 그 후 참여자 앤티티를 생성하고 저장
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        Participation p = ParticipationConverter.toParticipation(
-                user, event, ParticipateRole.PARTICIPANT
-        );
-
-        participationRepository.save(p);
-
     }
 
     /**
@@ -253,19 +273,15 @@ public class EventService {
      */
     @Transactional
     public void cancelEvent(Long userId, Long eventId) {
-        // 1) Pessimistic Lock 으로 이벤트 잠금
         Event event = eventRepository.findByIdWithLock(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
-        // 2) Participation 조회
         Participation p = participationRepository
                 .findByUserIdAndEventId(userId, eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
-        // 3) Participation 삭제
         participationRepository.delete(p);
 
-        // 4) 카운트 먼저 감소 (예외 시 전체 롤백)
         event.updateCurrentParticipants(false);
     }
 

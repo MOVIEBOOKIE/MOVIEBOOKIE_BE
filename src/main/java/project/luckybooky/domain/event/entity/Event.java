@@ -50,6 +50,7 @@ public class Event extends BaseEntity {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @Builder.Default
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     private List<Participation> participationList = new ArrayList<>();
 

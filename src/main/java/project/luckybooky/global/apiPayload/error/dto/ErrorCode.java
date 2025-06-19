@@ -86,8 +86,10 @@ public enum ErrorCode implements BaseStatus {
     TICKET_NOT_FOUND(HttpStatus.BAD_REQUEST, "TICKET_401", "해당 티켓을 찾을 수 없습니다."),
 
     NOTIFICATION_TYPE_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_400", "알림 타입을 찾을 수 없습니다."),
-    ACCESS_DENIED(HttpStatus.FORBIDDEN, "HOST_403", "접근이 거부되었습니다.");
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "HOST_403", "접근이 거부되었습니다."),
 
+    // Redis 관련
+    SYSTEM_BUSY(HttpStatus.SERVICE_UNAVAILABLE, "SYSTEM_503", "시스템이 바쁩니다. 잠시 후 다시 시도해주세요.");
 
     private final HttpStatus httpStatus;
     private final String code;
