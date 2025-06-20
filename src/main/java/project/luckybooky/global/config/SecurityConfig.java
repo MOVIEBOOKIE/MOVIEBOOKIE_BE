@@ -43,7 +43,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 이벤트 상세 조회 비로그인 유저 허용
                         .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
-
+                        .requestMatchers(HttpMethod.GET, "/api/test/users/tokens/**").permitAll()
                         .requestMatchers("/", "/api/health").permitAll() // 인증 없이 접근 허용
                         .requestMatchers("/", "/index.html", "/static/**", "/favicon.ico").permitAll() // 정적 파일 허용
                         .requestMatchers("/**").permitAll()  // 모든 요청 허용 (테스트용)
