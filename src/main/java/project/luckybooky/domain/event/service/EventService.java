@@ -5,7 +5,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -230,16 +229,9 @@ public class EventService {
      **/
     @Transactional
     public void registerEvent(Long userId, Long eventId) {
-        String locKey = "event:" + eventId + ":lock";
-        RLock lock = redissonClient.getLock(locKey);
-
-        boolean acquired = false;
+        RLock lock = redissonClient.getLock("event:" + eventId + ":lock");
+        lock.lock();
         try {
-            // 최대 5초 대기, 획득 후 10초 뒤 해제
-            acquired = lock.tryLock(5, 10, TimeUnit.SECONDS);
-            if (!acquired) {
-                throw new BusinessException(ErrorCode.SYSTEM_BUSY);
-            }
             Event event = eventRepository.findByIdWithLock(eventId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
@@ -258,13 +250,8 @@ public class EventService {
             );
 
             participationRepository.save(p);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new BusinessException(ErrorCode.SYSTEM_BUSY);
         } finally {
-            if (acquired && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            lock.unlock();
         }
     }
 
