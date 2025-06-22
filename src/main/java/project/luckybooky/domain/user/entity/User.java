@@ -1,6 +1,5 @@
 package project.luckybooky.domain.user.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,17 +8,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Pattern;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import project.luckybooky.domain.ticket.entity.Ticket;
 import project.luckybooky.global.entity.BaseEntity;
 
 @Getter
@@ -55,9 +50,11 @@ public class User extends BaseEntity {
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
+    @Builder.Default
     @Column(name = "host_experience_count", nullable = false)
     private int hostExperienceCount = 0;
 
+    @Builder.Default
     @Column(name = "participation_experience_count", nullable = false)
     private int participationExperienceCount = 0;
 
