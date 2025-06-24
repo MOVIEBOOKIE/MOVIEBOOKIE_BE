@@ -16,10 +16,10 @@ export const options = {
 
 export default function () {
     // 1. 홈화면 조회
-    let homeRes = http.get('http://host.docker.internal:8080/api/events/home', {
+    let homeRes = http.get('https://api.movie-bookie.shop/api/events/home', {
         headers: {
             'accept': '*/*',
-            'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJndWVzdDFAZXhhbXBsZS5jb20iLCJjYXRlZ29yeSI6ImFjY2VzcyIsImlhdCI6MTc1MDYwMzkzNywiZXhwIjoxNzUxMjA4NzM3fQ.Xq7EH3N5XJE15R-rOA9-bDFN1OoCJsjwDzzNT5iWnO4CX4wTQIgUIwDON3P-TphHgTzkzyaWPFCvRcAzOBSzYw'
+            'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtMDIwMjAyQG5hdmVyLmNvbSIsImNhdGVnb3J5IjoicmVmcmVzaCIsImlhdCI6MTc1MDU4OTM3NCwiZXhwIjoxNzUxNzk4OTc0fQ.dgZkEKvI2irgmGr9c5GwaQF18brAAUMyEYfQUg3YoBXB-sX5JYqgcJ8341UANgmoajtoUUE-Hj9SRcmDIReOQQ'
         }
     });
     check(homeRes, {
@@ -27,10 +27,10 @@ export default function () {
     });
 
     // 2. 이벤트 신청
-    let registerRes = http.post('http://host.docker.internal:8080/api/events/2/register', null, {
+    let registerRes = http.post('https://api.movie-bookie.shop/api/events/191/register', null, {
         headers: {
             'accept': '*/*',
-            'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJndWVzdDRAZXhhbXBsZS5jb20iLCJjYXRlZ29yeSI6ImFjY2VzcyIsImlhdCI6MTc1MDE3NDcwNSwiZXhwIjoxNzUwNzc5NTA1fQ.onlomPzLxBXglb7uFce1-EdidPGLg5XHgtLCdEn7gAAUPG1g3jUEaDD5pvBQUuc_-cBiJ_T4j2ZmeOa2dcBfBg'
+            'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtMDIwMjAyQG5hdmVyLmNvbSIsImNhdGVnb3J5IjoicmVmcmVzaCIsImlhdCI6MTc1MDU4OTM3NCwiZXhwIjoxNzUxNzk4OTc0fQ.dgZkEKvI2irgmGr9c5GwaQF18brAAUMyEYfQUg3YoBXB-sX5JYqgcJ8341UANgmoajtoUUE-Hj9SRcmDIReOQQ'
         }
     });
     check(registerRes, {
@@ -38,10 +38,10 @@ export default function () {
     });
 
     // 3. 신청한 이벤트 상세 조회
-    let detailRes = http.get('http://host.docker.internal:8080/api/events/2', {
+    let detailRes = http.get('https://api.movie-bookie.shop/api/events/191', {
         headers: {
             'accept': '*/*',
-            'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJndWVzdDRAZXhhbXBsZS5jb20iLCJjYXRlZ29yeSI6ImFjY2VzcyIsImlhdCI6MTc1MDE3NDcwNSwiZXhwIjoxNzUwNzc5NTA1fQ.onlomPzLxBXglb7uFce1-EdidPGLg5XHgtLCdEn7gAAUPG1g3jUEaDD5pvBQUuc_-cBiJ_T4j2ZmeOa2dcBfBg'
+            'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtMDIwMjAyQG5hdmVyLmNvbSIsImNhdGVnb3J5IjoicmVmcmVzaCIsImlhdCI6MTc1MDU4OTM3NCwiZXhwIjoxNzUxNzk4OTc0fQ.dgZkEKvI2irgmGr9c5GwaQF18brAAUMyEYfQUg3YoBXB-sX5JYqgcJ8341UANgmoajtoUUE-Hj9SRcmDIReOQQ'
         }
     });
     check(detailRes, {
