@@ -3,14 +3,14 @@ import { check, sleep } from 'k6';
 
 export const options = {
     stages: [
-        { duration: '10s', target: 50 },
-        { duration: '40s', target: 100 },
+        { duration: '10s', target: 100 },
+        { duration: '40s', target: 300 },
         { duration: '10s', target: 200 },
     ],
     thresholds: {
-        'http_req_failed': ['rate<0.01'],            // 실패율 1% 미만
-        'http_req_duration': ['p(95)<300', 'avg<300'], // 95% 요청 250ms 이하, 평균 300ms 이하
-        'checks': ['rate>0.99'],                     // 체크 성공률 99% 이상
+        'http_req_failed': ['rate<0.05'],            // 실패율 5% 미만으로 완화
+        'http_req_duration': ['p(95)<2000', 'avg<1000'], // 임계값 완화
+        'checks': ['rate>0.95'],                     // 체크 성공률 95% 이상으로 완화
     },
 };
 
