@@ -1,35 +1,55 @@
 import http from 'k6/http';
 import {check, sleep} from 'k6';
+import {Counter} from 'k6/metrics';
 
-// 부하 테스트 옵션: 300명의 VU를 1분간 유지
 export const options = {
-    vus: 300,
+    vus: 200,
     duration: '1m',
-    // 필요 시 ramp-up/다운 단계로 바꿀 수 있습니다.
-    // stages: [
-    //   { duration: '30s', target: 300 }, // 30초 동안 0→300 VUs ramp-up
-    //   { duration: '1m', target: 300 },  // 1분 유지
-    //   { duration: '30s', target: 0 },   // 30초 ramp-down
-    // ],
+    thresholds: {
+        'http_req_failed{status:>=500}': ['rate<0.01'],
+        'cert_dup_count': ['count>=1'],
+    },
 };
 
-const BASE_URL = 'https://your.api.server';  // ← 실제 호스트로 수정
-const SEND_ENDPOINT = '/api/email/send-code'; // ← 실제 엔드포인트 경로로 수정
+let certDupCount = new Counter('cert_dup_count');
+let dupSuccessCount = new Counter('cert_dup_success');
+
+const BASE = 'http://localhost:8080';
+const SEND = '/api/email/send';
 const HEADERS = {'Content-Type': 'application/json'};
+const BOUNDARY_DELAYS = [0.1, 1, 9]; // 0.1초, 1초, 9초
 
 export default function () {
-    // 각 VU와 iteration 조합으로 고유 이메일 생성
-    const email = `user${__VU}_${__ITER}@example.com`;
-    const payload = JSON.stringify({email});
+    // 1) 동시성 테스트: 매번 다른 이메일
+    let email1 = `user${Math.floor(Math.random() * 100000)}@test.com`;
+    let res1 = http.post(
+        `${BASE}${SEND}`,
+        JSON.stringify({email: email1}),
+        {headers: HEADERS}
+    );
+    check(res1, {'status < 500': r => r.status < 500});
 
-    // 인증코드 발송 요청
-    const res = http.post(`${BASE_URL}${SEND_ENDPOINT}`, payload, {headers: HEADERS});
+    // 2) 중복 요청 방지 boundary 테스트
+    const dupEmail = 'duplicate@test.com';
+    http.post(
+        `${BASE}${SEND}`,
+        JSON.stringify({email: dupEmail}),
+        {headers: HEADERS}
+    );
 
-    // 응답 코드 200 확인
-    check(res, {
-        'status is 200': (r) => r.status === 200,
-    });
+    // 0.1초, 1초, 9초 중 랜덤 지연
+    sleep(BOUNDARY_DELAYS[Math.floor(Math.random() * BOUNDARY_DELAYS.length)]);
 
-    // 사용자당 평균 1~3초 대기
+    let res2 = http.post(
+        `${BASE}${SEND}`,
+        JSON.stringify({email: dupEmail}),
+        {headers: HEADERS}
+    );
+    if (res2.status === 400 || res2.status === 429) {
+        certDupCount.add(1);
+    } else if (res2.status < 500) {
+        dupSuccessCount.add(1);
+    }
+
     sleep(Math.random() * 2 + 1);
 }
