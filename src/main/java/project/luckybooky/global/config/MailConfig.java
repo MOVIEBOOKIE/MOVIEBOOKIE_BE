@@ -22,6 +22,8 @@ public class MailConfig {
     private boolean auth;
     @Value("${spring.mail.properties.mail.smtp.starttls.enable:true}")
     private boolean starttls;
+    @Value("${spring.mail.properties.mail.smtp.starttls.required:true}")
+    private boolean starttlsRequired;
 
     @Bean
     public JavaMailSender javaMailSender() {
@@ -35,7 +37,13 @@ public class MailConfig {
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", auth);
         props.put("mail.smtp.starttls.enable", starttls);
+        props.put("mail.smtp.starttls.required", starttlsRequired);
         props.put("mail.debug", "false");
+
+        props.put("mail.smtp.pool", "true");
+        props.put("mail.smtp.connectiontimeout", "5000");
+        props.put("mail.smtp.timeout", "5000");
+        props.put("mail.smtp.writetimeout", "5000");
 
         return mailSender;
     }
