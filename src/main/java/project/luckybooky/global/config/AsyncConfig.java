@@ -19,5 +19,16 @@ public class AsyncConfig {
         exec.initialize();
         return exec;
     }
+
+    @Bean("smsExecutor")
+    public TaskExecutor smsExecutor() {
+        ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
+        exec.setCorePoolSize(20);
+        exec.setMaxPoolSize(50);
+        exec.setQueueCapacity(200);
+        exec.setThreadNamePrefix("sms-exec-");
+        exec.initialize();
+        return exec;
+    }
 }
 
