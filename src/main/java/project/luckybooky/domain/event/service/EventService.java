@@ -5,8 +5,11 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationEventPublisher;
@@ -47,6 +50,7 @@ import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.service.NCPStorageService;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -61,6 +65,8 @@ public class EventService {
     private final ApplicationEventPublisher publisher;
     private final UserRepository userRepository;
     private final RedissonClient redissonClient;
+
+    private final ConcurrentHashMap<Long, Object> eventLocks = new ConcurrentHashMap<>();
 
 
     @Transactional
@@ -228,32 +234,72 @@ public class EventService {
      * 이벤트 신청
      **/
     @Transactional
-    public void registerEvent(Long userId, Long eventId) {
+    public void registerEvent2(Long userId, Long eventId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        // user 조회는 락 밖에서 미리 수행
+
         RLock lock = redissonClient.getLock("event:" + eventId + ":lock");
-        lock.lock();
+        boolean acquired;
         try {
+            long start = System.currentTimeMillis();
+            // 최대 50ms만 대기, 획득 후 자동 해제(10s)
+            acquired = lock.tryLock(50, 10, TimeUnit.SECONDS);
+            long waited = System.currentTimeMillis() - start;
+            log.info("Lock wait: {}ms", waited);
+
+            if (!acquired) {
+                throw new BusinessException(ErrorCode.SYSTEM_BUSY);
+            }
+
             Event event = eventRepository.findByIdWithLock(eventId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
-
             if (event.getCurrentParticipants() + 1 > event.getMaxParticipants()) {
                 throw new BusinessException(ErrorCode.EVENT_FULL);
             }
-            // 1. 참여 카운트를 먼저 증가
+
+            // 카운트 증감 + 저장
             event.updateCurrentParticipants(true);
-
-            // 2. 그 후 참여자 앤티티를 생성하고 저장
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
             Participation p = ParticipationConverter.toParticipation(
                     user, event, ParticipateRole.PARTICIPANT
             );
-
             participationRepository.save(p);
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException(ErrorCode.SYSTEM_BUSY);
         } finally {
-            lock.unlock();
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
+
+    @Transactional
+    public void registerEvent(Long userId, Long eventId) {
+        // 이벤트 전용 락 오브젝트 획득
+        Object lock = eventLocks.computeIfAbsent(eventId, id -> new Object());
+        synchronized (lock) {
+            // 1) DB에서 PESSIMISTIC_WRITE 락으로 가져오기
+            Event event = eventRepository.findByIdWithLock(eventId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+            // 2) 최대 인원 초과 검사
+            if (event.getCurrentParticipants() + 1 > event.getMaxParticipants()) {
+                throw new BusinessException(ErrorCode.EVENT_FULL);
+            }
+
+            // 3) 카운트 증가
+            event.updateCurrentParticipants(true);
+
+            // 4) 참여자 저장
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+            Participation p = ParticipationConverter.toParticipation(user, event, ParticipateRole.PARTICIPANT);
+            participationRepository.save(p);
+        }
+    }
+
 
     /**
      * 이벤트 신청 취소

@@ -36,5 +36,5 @@ out/
 ### VS Code ###
 .vscode/
 
-tokens.json
-/scripts/k6/tokens.csv
+scripts/k6/tokens.json
+/scripts/k6/event/tokens.csv
