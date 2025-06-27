@@ -1,5 +1,7 @@
 package project.luckybooky.domain.certification.email.service;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
@@ -11,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
@@ -35,6 +38,7 @@ public class EmailService {
     private final EmailCertificationUtil mailUtil;
     private final TaskExecutor mailExecutor;
     private final UserRepository userRepository;
+    private final MeterRegistry meterRegistry;
     private final SecureRandom random = new SecureRandom();
 
     private final Map<String, CacheEntry> codeCache = new ConcurrentHashMap<>();
@@ -43,16 +47,17 @@ public class EmailService {
 
     public EmailService(EmailCertificationUtil mailUtil,
                         @Qualifier("mailExecutor") TaskExecutor mailExecutor,
-                        UserRepository userRepository) {
+                        UserRepository userRepository,
+                        MeterRegistry meterRegistry) {
         this.mailUtil = mailUtil;
         this.mailExecutor = mailExecutor;
         this.userRepository = userRepository;
+        this.meterRegistry = meterRegistry;
     }
 
     @PostConstruct
     private void init() {
         cleaner = Executors.newSingleThreadScheduledExecutor();
-        // 30초마다 만료된 엔트리 정리
         cleaner.scheduleAtFixedRate(this::cleanUp, 30, 30, TimeUnit.SECONDS);
     }
 
@@ -62,7 +67,7 @@ public class EmailService {
     }
 
     /**
-     * 인증번호 발송
+     * 인증번호 발송 (비동기 처리 및 메트릭 계측 포함)
      **/
     public void sendCode(EmailRequestDTO dto) {
         String email = dto.getEmail();
@@ -77,15 +82,21 @@ public class EmailService {
         String code = generate();
         codeCache.put(codeKey, new CacheEntry(code, Instant.now().plus(CODE_TTL)));
 
-        // 메일 전송 비동기 처리
+        // 큐잉 시간 측정
+        Timer.Sample enqueueSample = Timer.start(meterRegistry);
         mailExecutor.execute(() -> {
+            // 전송 실행 시간 측정
+            Timer.Sample execSample = Timer.start(meterRegistry);
             try {
                 mailUtil.sendMail(email, code);
                 log.info("Asynchronously sent email code {} → {}", code, email);
             } catch (Exception e) {
                 log.error("Failed to send mail to {}: {}", email, e.getMessage(), e);
+            } finally {
+                execSample.stop(meterRegistry.timer("email.send.execution"));
             }
         });
+        enqueueSample.stop(meterRegistry.timer("email.send.enqueue"));
 
         log.info("Queued mail send for {}", email);
     }
@@ -114,14 +125,15 @@ public class EmailService {
 
     private boolean acquireLock(String key, Duration ttl) {
         Instant now = Instant.now();
+        AtomicBoolean acquired = new AtomicBoolean(false);
         lockCache.compute(key, (k, existing) -> {
             if (existing == null || existing.isExpiredAt(now)) {
+                acquired.set(true);
                 return new CacheEntry("1", now.plus(ttl));
             }
             return existing;
         });
-        CacheEntry post = lockCache.get(key);
-        return post.expireAt.isAfter(now);
+        return acquired.get();
     }
 
     private void cleanUp() {
