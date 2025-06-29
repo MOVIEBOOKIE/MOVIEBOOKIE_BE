@@ -33,11 +33,7 @@ public class UserInitializer implements ApplicationRunner {
             return;
         }
 
-<<<<<<< Updated upstream
-        List<User> guests = IntStream.rangeClosed(1, 200)
-=======
         List<User> guests = IntStream.rangeClosed(1, 300)
->>>>>>> Stashed changes
                 .mapToObj(i -> buildGuest(
                         "guest" + i + "@example.com",
                         "게스트" + i,
