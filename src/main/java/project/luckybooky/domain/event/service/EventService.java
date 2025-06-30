@@ -68,7 +68,6 @@ public class EventService {
 
     private final ConcurrentHashMap<Long, Object> eventLocks = new ConcurrentHashMap<>();
 
-
     @Transactional
     public Long createEvent(Long userId, EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
         String eventImageUrl = s3Service.uploadFile(eventImage);
@@ -277,6 +276,10 @@ public class EventService {
 
     @Transactional
     public void registerEvent(Long userId, Long eventId) {
+        // 사용자 조회를 락 외부에서 미리 수행
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 이벤트 전용 락 오브젝트 획득
         Object lock = eventLocks.computeIfAbsent(eventId, id -> new Object());
         synchronized (lock) {
@@ -289,15 +292,20 @@ public class EventService {
                 throw new BusinessException(ErrorCode.EVENT_FULL);
             }
 
-            // 3) 카운트 증가
+            // 3) 참여자 수 증가
             event.updateCurrentParticipants(true);
 
             // 4) 참여자 저장
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
             Participation p = ParticipationConverter.toParticipation(user, event, ParticipateRole.PARTICIPANT);
             participationRepository.save(p);
         }
+        // synchronized 블록이 끝난 후 락 오브젝트 제거
+        eventLocks.remove(eventId);
+    }
+
+    @Transactional
+    public void cleanupEventLock(Long eventId) {
+        eventLocks.remove(eventId);
     }
 
 
