@@ -3,11 +3,13 @@ package project.luckybooky.global.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
 @EnableAsync
+@EnableRetry
 public class AsyncConfig {
     @Bean("mailExecutor")
     public TaskExecutor mailExecutor() {
@@ -30,5 +32,15 @@ public class AsyncConfig {
         exec.initialize();
         return exec;
     }
-}
 
+    @Bean(name = "notificationExecutor")
+    public TaskExecutor notificationExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(50);
+        executor.setMaxPoolSize(200);
+        executor.setQueueCapacity(500);
+        executor.setThreadNamePrefix("notif-exec-");
+        executor.initialize();
+        return executor;
+    }
+}
