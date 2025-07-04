@@ -4,7 +4,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class ChatCompletionRequestDTO {
+public class ClovaRequestDTO {
     private List<Message> messages;
     private double topP;
     private int topK;
