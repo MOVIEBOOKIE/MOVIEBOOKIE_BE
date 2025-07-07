@@ -47,8 +47,12 @@ public class EventConverter {
                 .build();
     }
 
-    public static EventResponse.ReadEventListResultDTO toEventListResultDTO(Event event, Integer rate, Integer d_day) {
-        d_day = (d_day == -1) ? null : d_day;
+    public static EventResponse.ReadEventListResultDTO toEventListResultDTO(Event event) {
+        double percentage = ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100;
+        int rate = Math.round((float) percentage);
+
+        // d-day 계산
+        Integer d_day = LocalDate.now().isAfter(event.getEventDate()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
         return EventResponse.ReadEventListResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
