@@ -8,6 +8,7 @@ import project.luckybooky.domain.location.entity.Location;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -47,8 +48,12 @@ public class EventConverter {
                 .build();
     }
 
-    public static EventResponse.ReadEventListResultDTO toEventListResultDTO(Event event, Integer rate, Integer d_day) {
-        d_day = (d_day == -1) ? null : d_day;
+    public static EventResponse.ReadEventListResultDTO toEventListResultDTO(Event event) {
+        double percentage = ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100;
+        int rate = Math.round((float) percentage);
+
+        // d-day 계산
+        Integer d_day = LocalDate.now().isAfter(event.getEventDate()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
         return EventResponse.ReadEventListResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())

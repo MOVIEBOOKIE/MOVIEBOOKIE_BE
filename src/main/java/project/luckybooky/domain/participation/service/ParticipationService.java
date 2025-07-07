@@ -106,9 +106,7 @@ public class ParticipationService {
     private List<EventResponse.ReadEventListResultDTO> toReadEventListResultDTO(Page<Event> eventList) {
         return eventList.stream().map(
                 e -> {
-                    double percentage = ((double) e.getCurrentParticipants() / e.getMaxParticipants()) * 100;
-                    int rate = Math.round((float) percentage);
-                    return EventConverter.toEventListResultDTO(e, rate, -1);
+                    return EventConverter.toEventListResultDTO(e);
                 }
         ).collect(Collectors.toList());
     }

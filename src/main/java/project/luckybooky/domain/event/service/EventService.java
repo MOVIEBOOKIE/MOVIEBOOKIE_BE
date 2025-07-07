@@ -119,6 +119,16 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
+    public EventResponse.ReadEventListWithPageResultDTO readEventListBySearch(String content, Integer page,
+                                                                              Integer size) {
+        Page<Event> eventList = eventRepository.findEventsBySearch(content, PageRequest.of(page, size));
+        int totalPages = eventList.getTotalPages();
+        List<EventResponse.ReadEventListResultDTO> eventListResultDTO = toReadEventListResultDTO(eventList);
+
+        return EventConverter.toReadEventListWithPageResult(totalPages, eventListResultDTO);
+    }
+
+    /** 카테고리별 이벤트 리스트 조회 **/
     public EventResponse.ReadEventListWithPageResultDTO readEventListByCategory(String category, Integer page,
                                                                                 Integer size) {
         Page<Event> eventList;
@@ -138,25 +148,10 @@ public class EventService {
 
         return EventConverter.toReadEventListWithPageResult(totalPages, eventListResultDTO);
     }
-
-    public EventResponse.ReadEventListWithPageResultDTO readEventListBySearch(String content, Integer page,
-                                                                              Integer size) {
-        Page<Event> eventList = eventRepository.findEventsBySearch(content, PageRequest.of(page, size));
-        int totalPages = eventList.getTotalPages();
-        List<EventResponse.ReadEventListResultDTO> eventListResultDTO = toReadEventListResultDTO(eventList);
-
-        return EventConverter.toReadEventListWithPageResult(totalPages, eventListResultDTO);
-    }
-
     private List<EventResponse.ReadEventListResultDTO> toReadEventListResultDTO(Page<Event> eventList) {
         return eventList.stream().map(
                 e -> {
-                    double percentage = ((double) e.getCurrentParticipants() / e.getMaxParticipants()) * 100;
-                    int rate = Math.round((float) percentage);
-
-                    int d_day = (int) ChronoUnit.DAYS.between(LocalDate.now(), e.getEventDate());
-
-                    return EventConverter.toEventListResultDTO(e, rate, d_day);
+                    return EventConverter.toEventListResultDTO(e);
                 }
         ).collect(Collectors.toList());
     }
@@ -217,17 +212,6 @@ public class EventService {
 
         return formattedStartDate + " - " + formattedEndDate;
     }
-
-    /**
-     * 이벤트 신청 혹은 취소
-     **/
-//    @Transactional
-//    public void registerEvent(Long eventId, Boolean type) {
-//        // 참여인원 추가
-//        Event event = eventRepository.findByIdWithLock(eventId)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
-//        event.updateCurrentParticipants(type);
-//    }
 
     /**
      * 이벤트 신청
