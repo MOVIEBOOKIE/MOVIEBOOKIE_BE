@@ -74,8 +74,6 @@ public class EventController {
     public CommonResponse<String> cancelRegisterEvent(@PathVariable("eventId") Long eventId) {
         Long userId = userContextService.getUserId();
 
-        participationService.deleteParticipation(userId, eventId);
-        //eventService.registerEvent(userId, eventId);
         eventService.cancelEvent(userId, eventId);
         
         return CommonResponse.of(ResultCode.OK, EventConstants.REGISTER_CANCEL_SUCCESS.getMessage());

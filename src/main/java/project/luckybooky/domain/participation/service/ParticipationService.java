@@ -57,28 +57,6 @@ public class ParticipationService {
         return EventConverter.toEventCreateResponseDTO(event);
     }
 
-    @Transactional
-    public void deleteParticipation(Long userId, Long eventId) {
-
-        // 참여자 조회
-        Participation participation = participationRepository
-                .findByUserIdAndEventId(userId, eventId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
-
-        // 2) 참여자인 경우에만 취소
-        if (participation.getParticipateRole() == ParticipateRole.PARTICIPANT) {
-            String eventTitle = participation.getEvent().getEventTitle();
-            publisher.publishEvent(new ParticipantNotificationEvent(
-                    eventId,
-                    userId,
-                    ParticipantNotificationType.APPLY_CANCEL,
-                    eventTitle
-            ));
-        }
-
-        participationRepository.deleteByUserIdAndEventId(userId, eventId);
-    }
-
     public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer role,
                                                                     Integer page, Integer size) {
         // 진행 중, 확정 이벤트 목록 필터링

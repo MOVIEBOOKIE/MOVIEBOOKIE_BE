@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.ErrorState;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationEventPublisher;
@@ -301,11 +302,23 @@ public class EventService {
         Event event = eventRepository.findByIdWithLock(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
-        Participation p = participationRepository
+        Participation participation = participationRepository
                 .findByUserIdAndEventId(userId, eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
-        participationRepository.delete(p);
+        // 참여자인지 검증
+        if (participation.getParticipateRole() != ParticipateRole.PARTICIPANT) {
+            throw new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND);
+        }
+
+        String eventTitle = participation.getEvent().getEventTitle();
+        publisher.publishEvent(new ParticipantNotificationEvent(
+                eventId,
+                userId,
+                ParticipantNotificationType.APPLY_CANCEL,
+                eventTitle
+        ));
+        participationRepository.delete(participation);
 
         event.updateCurrentParticipants(false);
     }
