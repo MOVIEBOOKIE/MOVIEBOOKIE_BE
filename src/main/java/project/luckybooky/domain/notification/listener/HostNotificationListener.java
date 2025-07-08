@@ -9,9 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -24,23 +21,22 @@ import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
-
+/**
+ * 호스트 알림: 비동기 FCM 전송 및 재시도, 멱등성 검사
+ */
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class HostNotificationListener {
     private final UserRepository userRepository;
-    private final RabbitTemplate rabbitTemplate;
 
     private static final Set<String> sentKeys = ConcurrentHashMap.newKeySet();
-    private static final String DLQ_QUEUE = "notification.dlq";
 
     @Async("notificationExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Retryable(
             value = {FirebaseMessagingException.class, ExecutionException.class},
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 2000, multiplier = 2)
+            maxAttempts = 3
     )
     public void onHostNotification(HostNotificationEvent evt) throws Exception {
         String idKey = evt.getType() + ":" + evt.getEventId() + ":" + evt.getHostUserId();
@@ -64,12 +60,5 @@ public class HostNotificationListener {
         future.get();
 
         log.info("✅ 전송 성공 [{}]", idKey);
-    }
-
-    @Recover
-    public void recover(Exception e, HostNotificationEvent evt) {
-        String idKey = evt.getType() + ":" + evt.getEventId() + ":" + evt.getHostUserId();
-        log.error("❌ 전송 실패 [{}], DLQ 전송: {}", idKey, e.getMessage());
-        rabbitTemplate.convertAndSend("", DLQ_QUEUE, evt);
     }
 }

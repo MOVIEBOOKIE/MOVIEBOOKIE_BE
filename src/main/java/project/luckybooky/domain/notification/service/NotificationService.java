@@ -140,4 +140,7 @@ public class NotificationService {
     }
 
 
+    public ParticipationRepository getParticipationRepository() {
+        return participationRepository;
+    }
 }
