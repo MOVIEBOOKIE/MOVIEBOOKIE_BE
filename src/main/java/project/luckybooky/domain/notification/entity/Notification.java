@@ -1,6 +1,8 @@
 package project.luckybooky.domain.notification.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -41,4 +43,7 @@ public class Notification {
 
     // 알림 읽음 상태
     private boolean isRead;
+
+    @Enumerated(EnumType.STRING)
+    private NotificationStatus status;
 }
