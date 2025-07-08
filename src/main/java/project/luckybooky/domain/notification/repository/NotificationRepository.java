@@ -6,5 +6,9 @@ import project.luckybooky.domain.notification.entity.Notification;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    List<Notification> findAllBySender(Long userId);
+    List<Notification> findByUserIdOrderBySentAtDesc(Long userId);
+
+    void deleteByUserIdAndId(Long userId, Long id);
+
+
 }

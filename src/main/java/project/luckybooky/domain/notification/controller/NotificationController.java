@@ -5,7 +5,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -103,6 +105,23 @@ public class NotificationController {
             @PathVariable String code
     ) {
         return notificationService.previewParticipantNotification(eventId, code);
+    }
+
+    @Operation(summary = "알림 전체 조회",
+            description = "로그인한 사용자의 모든 알림을 조회합니다.")
+    @GetMapping
+    public CommonResponse<List<NotificationResponseDTO>> getAll() {
+        Long userId = userContextService.getUserId();
+        List<NotificationResponseDTO> list = notificationService.findAllByUser(userId);
+        return CommonResponse.of(ResultCode.OK, list);
+    }
+
+    @Operation(summary = "알림 삭제", description = "로그인한 사용자의 특정 알림을 삭제합니다.")
+    @DeleteMapping("/{id}")
+    public CommonResponse<Void> deleteOne(@PathVariable Long id) {
+        Long userId = userContextService.getUserId();
+        notificationService.deleteByUser(userId, id);
+        return CommonResponse.of(ResultCode.OK);
     }
 
 }
