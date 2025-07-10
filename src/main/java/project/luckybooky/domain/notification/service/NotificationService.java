@@ -5,6 +5,7 @@ import com.google.firebase.messaging.Message;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class NotificationService {
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
+    @Getter
     private final ParticipationRepository participationRepository;
     private final NotificationRepository notificationRepository;
 
@@ -139,8 +141,4 @@ public class NotificationService {
         notificationRepository.deleteByUserIdAndId(userId, notificationId);
     }
 
-
-    public ParticipationRepository getParticipationRepository() {
-        return participationRepository;
-    }
 }
