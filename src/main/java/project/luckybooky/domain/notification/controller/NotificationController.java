@@ -117,10 +117,10 @@ public class NotificationController {
     }
 
     @Operation(summary = "알림 삭제", description = "로그인한 사용자의 특정 알림을 삭제합니다.")
-    @DeleteMapping("/{notificationsId}")
-    public CommonResponse<Void> deleteOne(@PathVariable Long notificationsId) {
+    @DeleteMapping("/{notificationId}")
+    public CommonResponse<Void> deleteOne(@PathVariable Long notificationId) {
         Long userId = userContextService.getUserId();
-        notificationService.deleteByUser(userId, notificationsId);
+        notificationService.deleteByUser(userId, notificationId);
         return CommonResponse.of(ResultCode.OK);
     }
 
