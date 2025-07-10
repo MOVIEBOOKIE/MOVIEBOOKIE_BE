@@ -138,6 +138,10 @@ public class NotificationService {
      */
     @Transactional
     public void deleteByUser(Long userId, Long notificationId) {
+        boolean exists = notificationRepository.existsById(notificationId);
+        if (!exists) {
+            throw new BusinessException(ErrorCode.NOTIFICATION_TYPE_NOT_FOUND);
+        }
         notificationRepository.deleteByUserIdAndId(userId, notificationId);
     }
 
