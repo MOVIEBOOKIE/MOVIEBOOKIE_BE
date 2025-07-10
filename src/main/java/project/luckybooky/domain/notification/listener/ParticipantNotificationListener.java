@@ -22,7 +22,7 @@ import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
 /**
- * 참여자 알림: 비동기 FCM 전송 및 재시도, 멱등성 검사, DLQ 전송
+ * 참여자 알림: 비동기 FCM 전송 및 재시도
  */
 @Component
 @Slf4j
