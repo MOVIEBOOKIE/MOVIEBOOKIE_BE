@@ -2,12 +2,14 @@ package project.luckybooky.domain.notification.service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.event.entity.Event;
@@ -134,7 +136,7 @@ public class NotificationService {
     }
 
     /**
-     * 알림 삭제 → 레포지토리 직접 호출
+     * 알림 삭제
      */
     @Transactional
     public void deleteByUser(Long userId, Long notificationId) {
@@ -143,6 +145,16 @@ public class NotificationService {
             throw new BusinessException(ErrorCode.NOTIFICATION_TYPE_NOT_FOUND);
         }
         notificationRepository.deleteByUserIdAndId(userId, notificationId);
+    }
+
+    /**
+     * 발솔 후 30일이 지난 알림 매일 자정에 자동 삭제
+     */
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void purgeOldNotifications() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(30);  // 현재 시각에서 30일 전 시점 계산
+        notificationRepository.deleteOlderThan(cutoff);
     }
 
 }
