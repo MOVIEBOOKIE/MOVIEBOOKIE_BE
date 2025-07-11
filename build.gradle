@@ -80,6 +80,9 @@ dependencies {
     // build.gradle
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
+    // Quartz
+    implementation 'org.springframework.boot:spring-boot-starter-quartz'
+
 }
 
 tasks.named('test') {
