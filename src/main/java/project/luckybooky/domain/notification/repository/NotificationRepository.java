@@ -12,9 +12,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     List<Notification> findByUserIdOrderBySentAtDesc(Long userId);
 
-    void deleteByUserIdAndId(Long userId, Long id);
-
     @Modifying
     @Query("delete from Notification n where n.sentAt < :cutoff")
     int deleteOlderThan(@Param("cutoff") LocalDateTime cutoff);
+
+    @Modifying
+    @Query("delete from Notification n where n.user.id = :userId and n.id = :id")
+    int deleteByUserIdAndId(@Param("userId") Long userId, @Param("id") Long id);
+
 }

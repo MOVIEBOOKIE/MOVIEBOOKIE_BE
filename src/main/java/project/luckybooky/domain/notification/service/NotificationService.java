@@ -138,11 +138,11 @@ public class NotificationService {
      */
     @Transactional
     public void deleteByUser(Long userId, Long notificationId) {
-        boolean exists = notificationRepository.existsById(notificationId);
-        if (!exists) {
-            throw new BusinessException(ErrorCode.NOTIFICATION_TYPE_NOT_FOUND);
+        int deleted = notificationRepository.deleteByUserIdAndId(userId, notificationId);
+        if (deleted == 0) {
+            // 해당 사용자의 알림이 아니거나, 존재하지 않는 알림인 경우
+            throw new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND);
         }
-        notificationRepository.deleteByUserIdAndId(userId, notificationId);
     }
 
 }
