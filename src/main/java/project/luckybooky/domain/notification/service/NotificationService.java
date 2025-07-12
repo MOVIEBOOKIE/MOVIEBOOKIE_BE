@@ -145,14 +145,4 @@ public class NotificationService {
         notificationRepository.deleteByUserIdAndId(userId, notificationId);
     }
 
-//    /**
-//     * 발솔 후 30일이 지난 알림 매일 자정에 자동 삭제
-//     */
-//    @Scheduled(cron = "0 0 0 * * *")
-//    @Transactional
-//    public void purgeOldNotifications() {
-//        LocalDateTime cutoff = LocalDateTime.now().minusDays(30);  // 현재 시각에서 30일 전 시점 계산
-//        notificationRepository.deleteOlderThan(cutoff);
-//    }
-
 }

@@ -81,8 +81,8 @@ public enum ErrorCode implements BaseStatus {
     NOTIFICATION_TYPE_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_402", "알림 타입을 찾을 수 없습니다."),
 
     // FCM 관련
-    FCM_TOKEN_REGISTER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_502", "FCM 토큰 등록에 실패했습니다."),
-    FCM_INITIALIZATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_503", "FCM 초기화에 실패했습니다."),
+    FCM_TOKEN_REGISTER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_500", "FCM 토큰 등록에 실패했습니다."),
+    FCM_INITIALIZATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_501", "FCM 초기화에 실패했습니다."),
 
     // Ticket 관련
     TICKET_NOT_FOUND(HttpStatus.BAD_REQUEST, "TICKET_401", "해당 티켓을 찾을 수 없습니다."),
