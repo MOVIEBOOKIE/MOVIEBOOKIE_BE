@@ -3,9 +3,13 @@ package project.luckybooky.domain.notification.service;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
@@ -14,6 +18,7 @@ import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO
 import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationPreviewDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationResponseDTO;
+import project.luckybooky.domain.notification.repository.NotificationRepository;
 import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
@@ -30,7 +35,9 @@ public class NotificationService {
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
+    @Getter
     private final ParticipationRepository participationRepository;
+    private final NotificationRepository notificationRepository;
 
     public FcmTokenResponseDTO registerFcmToken(FcmTokenRequestDTO dto) {
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
@@ -112,6 +119,30 @@ public class NotificationService {
                 type.getTitle(),
                 type.formatBody(event.getMediaTitle())
         );
+    }
+
+    /**
+     * 전체 알림 조회 → 레포지토리 사용
+     */
+    @Transactional(readOnly = true)
+    public List<NotificationResponseDTO> findAllByUser(Long userId) {
+        return notificationRepository
+                .findByUserIdOrderBySentAtDesc(userId)
+                .stream()
+                .map(NotificationResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 알림 삭제
+     */
+    @Transactional
+    public void deleteByUser(Long userId, Long notificationId) {
+        int deleted = notificationRepository.deleteByUserIdAndId(userId, notificationId);
+        if (deleted == 0) {
+            // 해당 사용자의 알림이 아니거나, 존재하지 않는 알림인 경우
+            throw new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND);
+        }
     }
 
 }

@@ -48,13 +48,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 ? bearer.substring(7)
                 : CookieUtil.getCookieValue(request, "accessToken");
 
-        log.info("[JWT 필터] 추출한 토큰: {}", token == null ? "없음" : token);
+        //log.info("[JWT 필터] 추출한 토큰: {}", token == null ? "없음" : token);
 
         if (token != null && jwtUtil.validateToken(token)) {
             String email = jwtUtil.extractEmail(token);
             SecurityContextHolder.getContext()
                     .setAuthentication(new JwtAuthenticationToken(email));
-            log.info("[JWT 필터] 인증 성공: {}", email);
+            //log.info("[JWT 필터] 인증 성공: {}", email);
             filterChain.doFilter(request, response);
         } else {
             log.warn("[JWT 필터] 인증 실패 → 401");
