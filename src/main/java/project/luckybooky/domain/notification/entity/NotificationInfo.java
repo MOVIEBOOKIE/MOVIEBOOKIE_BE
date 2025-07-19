@@ -46,4 +46,8 @@ public class NotificationInfo {
 
     @Enumerated(EnumType.STRING)
     private NotificationStatus status;
+
+    public void markRead() {
+        this.isRead = true;
+    }
 }

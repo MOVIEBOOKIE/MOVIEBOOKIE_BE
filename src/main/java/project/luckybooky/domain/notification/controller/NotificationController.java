@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -104,6 +105,13 @@ public class NotificationController {
     public CommonResponse<Void> deleteOne(@PathVariable Long notificationId) {
         Long userId = userContextService.getUserId();
         notificationService.deleteByUser(userId, notificationId);
+        return CommonResponse.of(ResultCode.OK);
+    }
+
+    @PatchMapping("/{notificationId}")
+    public CommonResponse<Void> markRead(@PathVariable("notificationId") Long notificationId) {
+        Long userId = userContextService.getUserId();
+        notificationService.markRead(userId, notificationId);
         return CommonResponse.of(ResultCode.OK);
     }
 

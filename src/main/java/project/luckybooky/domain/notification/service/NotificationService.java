@@ -121,7 +121,6 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
-
     /**
      * 알림 삭제
      */
@@ -130,6 +129,17 @@ public class NotificationService {
         int deleted = notificationRepository.deleteByUserIdAndId(userId, notificationId);
         if (deleted == 0) {
             // 해당 사용자의 알림이 아니거나, 존재하지 않는 알림인 경우
+            throw new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND);
+        }
+    }
+
+    /**
+     * 알림 읽음으로 바꾸는 메서드
+     */
+    @Transactional
+    public void markRead(Long userId, Long notificationId) {
+        int updated = notificationRepository.updateReadStatus(userId, notificationId);
+        if (updated == 0) {
             throw new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND);
         }
     }
