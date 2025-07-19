@@ -80,6 +80,7 @@ public enum ErrorCode implements BaseStatus {
     NOTIFICATION_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_500", "알림 전송 중 오류가 발생했습니다."),
     NOTIFICATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_401", "알림 내역을 찾을 수 없습니다."),
     NOTIFICATION_TYPE_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_402", "알림 타입을 찾을 수 없습니다."),
+    NOTIFICATION_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_503", "알림 내역 저장에 실패했습니다."),
 
     // FCM 관련
     FCM_TOKEN_REGISTER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_503", "FCM 토큰 등록에 실패했습니다."),

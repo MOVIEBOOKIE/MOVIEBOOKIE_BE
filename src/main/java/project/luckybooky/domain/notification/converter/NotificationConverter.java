@@ -2,6 +2,8 @@ package project.luckybooky.domain.notification.converter;
 
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
+import java.time.LocalDateTime;
+import project.luckybooky.domain.notification.entity.NotificationInfo;
 import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.user.entity.User;
@@ -61,6 +63,38 @@ public class NotificationConverter {
                         .setBody(type.formatBody(eventName))
                         .build())
                 .putData("eventId", String.valueOf(eventId))
+                .build();
+    }
+
+    public static NotificationInfo toEntityParticipant(
+            User user,
+            ParticipantNotificationType type,
+            String eventName,
+            Long eventId
+    ) {
+        return NotificationInfo.builder()
+                .user(user)
+                .title(type.getTitle())
+                .body(type.formatBody(eventName))
+                .eventId(eventId)
+                .sentAt(LocalDateTime.now())
+                .isRead(false)
+                .build();
+    }
+
+    public static NotificationInfo toEntity(
+            User user,
+            HostNotificationType type,
+            String eventName,
+            Long eventId
+    ) {
+        return NotificationInfo.builder()
+                .user(user)
+                .title(type.getTitle())
+                .body(type.formatBody(eventName))
+                .eventId(eventId)
+                .sentAt(LocalDateTime.now())
+                .isRead(false)
                 .build();
     }
 

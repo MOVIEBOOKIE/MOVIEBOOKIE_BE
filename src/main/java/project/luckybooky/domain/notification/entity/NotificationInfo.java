@@ -17,8 +17,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.luckybooky.domain.user.entity.User;
 
-@Entity
-@Table(name = "notification")
+@Entity(name = "NotificationInfo")
+@Table(name = "notification_info")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

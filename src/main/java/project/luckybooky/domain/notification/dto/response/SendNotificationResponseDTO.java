@@ -5,7 +5,8 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class NotificationPreviewDTO {
-    private final String title;
-    private final String body;
+public class SendNotificationResponseDTO {
+    private String status;
+    private String message;
 }
+
