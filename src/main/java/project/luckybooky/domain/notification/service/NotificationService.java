@@ -2,6 +2,7 @@ package project.luckybooky.domain.notification.service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,6 +19,7 @@ import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO
 import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationPreviewDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationResponseDTO;
+import project.luckybooky.domain.notification.entity.NotificationInfo;
 import project.luckybooky.domain.notification.repository.NotificationRepository;
 import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
@@ -84,6 +86,14 @@ public class NotificationService {
         try {
             String resp = FirebaseMessaging.getInstance().send(message);
             log.info("FCM 전송 성공: {}", resp);
+            NotificationInfo info = NotificationInfo.builder()
+                    .user(user)
+                    .title(requestDTO.getTitle())
+                    .body(requestDTO.getBody())
+                    .sentAt(LocalDateTime.now())
+                    .isRead(false)
+                    .build();
+            notificationRepository.save(info);
         } catch (Exception e) {
             log.error("FCM 전송 중 오류가 발생했지만, 로직에는 영향을 주지 않습니다.", e);
         }

@@ -127,7 +127,9 @@ public class EventService {
         return EventConverter.toReadEventListWithPageResult(totalPages, eventListResultDTO);
     }
 
-    /** 카테고리별 이벤트 리스트 조회 **/
+    /**
+     * 카테고리별 이벤트 리스트 조회
+     **/
     public EventResponse.ReadEventListWithPageResultDTO readEventListByCategory(String category, Integer page,
                                                                                 Integer size) {
         Page<Event> eventList;
@@ -147,6 +149,7 @@ public class EventService {
 
         return EventConverter.toReadEventListWithPageResult(totalPages, eventListResultDTO);
     }
+
     private List<EventResponse.ReadEventListResultDTO> toReadEventListResultDTO(Page<Event> eventList) {
         return eventList.stream().map(
                 e -> {
@@ -270,6 +273,11 @@ public class EventService {
             Event event = eventRepository.findByIdWithLock(eventId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
+            boolean already = participationRepository
+                    .existsByUserIdAndEventId(userId, eventId);
+            if (already) {
+                throw new BusinessException(ErrorCode.ALREADY_REGISTERED_EVENT);
+            }
             // 2) 최대 인원 초과 검사
             if (event.getCurrentParticipants() + 1 > event.getMaxParticipants()) {
                 throw new BusinessException(ErrorCode.EVENT_FULL);
