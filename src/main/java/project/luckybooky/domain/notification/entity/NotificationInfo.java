@@ -23,7 +23,7 @@ import project.luckybooky.domain.user.entity.User;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class Notification {
+public class NotificationInfo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
