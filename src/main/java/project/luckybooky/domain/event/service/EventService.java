@@ -288,6 +288,7 @@ public class EventService {
 
             // 4) 참여자 저장
             Participation p = ParticipationConverter.toParticipation(user, event, ParticipateRole.PARTICIPANT);
+            participationRepository.save(p);
 
             String eventTitle = p.getEvent().getEventTitle();
             publisher.publishEvent(new ParticipantNotificationEvent(
@@ -296,7 +297,6 @@ public class EventService {
                     ParticipantNotificationType.APPLY_COMPLETED,
                     eventTitle
             ));
-            participationRepository.save(p);
         }
         // synchronized 블록이 끝난 후 락 오브젝트 제거
         eventLocks.remove(eventId);
