@@ -71,7 +71,10 @@ public class HostNotificationListener {
                 evt.getEventName(),
                 evt.getEventId()
         );
-        notificationRepository.save(info);
-        log.info("💾 알림 내역 저장 완료: notificationId={}, hostId={}", info.getId(), host.getId());
+        try {
+            notificationRepository.save(info);
+        } catch (BusinessException e) {
+            log.error("❌ 알림 내역 저장 실패: hostId={}, error={}", host.getId(), e.getMessage(), e);
+        }
     }
 }

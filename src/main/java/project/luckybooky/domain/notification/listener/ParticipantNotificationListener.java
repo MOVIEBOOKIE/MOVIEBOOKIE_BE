@@ -69,7 +69,11 @@ public class ParticipantNotificationListener {
         NotificationInfo info = NotificationConverter.toEntityParticipant(
                 participant, evt.getType(), evt.getEventName(), evt.getEventId()
         );
-        notificationRepository.save(info);
-        log.info("💾 알림 저장 완료: id={}", info.getId());
+
+        try {
+            notificationRepository.save(info);
+        } catch (BusinessException e) {
+            log.error("❌ 알림 내역 저장 실패: participantId={}, error={}", participant.getId(), e.getMessage(), e);
+        }
     }
 }
