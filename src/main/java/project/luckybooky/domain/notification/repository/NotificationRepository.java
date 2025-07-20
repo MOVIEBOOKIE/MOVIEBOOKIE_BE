@@ -6,18 +6,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import project.luckybooky.domain.notification.entity.Notification;
+import project.luckybooky.domain.notification.entity.NotificationInfo;
 
-public interface NotificationRepository extends JpaRepository<Notification, Long> {
+public interface NotificationRepository extends JpaRepository<NotificationInfo, Long> {
 
-    List<Notification> findByUserIdOrderBySentAtDesc(Long userId);
+    List<NotificationInfo> findByUserIdOrderBySentAtDesc(Long userId);
 
     @Modifying
-    @Query("delete from Notification n where n.sentAt < :cutoff")
+    @Query("delete from NotificationInfo n where n.sentAt < :cutoff")
     int deleteOlderThan(@Param("cutoff") LocalDateTime cutoff);
 
     @Modifying
-    @Query("delete from Notification n where n.user.id = :userId and n.id = :id")
+    @Query("delete from NotificationInfo n where n.user.id = :userId and n.id = :id")
     int deleteByUserIdAndId(@Param("userId") Long userId, @Param("id") Long id);
+
+    @Modifying
+    @Query("update NotificationInfo n set n.isRead = true where n.user.id = :userId and n.id = :id")
+    int updateReadStatus(@Param("userId") Long userId, @Param("id") Long id);
 
 }

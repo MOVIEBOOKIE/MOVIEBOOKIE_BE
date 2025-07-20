@@ -17,13 +17,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.luckybooky.domain.user.entity.User;
 
-@Entity
-@Table(name = "notification")
+@Entity(name = "NotificationInfo")
+@Table(name = "notification_info")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class Notification {
+public class NotificationInfo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,4 +46,8 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     private NotificationStatus status;
+
+    public void markRead() {
+        this.isRead = true;
+    }
 }

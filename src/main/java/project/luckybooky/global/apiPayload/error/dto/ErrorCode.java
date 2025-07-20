@@ -63,6 +63,7 @@ public enum ErrorCode implements BaseStatus {
     EVENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "EVENT_401", "이벤트를 찾을 수 없습니다."),
     EVENT_FULL(HttpStatus.BAD_REQUEST, "EVENT_402", "모집 인원이 가득 찼습니다."),
     INVALID_OPERATION(HttpStatus.BAD_REQUEST, "EVENT_403", "유효하지 않은 작업입니다."),
+    ALREADY_REGISTERED_EVENT(HttpStatus.BAD_REQUEST, "USER_EVENT_401", "이미 신청된 이벤트입니다."),
 
     // Certification 관련
     CERTIFICATION_EXPIRED(HttpStatus.BAD_REQUEST, "AUTH_001", "인증번호가 만료되었습니다."),
@@ -79,6 +80,7 @@ public enum ErrorCode implements BaseStatus {
     NOTIFICATION_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_500", "알림 전송 중 오류가 발생했습니다."),
     NOTIFICATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_401", "알림 내역을 찾을 수 없습니다."),
     NOTIFICATION_TYPE_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_402", "알림 타입을 찾을 수 없습니다."),
+    NOTIFICATION_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_503", "알림 내역 저장에 실패했습니다."),
 
     // FCM 관련
     FCM_TOKEN_REGISTER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "NOTIFICATION_503", "FCM 토큰 등록에 실패했습니다."),

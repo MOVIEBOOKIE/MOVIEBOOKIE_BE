@@ -15,7 +15,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
+import project.luckybooky.domain.notification.entity.NotificationInfo;
 import project.luckybooky.domain.notification.event.HostNotificationEvent;
+import project.luckybooky.domain.notification.repository.NotificationRepository;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
@@ -29,6 +31,8 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 @RequiredArgsConstructor
 public class HostNotificationListener {
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
+
 
     private static final Set<String> sentKeys = ConcurrentHashMap.newKeySet();
 
@@ -60,5 +64,17 @@ public class HostNotificationListener {
         future.get();
 
         log.info("✅ 전송 성공 [{}]", idKey);
+
+        NotificationInfo info = NotificationConverter.toEntity(
+                host,
+                evt.getType(),
+                evt.getEventName(),
+                evt.getEventId()
+        );
+        try {
+            notificationRepository.save(info);
+        } catch (BusinessException e) {
+            log.error("❌ 알림 내역 저장 실패: hostId={}, error={}", host.getId(), e.getMessage(), e);
+        }
     }
 }
