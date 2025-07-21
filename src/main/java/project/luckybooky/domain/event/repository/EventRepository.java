@@ -22,7 +22,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("SELECT e FROM Event e WHERE e.eventStatus='RECRUITING' ORDER BY (e.currentParticipants * 1.0) / e.maxParticipants DESC")
     Page<Event> findOrderByPopularity(Pageable pageable);
 
-    @Query("SELECT e FROM Event e WHERE e.recruitmentEnd < :now")
+    @Query("SELECT e FROM Event e WHERE e.recruitmentEnd < :now and e.eventStatus='RECRUITING'")
     List<Event> findExpiredEvent(@Param("now") LocalDate now);
 
     @Query("SELECT e FROM Event e \n" +
