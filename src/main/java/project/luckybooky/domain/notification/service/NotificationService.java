@@ -111,11 +111,14 @@ public class NotificationService {
     }
 
     /**
-     * 전체 알림 조회 → 레포지토리 사용
+     * 전체 알림 조회 + 알림 읽음 상태로 변경
      */
-    @Transactional(readOnly = true)
+    @Transactional  // readOnly=false 로 변경
     public List<NotificationResponseDTO> findAllByUser(Long userId) {
-        return notificationRepository.findByUserIdOrderBySentAtDesc(userId)
+        notificationRepository.markAllReadByUserId(userId);
+
+        return notificationRepository
+                .findByUserIdOrderBySentAtDesc(userId)
                 .stream()
                 .map(NotificationResponseDTO::fromEntity)
                 .collect(Collectors.toList());
@@ -142,6 +145,11 @@ public class NotificationService {
         if (updated == 0) {
             throw new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasUnread(Long userId) {
+        return notificationRepository.existsByUserIdAndIsReadFalse(userId);
     }
 
 }

@@ -91,8 +91,10 @@ public class NotificationController {
         return CommonResponse.of(ResultCode.OK, response);
     }
 
-    @Operation(summary = "알림 전체 조회",
-            description = "로그인한 사용자의 모든 알림을 조회합니다.")
+    @Operation(
+            summary = "전체 알림 조회",
+            description = "모든 알림을 조회하고, 조회된 미읽음 알림은 모두 읽음 처리합니다."
+    )
     @GetMapping
     public CommonResponse<List<NotificationResponseDTO>> getAll() {
         Long userId = userContextService.getUserId();
@@ -113,6 +115,17 @@ public class NotificationController {
         Long userId = userContextService.getUserId();
         notificationService.markRead(userId, notificationId);
         return CommonResponse.of(ResultCode.OK);
+    }
+
+    @Operation(
+            summary = "읽지 않은 알림 존재 여부",
+            description = "읽지 않은 알림이 하나라도 있는지 true/false로 반환."
+    )
+    @GetMapping("/unread")
+    public CommonResponse<Boolean> hasUnread() {
+        Long userId = userContextService.getUserId();
+        boolean has = notificationService.hasUnread(userId);
+        return CommonResponse.of(ResultCode.OK, has);
     }
 
 }

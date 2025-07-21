@@ -9,16 +9,16 @@ import project.luckybooky.domain.notification.entity.NotificationInfo;
 @Getter
 @AllArgsConstructor
 public class NotificationResponseDTO {
+    private Long id;
     private String title;
     private String message;
-    private boolean isRead;
     private String timeAgo;
 
     public static NotificationResponseDTO fromEntity(NotificationInfo e) {
         return new NotificationResponseDTO(
+                e.getId(),
                 e.getTitle(),
                 e.getBody(),
-                e.isRead(),
                 calculateTimeAgo(e.getSentAt())
         );
     }
