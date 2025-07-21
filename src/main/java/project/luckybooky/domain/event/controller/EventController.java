@@ -91,7 +91,8 @@ public class EventController {
             "type: 0 -> 신청, 1 -> 취소")
     @PostMapping("/{eventId}/venue")
     public CommonResponse<String> venueProcess(@PathVariable("eventId") Long eventId, @RequestParam Integer type) {
-        String msg = eventService.venueProcess(eventId, type);
+        Long userId = userContextService.getUserId();
+        String msg = eventService.venueProcess(userId, eventId, type);
 
         return CommonResponse.of(ResultCode.OK, msg);
     }

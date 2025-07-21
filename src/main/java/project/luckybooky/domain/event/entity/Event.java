@@ -136,53 +136,84 @@ public class Event extends BaseEntity {
      * 모집 취소
      **/
     public void recruitCancel() {
-        eventStatus = EventStatus.RECRUIT_CANCELED;
-        hostEventButtonState = HostEventButtonState.RECRUIT_CANCELLED;
-        participantEventButtonState = ParticipantEventButtonState.RECRUIT_CANCELED;
+        // 이벤트의 현재 상태 검증
+        if (eventStatus == EventStatus.RECRUITING && hostEventButtonState == HostEventButtonState.RECRUIT_CANCELLED && participantEventButtonState == ParticipantEventButtonState.REGISTER_CANCELED) {
+            eventStatus = EventStatus.RECRUIT_CANCELED;
+            hostEventButtonState = HostEventButtonState.RECRUIT_CANCELLED;
+            participantEventButtonState = ParticipantEventButtonState.RECRUIT_CANCELED;
+            anonymousButtonState = AnonymousButtonState.RECRUIT_CANCELED;
+        } else {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
     }
 
     /**
      * 모집 완료
      **/
     public void recruitDone() {
-        eventStatus = EventStatus.RECRUITED;
-        hostEventButtonState = HostEventButtonState.VENUE_RESERVATION;
-        participantEventButtonState = ParticipantEventButtonState.RECRUIT_DONE;
-        anonymousButtonState = AnonymousButtonState.RECRUIT_DONE;
+        // 이벤트의 현재 상태 검증
+        if (eventStatus == EventStatus.RECRUITING && hostEventButtonState == HostEventButtonState.RECRUIT_CANCELLED && participantEventButtonState == ParticipantEventButtonState.REGISTER_CANCELED) {
+            eventStatus = EventStatus.RECRUITED;
+            hostEventButtonState = HostEventButtonState.VENUE_RESERVATION;
+            participantEventButtonState = ParticipantEventButtonState.RECRUIT_DONE;
+            anonymousButtonState = AnonymousButtonState.RECRUIT_DONE;
+        } else {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
     }
 
     /**
      * 대관 신청
      **/
     public void venueRegister() {
-        eventStatus = EventStatus.RECRUITED;
-        hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
-        participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
+        // 이벤트의 현재 상태 검증
+        if (eventStatus == EventStatus.RECRUITED && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION && participantEventButtonState == ParticipantEventButtonState.RECRUIT_DONE) {
+            eventStatus = EventStatus.RECRUITED;
+            hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
+            participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
+        } else {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
     }
 
     /**
      * 대관 취소
      **/
     public void venueCancel() {
-        eventStatus = EventStatus.VENUE_RESERVATION_CANCELED;
-        hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_CANCELED;
-        participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_CANCELED;
+        // 이벤트의 현재 상태 검증
+        if ((eventStatus == EventStatus.RECRUITED && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION && participantEventButtonState == ParticipantEventButtonState.RECRUIT_DONE) || (eventStatus == EventStatus.RECRUITED && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS && participantEventButtonState == ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS)) {
+            eventStatus = EventStatus.VENUE_RESERVATION_CANCELED;
+            hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_CANCELED;
+            participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_CANCELED;
+        } else {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
     }
 
     /**
      * 대관 확정
      **/
     public void venueConfirmed() {
-        eventStatus = EventStatus.VENUE_CONFIRMED;
-        hostEventButtonState = HostEventButtonState.TO_TICKET;
-        participantEventButtonState = ParticipantEventButtonState.TO_TICKET;
+        // 이벤트의 현재 상태 검증
+        if (eventStatus == EventStatus.RECRUITED && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS && participantEventButtonState == ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS) {
+            eventStatus = EventStatus.VENUE_CONFIRMED;
+            hostEventButtonState = HostEventButtonState.TO_TICKET;
+            participantEventButtonState = ParticipantEventButtonState.TO_TICKET;
+        } else {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
     }
 
     /**
      * 상영 완료 혹은 취소 처리
      **/
     public void screeningProcess(Integer type) {
-        eventStatus = (type == 0) ? EventStatus.COMPLETED : EventStatus.CANCELLED;
+        // 이벤트의 현재 상태 검증
+        if (eventStatus == EventStatus.VENUE_CONFIRMED && hostEventButtonState == HostEventButtonState.TO_TICKET && participantEventButtonState == ParticipantEventButtonState.TO_TICKET) {
+            eventStatus = (type == 0) ? EventStatus.COMPLETED : EventStatus.CANCELLED;
+        } else {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
     }
 
     public void resetCurrentParticipants() {
