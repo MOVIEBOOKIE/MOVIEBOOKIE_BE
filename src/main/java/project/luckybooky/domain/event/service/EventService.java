@@ -260,6 +260,7 @@ public class EventService {
         }
     }
 
+    /** 이벤트 신청 **/
     @Transactional
     public void registerEvent(Long userId, Long eventId) {
         // 사용자 조회를 락 외부에서 미리 수행
@@ -337,15 +338,19 @@ public class EventService {
         event.updateCurrentParticipants(false);
     }
 
+    /** 이벤트 주최자인지 검증 로직 **/
+    private Boolean isEventHost(Long userId, Long eventId) {
+        Participation participation = participationRepository.findByUserIdAndEventId(userId, eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+        return participation.getParticipateRole().equals(ParticipateRole.PARTICIPANT);
+    }
+
     /**
      * 이벤트 모집 취소
      **/
     @Transactional
     public String cancelRecruitEvent(Long userId, Long eventId) {
-        // 주최자인지 검증
-        Participation participation = participationRepository.findByUserIdAndEventId(userId, eventId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
-        if (participation.getParticipateRole().equals(ParticipateRole.PARTICIPANT)) {
+        if (isEventHost(userId, eventId)) {
             throw new BusinessException(ErrorCode.PARTICIPATION_NOT_ALLOWED);
         }
 
@@ -376,10 +381,81 @@ public class EventService {
     }
 
     /**
+     * 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직
+     **/
+    @Scheduled(cron = "0 0 0 * * *") // 매일 자정에 실행
+    @Transactional
+    public void processExpiredEvents() {
+        List<Event> expiredEvents = findExpiredEvents();
+        expiredEvents.forEach(event -> {
+            Long eventId = event.getId();
+
+            // 이벤트를 생성한 호스트의 userId = hostId로 설정 -> 엔티티 조회가 아닌 userId만 조회
+            Long hostId = participationRepository
+                    .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+            if (event.getCurrentParticipants() < event.getMinParticipants()) {
+                event.recruitCancel();
+                // 인원부족으로 이벤트 취소 시 자동 알림(호스트)
+                publisher.publishEvent(new HostNotificationEvent(
+                        event.getId(),
+                        hostId,
+                        HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소 (호스트)
+                        event.getEventTitle()
+                ));
+
+                // 모든 참여자 조회 후 알림 발송
+                List<Participation> participants = participationRepository
+                        .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+                for (Participation p : participants) {
+                    publisher.publishEvent(new ParticipantNotificationEvent(
+                            event.getId(),
+                            p.getUser().getId(),
+                            ParticipantNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 알림 (참여자)
+                            event.getEventTitle()
+                    ));
+                }
+
+            } else {
+                event.recruitDone();
+                // 인원 모집 달성 상태로 모집 기간 끝날 시 자동으로 알림 발송(호스트)
+                publisher.publishEvent(new HostNotificationEvent(
+                        event.getId(),
+                        hostId,
+                        HostNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (호스트)
+                        event.getEventTitle()
+                ));
+
+                // 참여자 전원에게 모집 완료 알림 발송
+                List<Participation> participants = participationRepository
+                        .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+                for (Participation p : participants) {
+                    publisher.publishEvent(new ParticipantNotificationEvent(
+                            event.getId(),
+                            p.getUser().getId(),
+                            ParticipantNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (참여자)
+                            event.getEventTitle()
+                    ));
+                }
+            }
+        });
+    }
+
+    private List<Event> findExpiredEvents() { // 모집 기간이 지난 이벤트 탐색
+        return eventRepository.findExpiredEvent(LocalDate.now());
+    }
+
+    /**
      * 대관 신청 / 취소
      **/
     @Transactional
-    public String venueProcess(Long eventId, Integer type) {
+    public String venueProcess(Long userId, Long eventId, Integer type) {
+        // 주최자 검증
+        if (isEventHost(userId, eventId)) {
+            throw new BusinessException(ErrorCode.PARTICIPATION_NOT_ALLOWED);
+        }
+
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
@@ -501,73 +577,6 @@ public class EventService {
             return EventConstants.SCREENING_DONE_SUCCESS.getMessage();
         }
         return EventConstants.SCREENING_CANCEL_SUCCESS.getMessage();
-    }
-
-    /**
-     * 매일 자정에 모집 끝난 이벤트 확인 및 이후 과정 처리 로직
-     **/
-    @Scheduled(cron = "0 0 0 * * *") // 매일 자정에 실행
-    @Transactional
-    public void processExpiredEvents() {
-        List<Event> expiredEvents = findExpiredEvents();
-
-        expiredEvents.forEach(event -> {
-            Long eventId = event.getId();
-
-            // 이벤트를 생성한 호스트의 userId = hostId로 설정 -> 엔티티 조회가 아닌 userId만 조회
-            Long hostId = participationRepository
-                    .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
-
-            if (event.getCurrentParticipants() < event.getMinParticipants()) {
-                event.recruitCancel();
-                // 인원부족으로 이벤트 취소 시 자동 알림(호스트)
-                publisher.publishEvent(new HostNotificationEvent(
-                        event.getId(),
-                        hostId,
-                        HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소 (호스트)
-                        event.getEventTitle()
-                ));
-
-                // 모든 참여자 조회 후 알림 발송
-                List<Participation> participants = participationRepository
-                        .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
-                for (Participation p : participants) {
-                    publisher.publishEvent(new ParticipantNotificationEvent(
-                            event.getId(),
-                            p.getUser().getId(),
-                            ParticipantNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 알림 (참여자)
-                            event.getEventTitle()
-                    ));
-                }
-
-            } else {
-                event.recruitDone();
-                // 인원 모집 달성 상태로 모집 기간 끝날 시 자동으로 알림 발송(호스트)
-                publisher.publishEvent(new HostNotificationEvent(
-                        event.getId(),
-                        hostId,
-                        HostNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (호스트)
-                        event.getEventTitle()
-                ));
-
-                // 참여자 전원에게 모집 완료 알림 발송
-                List<Participation> participants = participationRepository
-                        .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
-                for (Participation p : participants) {
-                    publisher.publishEvent(new ParticipantNotificationEvent(
-                            event.getId(),
-                            p.getUser().getId(),
-                            ParticipantNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (참여자)
-                            event.getEventTitle()
-                    ));
-                }
-            }
-        });
-    }
-
-    private List<Event> findExpiredEvents() { // 모집 기간이 지난 이벤트 탐색
-        return eventRepository.findExpiredEvent(LocalDate.now());
     }
 
     public List<EventResponse.HomeEventListResultDTO> readHomeEventList(Long userId) {
