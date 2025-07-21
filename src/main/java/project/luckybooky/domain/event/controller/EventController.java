@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,7 +23,6 @@ import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.service.EventService;
 import project.luckybooky.domain.event.util.EventConstants;
-import project.luckybooky.domain.participation.service.ParticipationService;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
 import project.luckybooky.global.service.UserContextService;
@@ -32,14 +33,13 @@ import project.luckybooky.global.service.UserContextService;
 @RequestMapping("/api/events")
 public class EventController {
     private final EventService eventService;
-    private final ParticipationService participationService;
     private final UserContextService userContextService;
 
     @PostMapping(path = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "이벤트 생성", description = "multipart/form-data 로 'request' JSON 파트와 'eventImage' 파일 파트를 함께 전송")
     public CommonResponse<Long> createEvent(
             @Parameter(description = "전송할 이벤트 정보 JSON", required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = EventRequest.EventCreateRequestDTO.class)))
-            @RequestPart(name = "request", required = true) EventRequest.EventCreateRequestDTO request,
+            @Valid @RequestPart(name = "request", required = true) EventRequest.EventCreateRequestDTO request,
             @Parameter(
                     description = "업로드할 이벤트 이미지",
                     required = false,
@@ -63,7 +63,6 @@ public class EventController {
     public CommonResponse<String> registerEvent(@PathVariable("eventId") Long eventId) {
         Long userId = userContextService.getUserId();
 
-        //participationService.createParticipation(userId, eventId, Boolean.FALSE);
         eventService.registerEvent(userId, eventId);
 
         return CommonResponse.of(ResultCode.OK, EventConstants.REGISTER_SUCCESS.getMessage());
