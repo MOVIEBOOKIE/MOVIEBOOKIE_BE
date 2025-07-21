@@ -342,7 +342,7 @@ public class EventService {
     private Boolean isEventHost(Long userId, Long eventId) {
         Participation participation = participationRepository.findByUserIdAndEventId(userId, eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
-        return participation.getParticipateRole().equals(ParticipateRole.PARTICIPANT);
+        return participation.getParticipateRole().equals(ParticipateRole.HOST);
     }
 
     /**
@@ -350,7 +350,7 @@ public class EventService {
      **/
     @Transactional
     public String cancelRecruitEvent(Long userId, Long eventId) {
-        if (isEventHost(userId, eventId)) {
+        if (!isEventHost(userId, eventId)) {
             throw new BusinessException(ErrorCode.PARTICIPATION_NOT_ALLOWED);
         }
 
@@ -452,7 +452,7 @@ public class EventService {
     @Transactional
     public String venueProcess(Long userId, Long eventId, Integer type) {
         // 주최자 검증
-        if (isEventHost(userId, eventId)) {
+        if (!isEventHost(userId, eventId)) {
             throw new BusinessException(ErrorCode.PARTICIPATION_NOT_ALLOWED);
         }
 
