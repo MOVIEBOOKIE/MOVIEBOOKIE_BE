@@ -56,10 +56,10 @@ public class VenueConfirmedMailListener {
 
         // 4) 메일 발송
         mailTemplateService.sendVenueConfirmedMail(
-                hostPart.getUser().getEmail(),
+                hostPart.getUser().getCertificationEmail(),
                 data
         );
 
-        log.info("✅ 호스트({})에게 대관확정 메일 발송 완료, eventId={}", hostPart.getUser().getEmail(), ev.getId());
+        log.info("✅ 호스트({})에게 대관확정 메일 발송 완료, eventId={}", hostPart.getUser().getCertificationEmail(), ev.getId());
     }
 }
