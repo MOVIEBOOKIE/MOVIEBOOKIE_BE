@@ -45,5 +45,13 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
 
     List<Participation> findAllByEventIdAndParticipateRole(Long eventId, ParticipateRole role);
 
+    // 이미 정의하신 메서드
+    Optional<Participation> findByUser_IdAndEvent_IdAndParticipateRole(
+            Long userId,
+            Long eventId,
+            ParticipateRole participateRole
+    );
+
+    Optional<Participation> findFirstByEventIdAndParticipateRole(Long eventId, ParticipateRole role);
 
 }

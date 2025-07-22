@@ -4,20 +4,29 @@ import com.google.api.core.ApiFuture;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
+import java.time.format.TextStyle;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
+import project.luckybooky.domain.notification.dto.ConfirmedData;
 import project.luckybooky.domain.notification.entity.NotificationInfo;
 import project.luckybooky.domain.notification.event.HostNotificationEvent;
 import project.luckybooky.domain.notification.repository.NotificationRepository;
+import project.luckybooky.domain.notification.service.MailTemplateService;
+import project.luckybooky.domain.participation.entity.Participation;
+import project.luckybooky.domain.participation.entity.type.ParticipateRole;
+import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
@@ -32,7 +41,8 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 public class HostNotificationListener {
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
-
+    private final ParticipationRepository participationRepository;
+    private final MailTemplateService mailTemplateService;
 
     private static final Set<String> sentKeys = ConcurrentHashMap.newKeySet();
 
@@ -77,4 +87,40 @@ public class HostNotificationListener {
             log.error("❌ 알림 내역 저장 실패: hostId={}, error={}", host.getId(), e.getMessage(), e);
         }
     }
+
+    @EventListener
+    public void handleHostNotification(HostNotificationEvent event) {
+
+        Participation hostPart = participationRepository
+                .findByUser_IdAndEvent_IdAndParticipateRole(
+                        event.getHostUserId(),
+                        event.getEventId(),
+                        ParticipateRole.HOST
+                )
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+        Event ev = hostPart.getEvent();
+
+        // DTO 빌더
+        ConfirmedData data = ConfirmedData.builder()
+                .mediaTitle(ev.getMediaTitle())
+                .eventTitle(ev.getEventTitle())
+                .eventDate(ev.getEventDate())
+                .eventDay(ev.getEventDate()
+                        .getDayOfWeek()
+                        .getDisplayName(TextStyle.SHORT, Locale.KOREAN))
+                .eventStartTime(ev.getEventStartTime())
+                .eventEndTime(ev.getEventEndTime())
+                .locationName(ev.getLocation().getLocationName())
+                .maxParticipants(ev.getMaxParticipants())
+                .contact("")
+                .participantsLink("https://your-domain.com/events/" + ev.getId() + "/participants")
+                .build();
+
+        mailTemplateService.sendVenueConfirmedMail(
+                hostPart.getUser().getEmail(),
+                data
+        );
+    }
+
 }

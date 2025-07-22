@@ -15,8 +15,8 @@ public class WebConfig implements WebMvcConfigurer {
         for (HttpMessageConverter<?> converter : converters) {
             if (converter instanceof MappingJackson2HttpMessageConverter jackson) {
                 List<MediaType> types = new ArrayList<>(jackson.getSupportedMediaTypes());
-                types.add(MediaType.TEXT_PLAIN);           // Swagger UI Text
-                types.add(MediaType.APPLICATION_OCTET_STREAM); // Swagger가 보내는 바이너리
+                types.add(MediaType.TEXT_PLAIN);
+                types.add(MediaType.APPLICATION_OCTET_STREAM);
                 jackson.setSupportedMediaTypes(types);
             }
         }

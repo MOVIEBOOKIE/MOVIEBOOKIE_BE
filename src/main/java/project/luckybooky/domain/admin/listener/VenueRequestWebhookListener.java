@@ -13,6 +13,7 @@ import project.luckybooky.domain.admin.service.WebhookService;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.participation.entity.Participation;
+import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
@@ -32,9 +33,14 @@ public class VenueRequestWebhookListener {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
-        List<Participation> parts = participationRepository.findAllWithUserByEventId(eventId);
+        Participation host = participationRepository
+                .findFirstByEventIdAndParticipateRole(eventId, ParticipateRole.HOST)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+        
+        List<Participation> participants = participationRepository
+                .findAllByEventIdAndParticipateRole(eventId, ParticipateRole.PARTICIPANT);
 
-        VenueRequestWebhookDTO dto = WebhookConverter.toDto(event, parts);
+        VenueRequestWebhookDTO dto = WebhookConverter.toDto(event, host, participants);
 
         log.info("▶️ Sending Discord webhook for venue request eventId={}", eventId);
         webhookService.sendVenueRequest(dto);
