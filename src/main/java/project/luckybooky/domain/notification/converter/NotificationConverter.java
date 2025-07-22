@@ -19,6 +19,7 @@ public class NotificationConverter {
 
         if (hostType == HostNotificationType.EVENT_CREATED) {
             return Message.builder()
+                    .setToken(token)
                     .putData("type", hostType.name())
                     .putData("title", hostType.getTitle())
                     .putData("body", hostType.formatBody(eventName))

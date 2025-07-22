@@ -46,7 +46,8 @@ public class ParticipantNotificationListener {
         String idKey = evt.getType() + ":" + evt.getEventId() + ":" + evt.getUserId();
         log.info("▶ 처리 시작 [{}]", idKey);
 
-        if (!sentKeys.add(idKey)) {
+        // 1) 먼저 중복체크만
+        if (sentKeys.contains(idKey)) {
             log.info("🛡️ 이미 전송됨 [{}] 스킵", idKey);
             return;
         }
@@ -54,26 +55,35 @@ public class ParticipantNotificationListener {
         User participant = userRepository.findById(evt.getUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Message msg = NotificationConverter.toFcmMessageParticipant(participant, evt.getType(), evt.getEventName(),
-                evt.getEventId());
+        Message msg = NotificationConverter.toFcmMessageParticipant(
+                participant, evt.getType(), evt.getEventName(), evt.getEventId()
+        );
         if (msg == null) {
             log.warn("⚠ 토큰 미등록 [{}]", idKey);
             return;
         }
 
-        ApiFuture<String> future = FirebaseMessaging.getInstance().sendAsync(msg);
-        future.get();
-
-        log.info("✅ 전송 성공 [{}]", idKey);
-
-        NotificationInfo info = NotificationConverter.toEntityParticipant(
-                participant, evt.getType(), evt.getEventName(), evt.getEventId()
-        );
-
         try {
+            // 2) 전송 시도
+            ApiFuture<String> future = FirebaseMessaging.getInstance().sendAsync(msg);
+            future.get();
+            log.info("✅ 전송 성공 [{}]", idKey);
+
+            // 3) 전송 성공 후에야 키를 추가
+            sentKeys.add(idKey);
+
+            // 4) 알림 기록 저장
+            NotificationInfo info = NotificationConverter.toEntityParticipant(
+                    participant, evt.getType(), evt.getEventName(), evt.getEventId()
+            );
             notificationRepository.save(info);
-        } catch (BusinessException e) {
-            log.error("❌ 알림 내역 저장 실패: participantId={}, error={}", participant.getId(), e.getMessage(), e);
+
+        } catch (Exception e) {
+            // 전송 실패 시 키 제거해서 retryable 동작하도록
+            sentKeys.remove(idKey);
+            log.error("❌ 알림 전송 오류 [{}]: {}", idKey, e.getMessage());
+            throw e;
         }
     }
+
 }
