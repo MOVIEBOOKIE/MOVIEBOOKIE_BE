@@ -298,6 +298,9 @@ public class EventService {
                     ParticipantNotificationType.APPLY_COMPLETED,
                     eventTitle
             ));
+
+            // 5) 미신청자 이벤트 신청 버튼 상태 변경 ('신청하기' -> '신청 마감')
+
         }
         // synchronized 블록이 끝난 후 락 오브젝트 제거
         eventLocks.remove(eventId);
