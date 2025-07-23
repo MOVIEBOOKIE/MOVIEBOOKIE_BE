@@ -299,8 +299,10 @@ public class EventService {
                     eventTitle
             ));
 
-            // 5) 미신청자 이벤트 신청 버튼 상태 변경 ('신청하기' -> '신청 마감')
-
+            // 5) 모집 인원 달성 시 미신청자 이벤트 신청 버튼 상태 변경 ('신청하기' -> '신청 마감')
+            if (event.getCurrentParticipants() == event.getMaxParticipants()) {
+                event.changeAnonymousButtonState();
+            }
         }
         // synchronized 블록이 끝난 후 락 오브젝트 제거
         eventLocks.remove(eventId);
@@ -339,6 +341,11 @@ public class EventService {
         participationRepository.delete(participation);
 
         event.updateCurrentParticipants(false);
+
+        // 기존에 모집 인원이 충족된 상태였을 경우, 미신청자 이벤트 버튼 상태 변경 ('신청 마감' -> '신청하기')
+        if (event.getCurrentParticipants() == event.getMaxParticipants() - 1) {
+            event.changeAnonymousButtonState();
+        }
     }
 
     /** 이벤트 주최자인지 검증 로직 **/
