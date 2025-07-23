@@ -134,7 +134,11 @@ public class Event extends BaseEntity {
 
     /** 미신청자 버튼 상태 변경 **/
     public void changeAnonymousButtonState() {
-        anonymousButtonState = (anonymousButtonState == AnonymousButtonState.REGISTER) ? AnonymousButtonState.REGISTER_DONE : AnonymousButtonState.REGISTER;
+        if (anonymousButtonState == AnonymousButtonState.REGISTER) {
+            anonymousButtonState = AnonymousButtonState.REGISTER_DONE;
+        } else {
+            anonymousButtonState = AnonymousButtonState.REGISTER;
+        }
     }
 
     /**
