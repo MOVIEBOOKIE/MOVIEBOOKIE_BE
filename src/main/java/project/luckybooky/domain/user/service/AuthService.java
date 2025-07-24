@@ -118,7 +118,7 @@ public class AuthService {
         // 1) 이메일로 유저 조회
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
 
-        User user = userRepository.findByEmail(email)
+        userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         boolean isLocal = false;
@@ -190,6 +190,7 @@ public class AuthService {
     @Transactional
     public BaseResponse<Void> deleteUser(HttpServletRequest request,
                                          HttpServletResponse response) {
+
         // 1) 현재 유저 조회
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
         User user = userRepository.findByEmail(email)
@@ -202,9 +203,15 @@ public class AuthService {
         // 3) Redis에 남은 리프레시 토큰 삭제
         tokenService.deleteAllRefreshTokens(userId);
 
+        boolean isLocal = false;
+        String referer = request.getHeader("Referer");
+        if (referer != null && referer.contains("localhost:3000")) {
+            isLocal = true;
+        }
+
         // 4) 클라이언트 쿠키 만료
-        CookieUtil.deleteCookie(response, "accessToken", false);
-        CookieUtil.deleteCookie(response, "refreshToken", false);
+        CookieUtil.deleteCookie(response, "accessToken", isLocal);
+        CookieUtil.deleteCookie(response, "refreshToken", isLocal);
 
         return BaseResponse.onSuccess(null);
     }
