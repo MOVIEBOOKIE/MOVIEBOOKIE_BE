@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import project.luckybooky.domain.feedback.repository.FeedbackRepository;
+import project.luckybooky.domain.notification.repository.NotificationRepository;
+import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.user.converter.AuthConverter;
 import project.luckybooky.domain.user.converter.UserConverter;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO;
@@ -28,11 +31,13 @@ import project.luckybooky.global.oauth.util.KakaoUtil;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
-
+    private final NotificationRepository notificationRepository;
     private final KakaoUtil kakaoUtil;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final TokenService tokenService;
+    private final FeedbackRepository feedbackRepository;
+    private final ParticipationRepository participationRepository;
 
 
     @Transactional
@@ -109,15 +114,13 @@ public class AuthService {
 
     @Transactional
     public BaseResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {
+
+        // 1) 이메일로 유저 조회
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
 
-        User user = userRepository.findByEmail(email)
+        userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        user.setRefreshToken(null);
-        userRepository.save(user);
-
-        // 4. 환경 판별 (로컬인지)
         boolean isLocal = false;
         String referer = request.getHeader("Referer");
         if (referer != null && referer.contains("localhost:3000")) {
@@ -180,6 +183,35 @@ public class AuthService {
                 newRefreshToken,
                 (int) jwtUtil.getRefreshTokenValidity(),
                 isLocal);
+
+        return BaseResponse.onSuccess(null);
+    }
+
+    @Transactional
+    public BaseResponse<Void> deleteUser(HttpServletRequest request,
+                                         HttpServletResponse response) {
+
+        // 1) 현재 유저 조회
+        String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        Long userId = user.getId();
+
+        // 2) User 삭제 (cascade 설정으로 Feedback, Notification, Participation 모두 함께 삭제)
+        userRepository.delete(user);
+
+        // 3) Redis에 남은 리프레시 토큰 삭제
+        tokenService.deleteAllRefreshTokens(userId);
+
+        boolean isLocal = false;
+        String referer = request.getHeader("Referer");
+        if (referer != null && referer.contains("localhost:3000")) {
+            isLocal = true;
+        }
+
+        // 4) 클라이언트 쿠키 만료
+        CookieUtil.deleteCookie(response, "accessToken", isLocal);
+        CookieUtil.deleteCookie(response, "refreshToken", isLocal);
 
         return BaseResponse.onSuccess(null);
     }
