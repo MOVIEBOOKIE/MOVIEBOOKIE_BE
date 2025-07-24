@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AnonymousButtonState {
     REGISTER("신청하기"),
+    REGISTER_DONE("신청 마감"),
     RECRUIT_DONE("모집 완료"),
     RECRUIT_CANCELED("모집 취소"),
     ;

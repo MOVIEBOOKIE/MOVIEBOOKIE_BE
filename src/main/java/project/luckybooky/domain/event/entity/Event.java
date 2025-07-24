@@ -132,6 +132,15 @@ public class Event extends BaseEntity {
         }
     }
 
+    /** 미신청자 버튼 상태 변경 **/
+    public void changeAnonymousButtonState() {
+        if (anonymousButtonState == AnonymousButtonState.REGISTER) {
+            anonymousButtonState = AnonymousButtonState.REGISTER_DONE;
+        } else {
+            anonymousButtonState = AnonymousButtonState.REGISTER;
+        }
+    }
+
     /**
      * 모집 취소
      **/
