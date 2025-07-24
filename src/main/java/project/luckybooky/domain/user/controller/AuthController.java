@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,11 +51,13 @@ public class AuthController {
         return authService.logout(request, response);
     }
 
-//    @Operation(summary = "회원탈퇴", description = "회원 정보를 포함한 모든 관련 데이터를 삭제한 후, 계정을 완전히 삭제합니다.")
-//    @DeleteMapping("/delete")
-//    public BaseResponse<String> deleteUser(HttpServletResponse response, boolean isLocal) {
-//        return authService.deleteUser(response, isLocal);
-//    }
+    @Operation(summary = "회원탈퇴",
+            description = "현재 로그인된 회원의 모든 연관 데이터를 삭제하고, 계정을 완전 제거합니다.")
+    @DeleteMapping("/delete")
+    public BaseResponse<Void> deleteUser(HttpServletRequest request,
+                                         HttpServletResponse response) {
+        return authService.deleteUser(request, response);
+    }
 
     @Operation(summary = "유저 정보 조회")
     @GetMapping("/user")
