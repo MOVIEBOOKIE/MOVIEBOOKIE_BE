@@ -187,7 +187,7 @@ public class AuthService {
     }
 
     @Transactional
-    public BaseResponse<Void> deleteUser(HttpServletRequest request,
+    public BaseResponse<String> deleteUser(HttpServletRequest request,
                                          HttpServletResponse response) {
 
         // 1) 현재 유저 조회
@@ -215,6 +215,6 @@ public class AuthService {
         CookieUtil.deleteCookie(response, "accessToken", isLocal);
         CookieUtil.deleteCookie(response, "refreshToken", isLocal);
 
-        return BaseResponse.onSuccess(null);
+        return BaseResponse.onSuccess("정상 처리되었습니다.");
     }
 }
