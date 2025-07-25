@@ -93,6 +93,7 @@ public class ParticipationService {
     /**
      * 회원 탈퇴 시 연관된 이벤트 취소
      **/
+    @Transactional
     public String cancelParticipation(Long userId) {
         List<Participation> participationList = participationRepository.findByUserId(userId);
         participationList.stream().forEach(p -> {
