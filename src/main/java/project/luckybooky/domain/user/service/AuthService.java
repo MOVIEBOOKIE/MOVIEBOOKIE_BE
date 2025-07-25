@@ -202,7 +202,7 @@ public class AuthService {
         // 3) User 삭제 (cascade 설정으로 Feedback, Notification, Participation 모두 함께 삭제)
         userRepository.delete(user);
 
-        // 3) Redis에 남은 리프레시 토큰 삭제
+        // 4) Redis에 남은 리프레시 토큰 삭제
         tokenService.deleteAllRefreshTokens(userId);
 
         boolean isLocal = false;
@@ -211,7 +211,7 @@ public class AuthService {
             isLocal = true;
         }
 
-        // 4) 클라이언트 쿠키 만료
+        // 5) 클라이언트 쿠키 만료
         CookieUtil.deleteCookie(response, "accessToken", isLocal);
         CookieUtil.deleteCookie(response, "refreshToken", isLocal);
 

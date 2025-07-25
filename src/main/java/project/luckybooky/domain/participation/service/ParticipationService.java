@@ -111,6 +111,8 @@ public class ParticipationService {
                             throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
                         }
                         break;
+                    default:
+                        break;
                 }
             } else {
                 switch (event.getParticipantEventButtonState()) {
@@ -123,6 +125,8 @@ public class ParticipationService {
                         if (event.getEventStatus().equals(EventStatus.VENUE_CONFIRMED)) {
                             throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
                         }
+                        break;
+                    default:
                         break;
                 }
             }
