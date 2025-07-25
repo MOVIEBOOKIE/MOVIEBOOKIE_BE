@@ -20,5 +20,6 @@ public class AuthenticatedUserUtils {
             return (String) authentication.getPrincipal();
         }
 
-        throw new BusinessException(ErrorCode.UNAUTHORIZED);    }
+        throw new BusinessException(ErrorCode.UNAUTHORIZED);
+    }
 }
