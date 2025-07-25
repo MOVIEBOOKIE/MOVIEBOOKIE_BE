@@ -192,9 +192,7 @@ public class EventService {
 
         return EventConverter.toEventReadDetailsResultDTO(
                 event,
-                host.getUsername(),
-                host.getProfileImage(),
-                host.getHostExperienceCount(),
+                host,
                 userRole,
                 formatDateRange(event.getRecruitmentStart(), event.getRecruitmentEnd()),
                 Math.round((float) ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100),

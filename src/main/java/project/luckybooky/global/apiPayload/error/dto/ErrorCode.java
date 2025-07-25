@@ -74,6 +74,7 @@ public enum ErrorCode implements BaseStatus {
     // Participation 관련
     PARTICIPATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "PARTICIPATION_401", "해당 이벤트를 참여하지 않았습니다."),
     PARTICIPATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PARTICIPATION_402", "해당 이벤트의 주최자가 아닙니다."),
+    EVENT_IN_PROGRESS(HttpStatus.BAD_REQUEST, "PARTICIPATION_403", "아직 끝나지 않은 이벤트가 있습니다."),
 
     // Notification 관련
     NOTIFICATION_FCM_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_400", "FCM 토큰이 등록되지 않았습니다."),

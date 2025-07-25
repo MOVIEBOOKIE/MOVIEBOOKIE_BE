@@ -1,5 +1,6 @@
 package project.luckybooky.domain.user.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -8,13 +9,19 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import project.luckybooky.domain.feedback.entity.Feedback;
+import project.luckybooky.domain.notification.entity.NotificationInfo;
+import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.global.entity.BaseEntity;
 
 @Getter
@@ -80,6 +87,15 @@ public class User extends BaseEntity {
     @Column(name = "participation", nullable = false)
     @Builder.Default
     private Integer participation = 0;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Feedback> feedbacks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<NotificationInfo> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Participation> participations = new ArrayList<>();
 
     public void updateExperience(Integer type) {
         if (type == 0) {
