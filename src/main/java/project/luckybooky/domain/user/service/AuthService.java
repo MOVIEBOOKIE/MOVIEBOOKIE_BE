@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.feedback.repository.FeedbackRepository;
 import project.luckybooky.domain.notification.repository.NotificationRepository;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
+import project.luckybooky.domain.participation.service.ParticipationService;
 import project.luckybooky.domain.user.converter.AuthConverter;
 import project.luckybooky.domain.user.converter.UserConverter;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO;
@@ -31,13 +32,11 @@ import project.luckybooky.global.oauth.util.KakaoUtil;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
-    private final NotificationRepository notificationRepository;
     private final KakaoUtil kakaoUtil;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final TokenService tokenService;
-    private final FeedbackRepository feedbackRepository;
-    private final ParticipationRepository participationRepository;
+    private final ParticipationService participationService;
 
 
     @Transactional
@@ -197,7 +196,10 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         Long userId = user.getId();
 
-        // 2) User 삭제 (cascade 설정으로 Feedback, Notification, Participation 모두 함께 삭제)
+        // 2) 연관된 이벤트 취소 처리
+        participationService.cancelParticipation(userId);
+
+        // 3) User 삭제 (cascade 설정으로 Feedback, Notification, Participation 모두 함께 삭제)
         userRepository.delete(user);
 
         // 3) Redis에 남은 리프레시 토큰 삭제
