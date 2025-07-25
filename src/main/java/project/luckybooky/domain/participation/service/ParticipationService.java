@@ -106,6 +106,11 @@ public class ParticipationService {
                     case VENUE_RESERVATION, VENUE_RESERVATION_IN_PROGRESS:
                         eventService.venueProcess(userId, event.getId(), 1);
                         break;
+                    case TO_TICKET:
+                        if (event.getEventStatus().equals(EventStatus.VENUE_CONFIRMED)) {
+                            throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
+                        }
+                        break;
                 }
             } else {
                 switch (event.getParticipantEventButtonState()) {
