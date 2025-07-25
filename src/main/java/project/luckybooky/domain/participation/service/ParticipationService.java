@@ -107,7 +107,18 @@ public class ParticipationService {
                         break;
                 }
             } else {
-                eventService.cancelEvent(userId, p.getEvent().getId());
+                switch (event.getParticipantEventButtonState()) {
+                    case REGISTER_CANCELED:
+                        eventService.cancelEvent(userId, event.getId());
+                        break;
+                    case RECRUIT_DONE, VENUE_RESERVATION_IN_PROGRESS:
+                        throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
+                    case TO_TICKET:
+                        if (event.getEventStatus().equals(EventStatus.VENUE_CONFIRMED)) {
+                            throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
+                        }
+                        break;
+                }
             }
         });
         return "정상 처리되었습니다.";
