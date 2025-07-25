@@ -5,6 +5,7 @@ import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.location.entity.Location;
+import project.luckybooky.domain.user.entity.User;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -70,9 +71,7 @@ public class EventConverter {
 
     public static EventResponse.EventReadDetailsResultDTO toEventReadDetailsResultDTO(
             Event event,
-            String username,
-            String userImageUrl,
-            Integer recruitment,
+            User host,
             String userRole,
             String recruitmentDate,
             Integer recruitmentRate,
@@ -96,6 +95,15 @@ public class EventConverter {
         LocalTime localTime = LocalTime.parse(event.getEventStartTime(), DateTimeFormatter.ofPattern("HH:mm"));
         String eventTime = localTime.format(DateTimeFormatter.ofPattern("HH시 mm분"));
 
+        // 주최자 처리
+        String username = "알 수 없음";
+        String userImageUrl = null;
+        Integer recruitment = 0;
+        if (host != null) {
+            username = host.getUsername();
+            userImageUrl = host.getProfileImage();
+            recruitment = host.getRecruitment();
+        }
         return EventResponse.EventReadDetailsResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
