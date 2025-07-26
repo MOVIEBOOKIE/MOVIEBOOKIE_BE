@@ -12,6 +12,7 @@ import project.luckybooky.domain.event.converter.EventConverter;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.entity.type.EventStatus;
+import project.luckybooky.domain.event.entity.type.HostEventButtonState;
 import project.luckybooky.domain.event.service.EventService;
 import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
@@ -88,4 +89,49 @@ public class ParticipationService {
                 }
         ).collect(Collectors.toList());
     }
+
+    /**
+     * 회원 탈퇴 시 연관된 이벤트 취소
+     **/
+    @Transactional
+    public String cancelParticipation(Long userId) {
+        List<Participation> participationList = participationRepository.findByUserId(userId);
+        participationList.stream().forEach(p -> {
+            Event event = p.getEvent();
+            if (p.getParticipateRole().equals(ParticipateRole.HOST)) {
+                switch (event.getHostEventButtonState()) {
+                    case RECRUIT_CANCELLED:
+                        eventService.cancelRecruitEvent(userId, event.getId());
+                        break;
+                    case VENUE_RESERVATION, VENUE_RESERVATION_IN_PROGRESS:
+                        eventService.venueProcess(userId, event.getId(), 1);
+                        break;
+                    case TO_TICKET:
+                        if (event.getEventStatus().equals(EventStatus.VENUE_CONFIRMED)) {
+                            throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                switch (event.getParticipantEventButtonState()) {
+                    case REGISTER_CANCELED:
+                        eventService.cancelEvent(userId, event.getId());
+                        break;
+                    case RECRUIT_DONE, VENUE_RESERVATION_IN_PROGRESS:
+                        throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
+                    case TO_TICKET:
+                        if (event.getEventStatus().equals(EventStatus.VENUE_CONFIRMED)) {
+                            throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+        return "정상 처리되었습니다.";
+    }
+
 }

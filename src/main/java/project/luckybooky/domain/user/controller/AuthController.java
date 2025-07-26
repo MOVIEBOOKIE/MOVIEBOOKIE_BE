@@ -54,7 +54,7 @@ public class AuthController {
     @Operation(summary = "회원탈퇴",
             description = "현재 로그인된 회원의 모든 연관 데이터를 삭제하고, 계정을 완전 제거합니다.")
     @DeleteMapping("/delete")
-    public BaseResponse<Void> deleteUser(HttpServletRequest request,
+    public BaseResponse<String> deleteUser(HttpServletRequest request,
                                          HttpServletResponse response) {
         return authService.deleteUser(request, response);
     }
