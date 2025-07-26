@@ -30,7 +30,7 @@ public enum ErrorCode implements BaseStatus {
     // JWT 관련 에러
     JWT_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "JWT_500", "JWT 토큰 생성 중 오류가 발생했습니다."),
     JWT_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT_401", "유효하지 않은 JWT 토큰입니다."),
-    JWT_EXPIRED_TOKEN(HttpStatus.BAD_REQUEST, "JWT_402", "만료된 JWT 토큰입니다."),
+    JWT_EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "JWT_401", "만료된 JWT 토큰입니다."),
     INVALID_TOKEN_TYPE(HttpStatus.BAD_REQUEST, "AUTH_400", "잘못된 토큰 유형입니다."),
     MULTI_ENV_LOGIN(HttpStatus.UNAUTHORIZED, "AUTH_401", "다른 환경에서 로그인되어 세션이 만료되었습니다."),
 
