@@ -153,7 +153,7 @@ public class EventController {
         return CommonResponse.of(ResultCode.OK, dto);
     }
 
-    @Operation(summary = "이벤트 상세 조회", description = "상세 조회를 희망하는 이벤트 ID를 넣어주세요 !!")
+    @Operation(summary = "비로그인 유저용 이벤트 상세 조회", description = "상세 조회를 희망하는 이벤트 ID를 넣어주세요 !!")
     @GetMapping("/anonymous/{eventId}")
     public CommonResponse<EventResponse.EventReadDetailsResultDTO> readEventDetailsForAnonymous(
             @PathVariable("eventId") Long eventId) {
