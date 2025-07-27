@@ -23,7 +23,6 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.jwt.JwtUtil;
 import project.luckybooky.global.jwt.TokenService;
 import project.luckybooky.global.oauth.dto.KakaoDTO;
-import project.luckybooky.global.oauth.handler.AuthFailureHandler;
 import project.luckybooky.global.oauth.util.CookieUtil;
 import project.luckybooky.global.oauth.util.KakaoUtil;
 
@@ -77,19 +76,19 @@ public class AuthService {
 
             return user;
 
-        } catch (AuthFailureHandler e) {
+        } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
             log.error("🌐 OAuth 로그인 처리 중 예외 발생", e);
-            throw new AuthFailureHandler(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
     private User createNewUser(String email, String nickname, String profileImage) {
         try {
             return userRepository.save(AuthConverter.toUser(email, nickname, profileImage));
-        } catch (Exception e) {
-            throw new AuthFailureHandler(ErrorCode.INTERNAL_SERVER_ERROR);
+        } catch (BusinessException e) {
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

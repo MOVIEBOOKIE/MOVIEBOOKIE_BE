@@ -17,8 +17,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.oauth.dto.KakaoDTO;
-import project.luckybooky.global.oauth.handler.AuthFailureHandler;
 
 @Component
 @Slf4j
@@ -46,7 +46,7 @@ public class KakaoUtil {
     public KakaoDTO.OAuthToken requestToken(String accessCode, String redirectUri) {
         if (!allowedRedirectUris.contains(redirectUri)) {
             log.error("🚨 [ERROR] 허용되지 않은 redirect_uri 요청: {}", redirectUri);
-            throw new AuthFailureHandler(ErrorCode.KAKAO_INVALID_GRANT);
+            throw new BusinessException(ErrorCode.KAKAO_INVALID_GRANT);
         }
 
         RestTemplate restTemplate = new RestTemplate();
@@ -78,20 +78,20 @@ public class KakaoUtil {
             log.info("🔹 카카오 API 응답: {}", response.getBody());
 
             if (response.getStatusCode() != HttpStatus.OK) {
-                throw new AuthFailureHandler(ErrorCode.KAKAO_AUTH_FAILED);
+                throw new BusinessException(ErrorCode.KAKAO_AUTH_FAILED);
             }
 
             return objectMapper.readValue(response.getBody(), KakaoDTO.OAuthToken.class);
 
         } catch (HttpClientErrorException.Unauthorized e) {
             log.error("🚨 유효하지 않은 카카오 인증 코드 (401 Unauthorized)");
-            throw new AuthFailureHandler(ErrorCode.KAKAO_INVALID_GRANT);
+            throw new BusinessException(ErrorCode.KAKAO_INVALID_GRANT);
         } catch (JsonProcessingException e) {
             log.error("🚨 카카오 응답 JSON 파싱 오류: {}", e.getMessage());
-            throw new AuthFailureHandler(ErrorCode.KAKAO_JSON_PARSE_ERROR);
+            throw new BusinessException(ErrorCode.KAKAO_JSON_PARSE_ERROR);
         } catch (Exception e) {
             log.error("🚨 카카오 API 호출 중 오류 발생: {}", e.getMessage());
-            throw new AuthFailureHandler(ErrorCode.KAKAO_API_ERROR);
+            throw new BusinessException(ErrorCode.KAKAO_API_ERROR);
         }
     }
 
@@ -117,10 +117,10 @@ public class KakaoUtil {
 
         } catch (JsonProcessingException e) {
             log.error("🚨 카카오 프로필 파싱 오류: {}", e.getMessage());
-            throw new AuthFailureHandler(ErrorCode.KAKAO_JSON_PARSE_ERROR);
+            throw new BusinessException(ErrorCode.KAKAO_JSON_PARSE_ERROR);
         } catch (Exception e) {
             log.error("🚨 카카오 프로필 요청 중 오류 발생: {}", e.getMessage());
-            throw new AuthFailureHandler(ErrorCode.KAKAO_API_ERROR);
+            throw new BusinessException(ErrorCode.KAKAO_API_ERROR);
         }
     }
 }

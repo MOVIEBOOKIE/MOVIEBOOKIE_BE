@@ -12,7 +12,7 @@ import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
-import project.luckybooky.global.oauth.handler.AuthFailureHandler;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
 @Component
 public class JwtUtil {
@@ -58,9 +58,9 @@ public class JwtUtil {
             Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
-            throw new AuthFailureHandler(ErrorCode.JWT_EXPIRED_TOKEN);
+            throw new BusinessException(ErrorCode.JWT_EXPIRED_TOKEN);
         } catch (JwtException e) {
-            throw new AuthFailureHandler(ErrorCode.JWT_INVALID_TOKEN);
+            throw new BusinessException(ErrorCode.JWT_INVALID_TOKEN);
         }
     }
 
