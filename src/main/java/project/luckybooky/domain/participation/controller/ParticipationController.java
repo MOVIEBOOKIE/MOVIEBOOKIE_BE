@@ -22,8 +22,8 @@ public class ParticipationController {
     private final ParticipationService participationService;
     private final UserContextService userContextService;
 
-    @Operation(summary = "내가 신청한 이벤트 리스트 조회 (진행 중, 확정)", description = "type과 page&size를 넣어주세요!! <br><br>" +
-            "type: 0 -> 진행 중, 1 -> 확정 <br>" +
+    @Operation(summary = "내가 신청한 이벤트 리스트 조회 (신청, 확정)", description = "type과 page&size를 넣어주세요!! <br><br>" +
+            "type: 0 -> 신청, 1 -> 확정 <br>" +
             "page: 조회할 페이지 번호 <br> size: 한 페이지에 조회할 이벤트 수")
     @GetMapping("/registered")
     public CommonResponse<List<EventResponse.ReadEventListResultDTO>> readRegisteredEventList(
@@ -37,8 +37,8 @@ public class ParticipationController {
         return CommonResponse.of(ResultCode.OK, list);
     }
 
-    @Operation(summary = "내가 만든 이벤트 리스트 조회 (진행 중, 확정)", description = "type과 page&size를 넣어주세요!! <br><br>" +
-            "type: 0 -> 진행 중, 1 -> 확정 <br>" +
+    @Operation(summary = "내가 만든 이벤트 리스트 조회 (모집, 확정)", description = "type과 page&size를 넣어주세요!! <br><br>" +
+            "type: 0 -> 모집, 1 -> 확정 <br>" +
             "page: 조회할 페이지 번호 <br> size: 한 페이지에 조회할 이벤트 수")
     @GetMapping("/hosted")
     public CommonResponse<List<EventResponse.ReadEventListResultDTO>> readHostedEventList(

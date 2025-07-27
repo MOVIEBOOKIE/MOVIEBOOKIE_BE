@@ -64,14 +64,14 @@ public class ParticipationService {
         List<EventStatus> statuses = (type == 0)
                 ? List.of(
                 EventStatus.RECRUITING,
-                EventStatus.RECRUITED
+                EventStatus.RECRUITED,
+                EventStatus.RECRUIT_CANCELED,
+                EventStatus.VENUE_RESERVATION_CANCELED
         )
                 : List.of(
                         EventStatus.COMPLETED,
                         EventStatus.CANCELLED,
-                        EventStatus.VENUE_CONFIRMED,
-                        EventStatus.RECRUIT_CANCELED,
-                        EventStatus.VENUE_RESERVATION_CANCELED
+                        EventStatus.VENUE_CONFIRMED
                 );
 
         // 주최자 / 참여자 판단
