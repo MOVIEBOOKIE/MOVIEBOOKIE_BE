@@ -57,14 +57,23 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/"
                         ).permitAll()
-                        
+
                         .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/test/users/tokens/**").permitAll()
                         .requestMatchers("/", "/api/health").permitAll()
                         .requestMatchers("/index.html", "/static/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // 2) 이메일 발송, 이벤트 익명 조회 등 기존 공개 API
+                        .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
+
+                        // 3) **여기서 카카오 로그인 엔드포인트를 공개**
+                        .requestMatchers(HttpMethod.GET, "/api/auth/login/kakao").permitAll()
+
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
