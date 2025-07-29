@@ -31,7 +31,7 @@ public class EventResponse {
         String description;
         Integer rate;
         Integer estimatedPrice;
-        LocalDate eventDate;
+        String eventDate;
         String eventStatus;
         Integer d_day;
         String locationName;

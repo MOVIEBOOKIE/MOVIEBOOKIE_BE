@@ -2,6 +2,10 @@ package project.luckybooky.domain.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,6 +25,7 @@ import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.service.AuthService;
 import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
 import project.luckybooky.global.apiPayload.common.BaseResponse;
+import project.luckybooky.global.apiPayload.error.dto.ErrorResponse;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
 
@@ -53,6 +58,11 @@ public class AuthController {
 
     @Operation(summary = "회원탈퇴",
             description = "현재 로그인된 회원의 모든 연관 데이터를 삭제하고, 계정을 완전 제거합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "탈퇴 성공"),
+            @ApiResponse(responseCode = "400", description = "아직 진행 중인 이벤트 존재로 탈퇴 실패",
+                        content = @Content(schema = @Schema(implementation = ErrorResponse.class)))}
+    )
     @DeleteMapping("/delete")
     public BaseResponse<String> deleteUser(HttpServletRequest request,
                                          HttpServletResponse response) {
