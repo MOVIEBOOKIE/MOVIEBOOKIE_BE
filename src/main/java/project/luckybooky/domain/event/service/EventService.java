@@ -613,8 +613,7 @@ public class EventService {
 
         List<Event> eventList = eventRepository.findEventListByUserType(categoryId, PageRequest.of(0, 7));
         return eventList.stream().map(event -> {
-            String eventDate = event.getEventDate().format(DateTimeFormatter.ofPattern("yyyy. MM. dd"));
-            return EventConverter.toHomeEventListResultDTO(event, eventDate);
+            return EventConverter.toHomeEventListResultDTO(event);
         }).collect(Collectors.toList());
     }
 
