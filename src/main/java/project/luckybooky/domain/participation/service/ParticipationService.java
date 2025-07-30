@@ -12,7 +12,6 @@ import project.luckybooky.domain.event.converter.EventConverter;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.entity.type.EventStatus;
-import project.luckybooky.domain.event.entity.type.HostEventButtonState;
 import project.luckybooky.domain.event.service.EventService;
 import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
