@@ -57,15 +57,19 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/"
                         ).permitAll()
-                        
+
                         .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/test/users/tokens/**").permitAll()
                         .requestMatchers("/", "/api/health").permitAll()
                         .requestMatchers("/index.html", "/static/**", "/favicon.ico").permitAll()
-                        // 그 외 모든 요청은 인증 필요
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/login/kakao").permitAll()
                         .anyRequest().authenticated()
                 )
                 // 5) OAuth2 로그인 핸들러
