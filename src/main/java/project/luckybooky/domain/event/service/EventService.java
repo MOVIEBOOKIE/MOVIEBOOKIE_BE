@@ -158,6 +158,7 @@ public class EventService {
         ).collect(Collectors.toList());
     }
 
+    /** 이벤트 상세 조회 **/
     public EventResponse.EventReadDetailsResultDTO readEventDetails(Long userId, Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));

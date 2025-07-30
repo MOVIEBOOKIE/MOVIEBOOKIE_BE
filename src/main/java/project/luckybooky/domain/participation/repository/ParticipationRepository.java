@@ -16,7 +16,7 @@ import project.luckybooky.domain.user.entity.User;
 public interface ParticipationRepository extends JpaRepository<Participation, Long> {
     Optional<Participation> findByUserIdAndEventId(Long userId, Long eventId);
 
-    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses")
+    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses ORDER BY p.event.eventDate")
     Page<Event> findByUserIdAndEventStatuses(@Param("userId") Long userId,
                                              @Param("participateRole") ParticipateRole participateRole,
                                              @Param("statuses") List<EventStatus> statuses, Pageable pageable);
