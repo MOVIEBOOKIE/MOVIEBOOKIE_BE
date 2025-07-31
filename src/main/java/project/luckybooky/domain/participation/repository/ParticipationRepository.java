@@ -18,7 +18,7 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
 
     @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses " +
             "ORDER BY CASE " +
-            "WHEN p.event.eventStatus IN (project.luckybooky.domain.event.entity.type.EventStatus.RECRUITING, project.luckybooky.domain.event.entity.type.EventStatus.VENUE_CONFIRMED) THEN 0" +
+            "WHEN p.event.eventStatus IN (project.luckybooky.domain.event.entity.type.EventStatus.RECRUITING, project.luckybooky.domain.event.entity.type.EventStatus.RECRUITED, project.luckybooky.domain.event.entity.type.EventStatus.VENUE_CONFIRMED) THEN 0" +
             " ELSE 1 END, p.event.eventDate ASC ")
     Page<Event> findByUserIdAndEventStatuses(@Param("userId") Long userId,
                                              @Param("participateRole") ParticipateRole participateRole,
