@@ -77,7 +77,6 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 ->
                         oauth2.successHandler(oAuth2LoginSuccessHandler)
                 )
-                // 6) JWT 인증 필터를 UsernamePasswordAuthenticationFilter 전에 삽입
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),
                         UsernamePasswordAuthenticationFilter.class);
 

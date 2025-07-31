@@ -13,7 +13,7 @@ public class RedisCertificationCache implements SmsCertificationCache {
 
     @Override
     public boolean store(String key, String code, Duration ttl) {
-        Boolean ok = redis.opsForValue().setIfAbsent(key, code, ttl);       // Lettuce 6+
+        Boolean ok = redis.opsForValue().setIfAbsent(key, code, ttl);
         return Boolean.TRUE.equals(ok);
     }
 

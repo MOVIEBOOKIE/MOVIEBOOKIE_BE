@@ -92,7 +92,7 @@ public class EventService {
                 event.getId(),
                 userId, // hostId
                 HostNotificationType.EVENT_CREATED,
-                event.getEventTitle()
+                event.getMediaTitle()
         ));
         return event.getId();
     }
@@ -158,7 +158,9 @@ public class EventService {
         ).collect(Collectors.toList());
     }
 
-    /** 이벤트 상세 조회 **/
+    /**
+     * 이벤트 상세 조회
+     **/
     public EventResponse.EventReadDetailsResultDTO readEventDetails(Long userId, Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
@@ -259,7 +261,9 @@ public class EventService {
         }
     }
 
-    /** 이벤트 신청 **/
+    /**
+     * 이벤트 신청
+     **/
     @Transactional
     public void registerEvent(Long userId, Long eventId) {
         // 사용자 조회를 락 외부에서 미리 수행
@@ -290,12 +294,11 @@ public class EventService {
             Participation p = ParticipationConverter.toParticipation(user, event, ParticipateRole.PARTICIPANT);
             participationRepository.save(p);
 
-            String eventTitle = p.getEvent().getEventTitle();
             publisher.publishEvent(new ParticipantNotificationEvent(
                     eventId,
                     userId,
                     ParticipantNotificationType.APPLY_COMPLETED,
-                    eventTitle
+                    event.getMediaTitle()
             ));
 
             // 5) 모집 인원 달성 시 미신청자 이벤트 신청 버튼 상태 변경 ('신청하기' -> '신청 마감')
@@ -330,12 +333,12 @@ public class EventService {
             throw new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND);
         }
 
-        String eventTitle = participation.getEvent().getEventTitle();
+        String MediaTitle = participation.getEvent().getMediaTitle();
         publisher.publishEvent(new ParticipantNotificationEvent(
                 eventId,
                 userId,
                 ParticipantNotificationType.APPLY_CANCEL,
-                eventTitle
+                MediaTitle
         ));
         participationRepository.delete(participation);
 
@@ -347,7 +350,9 @@ public class EventService {
         }
     }
 
-    /** 이벤트 주최자인지 검증 로직 **/
+    /**
+     * 이벤트 주최자인지 검증 로직
+     **/
     private Boolean isEventHost(Long userId, Long eventId) {
         Participation participation = participationRepository.findByUserIdAndEventId(userId, eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
@@ -368,10 +373,10 @@ public class EventService {
         event.recruitCancel();
 
         publisher.publishEvent(new HostNotificationEvent(
-                event.getId(),
+                eventId,
                 userId, // hostId
                 HostNotificationType.RECRUITMENT_CANCELLED,
-                event.getEventTitle()
+                event.getMediaTitle()
         ));
 
         // 4) 참여자 전원 조회 → 참여자용 "모집 취소" 알림 발송
@@ -379,10 +384,10 @@ public class EventService {
                 .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
         for (Participation p : participants) {
             publisher.publishEvent(new ParticipantNotificationEvent(
-                    event.getId(),        // ← eventId
+                    eventId,        // ← eventId
                     p.getUser().getId(),
                     ParticipantNotificationType.RECRUITMENT_CANCELLED,
-                    event.getEventTitle()
+                    event.getMediaTitle()
             ));
         }
 
@@ -411,7 +416,7 @@ public class EventService {
                         event.getId(),
                         hostId,
                         HostNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 취소 (호스트)
-                        event.getEventTitle()
+                        event.getMediaTitle()
                 ));
 
                 // 모든 참여자 조회 후 알림 발송
@@ -422,7 +427,7 @@ public class EventService {
                             event.getId(),
                             p.getUser().getId(),
                             ParticipantNotificationType.RECRUITMENT_CANCELLED, // 인원 부족 알림 (참여자)
-                            event.getEventTitle()
+                            event.getMediaTitle()
                     ));
                 }
 
@@ -444,7 +449,7 @@ public class EventService {
                             event.getId(),
                             p.getUser().getId(),
                             ParticipantNotificationType.RECRUITMENT_COMPLETED, // 모집 완료 알림 (참여자)
-                            event.getEventTitle()
+                            event.getMediaTitle()
                     ));
                 }
             }
@@ -481,10 +486,10 @@ public class EventService {
                     .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
             publisher.publishEvent(new HostNotificationEvent(
-                    event.getId(),
+                    eventId,
                     hostId,
                     HostNotificationType.RESERVATION_DENIED, // 대관 취소 알림 (호스트)
-                    event.getEventTitle()
+                    event.getMediaTitle()
             ));
 
             // 2) 참여자 전원 대관 취소 알림
@@ -492,7 +497,7 @@ public class EventService {
                     .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
             for (Participation p : participants) {
                 publisher.publishEvent(new ParticipantNotificationEvent(
-                        event.getId(),
+                        eventId,
                         p.getUser().getId(),
                         ParticipantNotificationType.RESERVATION_NOT_APPLIED, // 대관 취소 알림 (참여자)
                         event.getEventTitle()
@@ -521,10 +526,10 @@ public class EventService {
 
         //  호스트에게 대관 확정 알림 발송
         publisher.publishEvent(new HostNotificationEvent(
-                event.getId(),
+                eventId,
                 hostId,
                 HostNotificationType.RESERVATION_CONFIRMED, // 대관 확정 알림 (호스트)
-                event.getEventTitle()
+                event.getMediaTitle()
         ));
 
         // 참여자 전원에게 대관 확정 알림 발송
@@ -532,10 +537,10 @@ public class EventService {
                 .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
         for (Participation p : participants) {
             publisher.publishEvent(new ParticipantNotificationEvent(
-                    event.getId(),
+                    eventId,
                     p.getUser().getId(),
                     ParticipantNotificationType.RESERVATION_CONFIRMED, // 대관 확정 알림 (참여자)
-                    event.getEventTitle()
+                    event.getMediaTitle()
             ));
         }
 
@@ -565,10 +570,10 @@ public class EventService {
 
             // 상영 완료 후기 요청 알림(호스트)
             publisher.publishEvent(new HostNotificationEvent(
-                    event.getId(),
+                    eventId,
                     hostId,
                     HostNotificationType.SCREENING_COMPLETED,
-                    event.getEventTitle()
+                    event.getMediaTitle()
             ));
 
             // 참여자 전원 상영 완료 후기 요청 알림 발송
@@ -576,10 +581,10 @@ public class EventService {
                     .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
             for (Participation p : participants) {
                 publisher.publishEvent(new ParticipantNotificationEvent(
-                        event.getId(),
+                        eventId,
                         p.getUser().getId(),
                         ParticipantNotificationType.SCREENING_COMPLETED, // 상영 완료 후기 요청 알림 (참여자)
-                        event.getEventTitle()
+                        event.getMediaTitle()
                 ));
             }
 

@@ -36,26 +36,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 디버깅: 쿠키가 정말로 들어오는지
         if (request.getCookies() != null) {
             for (var c : request.getCookies()) {
                 log.debug("[JWT 필터] Cookie: {}={}", c.getName(), c.getValue());
             }
         }
 
-        // 헤더 우선, 없으면 쿠키에서
         String bearer = request.getHeader("Authorization");
         String token = bearer != null && bearer.startsWith("Bearer ")
                 ? bearer.substring(7)
                 : CookieUtil.getCookieValue(request, "accessToken");
 
-        //log.info("[JWT 필터] 추출한 토큰: {}", token == null ? "없음" : token);
-
         if (token != null && jwtUtil.validateToken(token)) {
             String email = jwtUtil.extractEmail(token);
             SecurityContextHolder.getContext()
                     .setAuthentication(new JwtAuthenticationToken(email));
-            //log.info("[JWT 필터] 인증 성공: {}", email);
             filterChain.doFilter(request, response);
         } else {
             log.warn("[JWT 필터] 인증 실패 → 401");
@@ -68,12 +63,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String resolveToken(HttpServletRequest request) {
-        // 우선적으로 Authorization 헤더에서 가져옴
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
-        // 헤더에 없으면 쿠키에서 accessToken 가져옴
         return CookieUtil.getCookieValue(request, "accessToken");
     }
 }

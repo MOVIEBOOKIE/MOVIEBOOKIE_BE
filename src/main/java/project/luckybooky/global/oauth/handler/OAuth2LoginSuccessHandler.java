@@ -42,7 +42,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
                 .secure(!isLocal)
-                .sameSite(isLocal ? "Lax" : "None")   // ← 여길 이렇게 바꿔주시면,
+                .sameSite(isLocal ? "Lax" : "None")
                 .path("/")
                 .maxAge(jwtUtil.getAccessTokenValidity() / 1000)
                 .build();
@@ -51,7 +51,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(!isLocal)
-                .sameSite(isLocal ? "Lax" : "None")   // ← 여길 이렇게 바꿔주시면,
+                .sameSite(isLocal ? "Lax" : "None")
                 .path("/")
                 .maxAge(jwtUtil.getRefreshTokenValidity() / 1000)
                 .build();
@@ -64,7 +64,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         boolean firstLogin = (user.getUserType() == null);
 
-        //6) 리다이렉트 경로 결정
         String baseUrl = isLocal ? "http://localhost:3000" : "https://movie-bookie.shop";
         String targetPath = firstLogin ? "/agreement" : "/";
 
