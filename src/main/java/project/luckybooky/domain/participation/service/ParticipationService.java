@@ -60,25 +60,35 @@ public class ParticipationService {
     public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer role,
                                                                     Integer page, Integer size) {
         // 진행 중, 확정 이벤트 목록 필터링
-        List<EventStatus> statuses = (type == 0)
-                ? List.of(
-                EventStatus.RECRUITING,
-                EventStatus.RECRUITED,
-                EventStatus.RECRUIT_CANCELED,
-                EventStatus.VENUE_RESERVATION_CANCELED
-        )
-                : List.of(
-                        EventStatus.COMPLETED,
-                        EventStatus.CANCELLED,
-                        EventStatus.VENUE_CONFIRMED
-                );
+        List<EventStatus> statuses;
 
         // 주최자 / 참여자 판단
         ParticipateRole participateRole = (role == 0) ? ParticipateRole.PARTICIPANT : ParticipateRole.HOST;
-        Page<Event> eventList = participationRepository.findByUserIdAndEventStatuses(userId, participateRole, statuses,
-                PageRequest.of(page, size));
 
-        return toReadEventListResultDTO(eventList);
+        Page<Event> eventList;
+        if (type == 0) {
+            statuses = List.of(
+                    EventStatus.RECRUITING,
+                    EventStatus.RECRUITED,
+                    EventStatus.RECRUIT_CANCELED,
+                    EventStatus.VENUE_RESERVATION_CANCELED);
+
+            eventList = participationRepository.findByUserIdAndEventStatusesType1(userId, participateRole, statuses,
+                    PageRequest.of(page, size));
+
+            return toReadEventListResultDTO(eventList);
+        } else {
+            statuses = List.of(
+                    EventStatus.VENUE_RESERVATION_IN_PROGRESS,
+                    EventStatus.COMPLETED,
+                    EventStatus.CANCELLED,
+                    EventStatus.VENUE_CONFIRMED);
+
+            eventList = participationRepository.findByUserIdAndEventStatusesType2(userId, participateRole, statuses,
+                    PageRequest.of(page, size));
+
+            return toReadEventListResultDTO(eventList);
+        }
     }
 
     private List<EventResponse.ReadEventListResultDTO> toReadEventListResultDTO(Page<Event> eventList) {

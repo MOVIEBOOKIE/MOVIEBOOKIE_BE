@@ -4,6 +4,7 @@ import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
+import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.user.entity.User;
 
@@ -81,7 +82,18 @@ public class EventConverter {
         int rate = Math.round((float) percentage);
 
         // d-day 계산
-        Integer d_day = LocalDate.now().isAfter(event.getEventDate()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
+        Integer d_day;
+        switch (event.getEventStatus()) {
+            case RECRUITING -> {
+                d_day = LocalDate.now().isAfter(event.getRecruitmentEnd()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
+            }
+            case VENUE_RESERVATION_IN_PROGRESS,VENUE_CONFIRMED -> {
+                d_day = LocalDate.now().isAfter(event.getEventDate()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
+            }
+            default -> {
+                d_day = null;
+            }
+        }
         return EventResponse.ReadEventListResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
