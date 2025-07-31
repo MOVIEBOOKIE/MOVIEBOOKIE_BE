@@ -59,12 +59,12 @@ public class ParticipationService {
 
     public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer role,
                                                                     Integer page, Integer size) {
-        // 진행 중, 확정 이벤트 목록 필터링
-        List<EventStatus> statuses;
 
         // 주최자 / 참여자 판단
         ParticipateRole participateRole = (role == 0) ? ParticipateRole.PARTICIPANT : ParticipateRole.HOST;
 
+        // 진행 중, 확정 이벤트 목록 필터링
+        List<EventStatus> statuses;
         Page<Event> eventList;
         if (type == 0) {
             statuses = List.of(
@@ -75,8 +75,6 @@ public class ParticipationService {
 
             eventList = participationRepository.findByUserIdAndEventStatusesType1(userId, participateRole, statuses,
                     PageRequest.of(page, size));
-
-            return toReadEventListResultDTO(eventList);
         } else {
             statuses = List.of(
                     EventStatus.VENUE_RESERVATION_IN_PROGRESS,
@@ -87,8 +85,8 @@ public class ParticipationService {
             eventList = participationRepository.findByUserIdAndEventStatusesType2(userId, participateRole, statuses,
                     PageRequest.of(page, size));
 
-            return toReadEventListResultDTO(eventList);
         }
+        return toReadEventListResultDTO(eventList);
     }
 
     private List<EventResponse.ReadEventListResultDTO> toReadEventListResultDTO(Page<Event> eventList) {
