@@ -4,7 +4,6 @@ import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
-import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.user.entity.User;
 
@@ -135,7 +134,7 @@ public class EventConverter {
         String eventTime = localTime.format(DateTimeFormatter.ofPattern("HH시 mm분"));
 
         // 주최자 처리
-        String username = "알 수 없음";
+        String username = "(알수없음)";
         String userImageUrl = null;
         Integer recruitment = 0;
         if (host != null) {
