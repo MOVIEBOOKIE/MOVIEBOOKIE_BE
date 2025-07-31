@@ -12,7 +12,6 @@ import project.luckybooky.domain.event.converter.EventConverter;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.entity.type.EventStatus;
-import project.luckybooky.domain.event.entity.type.HostEventButtonState;
 import project.luckybooky.domain.event.service.EventService;
 import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
@@ -60,25 +59,33 @@ public class ParticipationService {
 
     public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer role,
                                                                     Integer page, Integer size) {
-        // 진행 중, 확정 이벤트 목록 필터링
-        List<EventStatus> statuses = (type == 0)
-                ? List.of(
-                EventStatus.RECRUITING,
-                EventStatus.RECRUITED,
-                EventStatus.RECRUIT_CANCELED,
-                EventStatus.VENUE_RESERVATION_CANCELED
-        )
-                : List.of(
-                        EventStatus.COMPLETED,
-                        EventStatus.CANCELLED,
-                        EventStatus.VENUE_CONFIRMED
-                );
 
         // 주최자 / 참여자 판단
         ParticipateRole participateRole = (role == 0) ? ParticipateRole.PARTICIPANT : ParticipateRole.HOST;
-        Page<Event> eventList = participationRepository.findByUserIdAndEventStatuses(userId, participateRole, statuses,
-                PageRequest.of(page, size));
 
+        // 진행 중, 확정 이벤트 목록 필터링
+        List<EventStatus> statuses;
+        Page<Event> eventList;
+        if (type == 0) {
+            statuses = List.of(
+                    EventStatus.RECRUITING,
+                    EventStatus.RECRUITED,
+                    EventStatus.RECRUIT_CANCELED,
+                    EventStatus.VENUE_RESERVATION_CANCELED);
+
+            eventList = participationRepository.findByUserIdAndEventStatusesType1(userId, participateRole, statuses,
+                    PageRequest.of(page, size));
+        } else {
+            statuses = List.of(
+                    EventStatus.VENUE_RESERVATION_IN_PROGRESS,
+                    EventStatus.COMPLETED,
+                    EventStatus.CANCELLED,
+                    EventStatus.VENUE_CONFIRMED);
+
+            eventList = participationRepository.findByUserIdAndEventStatusesType2(userId, participateRole, statuses,
+                    PageRequest.of(page, size));
+
+        }
         return toReadEventListResultDTO(eventList);
     }
 

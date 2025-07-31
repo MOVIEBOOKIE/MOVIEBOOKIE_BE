@@ -16,10 +16,24 @@ import project.luckybooky.domain.user.entity.User;
 public interface ParticipationRepository extends JpaRepository<Participation, Long> {
     Optional<Participation> findByUserIdAndEventId(Long userId, Long eventId);
 
-    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses")
-    Page<Event> findByUserIdAndEventStatuses(@Param("userId") Long userId,
+    /** 진행 중인 이벤트 조회 **/
+    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses " +
+            "ORDER BY CASE " +
+            "WHEN p.event.eventStatus = project.luckybooky.domain.event.entity.type.EventStatus.RECRUITING THEN 0" +
+            "WHEN p.event.eventStatus = project.luckybooky.domain.event.entity.type.EventStatus.RECRUITED THEN 1" +
+            " ELSE 2 END, p.event.recruitmentEnd ASC ")
+    Page<Event> findByUserIdAndEventStatusesType1(@Param("userId") Long userId,
                                              @Param("participateRole") ParticipateRole participateRole,
                                              @Param("statuses") List<EventStatus> statuses, Pageable pageable);
+
+    /** 확정된 이벤트 조회 **/
+    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses " +
+            "ORDER BY CASE " +
+            "WHEN p.event.eventStatus IN (project.luckybooky.domain.event.entity.type.EventStatus.VENUE_RESERVATION_IN_PROGRESS, project.luckybooky.domain.event.entity.type.EventStatus.VENUE_CONFIRMED)  THEN 0" +
+            " ELSE 1 END, p.event.eventDate ASC ")
+    Page<Event> findByUserIdAndEventStatusesType2(@Param("userId") Long userId,
+                                                  @Param("participateRole") ParticipateRole participateRole,
+                                                  @Param("statuses") List<EventStatus> statuses, Pageable pageable);
 
 
     @Query("SELECT p FROM Participation p " + " WHERE p.event.id = :eventId AND p.participateRole = :role")
