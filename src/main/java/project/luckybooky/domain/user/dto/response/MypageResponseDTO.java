@@ -13,6 +13,7 @@ public class MypageResponseDTO {
     private String username;
     private String userTypeTitle;
     private String certificationEmail;
+    private String email;
     private int hostExperienceCount;
     private int participationExperienceCount;
     private int ticketCount;
