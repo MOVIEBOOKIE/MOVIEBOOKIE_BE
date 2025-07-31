@@ -16,7 +16,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private static final List<String> EXCLUDED_URLS = List.of(
             "/api/auth/login/kakao", "/swagger-ui", "/v3/api-docs", "/swagger-resources", "/api/events/anonymous",
-            "/api/test/users/tokens", "api/test/events/", "/actuator/prometheus", "/actuator/metrics", "/api/email/send"
+            "/api/test/users/tokens", "api/test/events/", "/actuator/prometheus", "/actuator/metrics",
+            "/api/email/send", "/api/auth/reissue"
     );
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil) {
