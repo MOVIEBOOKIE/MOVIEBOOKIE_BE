@@ -177,7 +177,7 @@ public class Event extends BaseEntity {
     public void venueRegister() {
         // 이벤트의 현재 상태 검증
         if (eventStatus == EventStatus.RECRUITED && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION && participantEventButtonState == ParticipantEventButtonState.RECRUIT_DONE) {
-            eventStatus = EventStatus.RECRUITED;
+            eventStatus = EventStatus.VENUE_RESERVATION_IN_PROGRESS;
             hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
             participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
         } else {
@@ -195,7 +195,7 @@ public class Event extends BaseEntity {
                             && participantEventButtonState == ParticipantEventButtonState.RECRUIT_DONE;
 
         // 영화관 측에서 취소하는 경우
-        boolean canCancelByTheater = eventStatus == EventStatus.RECRUITED
+        boolean canCancelByTheater = eventStatus == EventStatus.VENUE_RESERVATION_IN_PROGRESS
             && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS
             && participantEventButtonState == ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
 

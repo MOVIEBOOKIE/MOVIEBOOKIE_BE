@@ -10,6 +10,7 @@ public enum EventStatus {
     RECRUITED("모집 완료"),
     COMPLETED("상영 완료"),
     CANCELLED("상영 취소"),
+    VENUE_RESERVATION_IN_PROGRESS("대관 진행 중"),
     VENUE_CONFIRMED("대관 확정"),
     RECRUIT_CANCELED("모집 취소"),
     VENUE_RESERVATION_CANCELED("대관 취소");
