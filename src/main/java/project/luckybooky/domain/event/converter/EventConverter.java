@@ -85,7 +85,7 @@ public class EventConverter {
         Integer d_day;
         switch (event.getEventStatus()) {
             case RECRUITING -> {
-                d_day = LocalDate.now().isAfter(event.getRecruitmentEnd()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
+                d_day = LocalDate.now().isAfter(event.getRecruitmentEnd()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getRecruitmentEnd());
             }
             case VENUE_RESERVATION_IN_PROGRESS,VENUE_CONFIRMED -> {
                 d_day = LocalDate.now().isAfter(event.getEventDate()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());

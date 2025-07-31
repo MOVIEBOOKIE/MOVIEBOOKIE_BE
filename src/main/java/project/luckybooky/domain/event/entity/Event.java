@@ -213,7 +213,7 @@ public class Event extends BaseEntity {
      **/
     public void venueConfirmed() {
         // 이벤트의 현재 상태 검증
-        if (eventStatus == EventStatus.RECRUITED && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS && participantEventButtonState == ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS) {
+        if (eventStatus == EventStatus.VENUE_RESERVATION_IN_PROGRESS && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS && participantEventButtonState == ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS) {
             eventStatus = EventStatus.VENUE_CONFIRMED;
             hostEventButtonState = HostEventButtonState.TO_TICKET;
             participantEventButtonState = ParticipantEventButtonState.TO_TICKET;
