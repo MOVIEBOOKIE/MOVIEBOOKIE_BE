@@ -81,7 +81,18 @@ public class EventConverter {
         int rate = Math.round((float) percentage);
 
         // d-day 계산
-        Integer d_day = LocalDate.now().isAfter(event.getEventDate()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
+        Integer d_day;
+        switch (event.getEventStatus()) {
+            case RECRUITING -> {
+                d_day = LocalDate.now().isAfter(event.getRecruitmentEnd()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getRecruitmentEnd());
+            }
+            case VENUE_RESERVATION_IN_PROGRESS,VENUE_CONFIRMED -> {
+                d_day = LocalDate.now().isAfter(event.getEventDate()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
+            }
+            default -> {
+                d_day = null;
+            }
+        }
         return EventResponse.ReadEventListResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
@@ -123,7 +134,7 @@ public class EventConverter {
         String eventTime = localTime.format(DateTimeFormatter.ofPattern("HH시 mm분"));
 
         // 주최자 처리
-        String username = "알 수 없음";
+        String username = "(알수없음)";
         String userImageUrl = null;
         Integer recruitment = 0;
         if (host != null) {

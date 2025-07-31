@@ -70,6 +70,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/login/kakao").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/reissue").permitAll()
                         .anyRequest().authenticated()
                 )
                 // 5) OAuth2 로그인 핸들러

@@ -138,7 +138,7 @@ public class EventService {
                 eventList = eventRepository.findOrderByPopularity(PageRequest.of(page, size));
                 break;
             case "최신":
-                eventList = eventRepository.findOrderByCreatedAtDesc(PageRequest.of(page, size));
+                eventList = eventRepository.findOrderByRecruitmentEnd(PageRequest.of(page, size));
                 break;
             default:
                 eventList = eventRepository.findByCategoryName(category, PageRequest.of(page, size));
@@ -158,6 +158,7 @@ public class EventService {
         ).collect(Collectors.toList());
     }
 
+    /** 이벤트 상세 조회 **/
     public EventResponse.EventReadDetailsResultDTO readEventDetails(Long userId, Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
