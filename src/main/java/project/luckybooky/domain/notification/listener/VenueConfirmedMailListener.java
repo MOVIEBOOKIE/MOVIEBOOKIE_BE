@@ -51,7 +51,7 @@ public class VenueConfirmedMailListener {
                 .locationName(ev.getLocation().getLocationName())
                 .maxParticipants(ev.getMaxParticipants())
                 .contact("")  // 필요 시 채워주세요
-                .participantsLink("https://your-domain.com/events/" + ev.getId() + "/participants")
+                .participantsLink("https://movie-bookie.shop/events/" + ev.getId() + "/participants")
                 .build();
 
         // 4) 메일 발송
