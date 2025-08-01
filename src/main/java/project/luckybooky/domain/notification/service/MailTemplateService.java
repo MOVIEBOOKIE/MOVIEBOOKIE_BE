@@ -37,7 +37,7 @@ public class MailTemplateService {
             Context ctx = new Context();
             ctx.setVariable("mediaTitle", data.getMediaTitle());
             ctx.setVariable("eventTitle", data.getEventTitle());
-            ctx.setVariable("hostName", data.getHostName()); // hostName 필드 필요
+            ctx.setVariable("hostName", data.getHostName());
 
             String dateStr = data.getEventDate().format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일"))
                     + " (" + data.getEventDay() + ") "
@@ -55,7 +55,7 @@ public class MailTemplateService {
 
             ctx.setVariable("contact", data.getContact());
             ctx.setVariable("participantsLink", data.getParticipantsLink());
-            ctx.setVariable("homeUrl", "https://your-domain.com"); // 필요 시 동적으로
+            ctx.setVariable("homeUrl", "https://movie-bookie.shop");
 
             // HTML 렌더링
             String html = templateEngine.process("venue_confirmed", ctx);
@@ -78,20 +78,22 @@ public class MailTemplateService {
         }
     }
 
-    public void sendVenueRejectedMail(String to, ConfirmedData data, String rejectionReason) {
+    public void sendVenueRejectedMail(String to, ConfirmedData data) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            String eventTitle = data.getEventTitle() != null ? data.getEventTitle() : "";
+            String hostName = data.getHostName() != null ? data.getHostName() : "주최자님";
+
             helper.setTo(to);
-            helper.setSubject("[MovieBookie] 대관 승인 실패 안내: " + data.getEventTitle());
+            helper.setSubject("[MovieBookie] 대관 승인 실패 안내: " + eventTitle);
             helper.setFrom("no-reply@luckybooky.com");
 
             Context ctx = new Context();
-            ctx.setVariable("eventTitle", data.getEventTitle());
-            ctx.setVariable("hostName", data.getHostName());
-            ctx.setVariable("rejectionReason", rejectionReason);
-            ctx.setVariable("homeUrl", "https://your-domain.com"); // 실제 URL로 대체
+            ctx.setVariable("eventTitle", eventTitle);
+            ctx.setVariable("hostName", hostName);
+            ctx.setVariable("homeUrl", "https://movie-bookie.shop");
 
             String html = templateEngine.process("venue_rejected", ctx);
             helper.setText(html, true);
@@ -105,5 +107,5 @@ public class MailTemplateService {
             throw new BusinessException(ErrorCode.MAIL_SEND_FAILED);
         }
     }
-
 }
+
