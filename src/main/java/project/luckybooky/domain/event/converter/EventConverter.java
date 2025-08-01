@@ -134,7 +134,7 @@ public class EventConverter {
         String eventTime = localTime.format(DateTimeFormatter.ofPattern("HH시 mm분"));
 
         // 주최자 처리
-        String username = "(알수없음)";
+        String username = "(탈퇴한 사용자)";
         String userImageUrl = null;
         Integer recruitment = 0;
         if (host != null) {
