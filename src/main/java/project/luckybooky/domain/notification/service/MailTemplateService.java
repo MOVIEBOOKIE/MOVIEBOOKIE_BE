@@ -54,7 +54,9 @@ public class MailTemplateService {
             ctx.setVariable("capacity", capacityFormatted);
 
             ctx.setVariable("contact", data.getContact());
-            ctx.setVariable("participantsLink", data.getParticipantsLink());
+            String url = "https://movie-bookie.shop/events/" + data.getEventId() + "/participants";
+            ctx.setVariable("participantsLink", url);
+
             ctx.setVariable("homeUrl", "https://movie-bookie.shop");
 
             // HTML 렌더링

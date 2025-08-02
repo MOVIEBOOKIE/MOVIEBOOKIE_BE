@@ -52,4 +52,6 @@ public class ConfirmedData {
     private final String participantsLink;
 
     private String hostName;
+
+    private Long eventId;
 }
