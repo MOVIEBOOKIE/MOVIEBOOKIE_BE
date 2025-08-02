@@ -138,7 +138,7 @@ public class EventService {
                 eventList = eventRepository.findOrderByPopularity(PageRequest.of(page, size));
                 break;
             case "최신":
-                eventList = eventRepository.findOrderByRecruitmentEnd(PageRequest.of(page, size));
+                eventList = eventRepository.findOrderByCreatedAt(PageRequest.of(page, size));
                 break;
             default:
                 eventList = eventRepository.findByCategoryName(category, PageRequest.of(page, size));
