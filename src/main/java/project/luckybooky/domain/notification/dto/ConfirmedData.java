@@ -50,4 +50,8 @@ public class ConfirmedData {
      * 참여자 정보 확인 링크
      */
     private final String participantsLink;
+
+    private String hostName;
+
+    private Long eventId;
 }
