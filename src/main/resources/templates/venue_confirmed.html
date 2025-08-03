@@ -1,174 +1,206 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Apple SD Gothic Neo', sans-serif;
-            background: #f5f5f5;
-        }
-
-        .wrapper {
-            width: 100%;
-            background: #f5f5f5;
-            padding: 40px 0;
-        }
-
-        .container {
-            width: 600px;
-            margin: 0 auto;
-            background: #fff;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .header {
-            padding: 24px;
-            display: flex;
-            align-items: center;
-        }
-
-        .header img {
-            width: 40px;
-            height: 40px;
-            margin-right: 12px;
-        }
-
-        .title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .content {
-            padding: 0 24px 24px;
-            color: #555;
-            line-height: 1.6;
-        }
-
-        .divider {
-            border-top: 1px solid #eee;
-            margin: 24px 0;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 12px;
-        }
-
-        .info-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .info-list li {
-            margin-bottom: 6px;
-        }
-
-        .btn {
-            display: inline-block;
-            background: #000;
-            color: #fff;
-            text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .footer {
-            font-size: 12px;
-            color: #999;
-            text-align: center;
-            padding: 24px;
-        }
-
-        .chat-guide {
-            display: block;
-            width: 100%;
-            margin: 12px 0;
-        }
-    </style>
+    <title>대관 확정 안내</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 </head>
-<body>
-<div class="wrapper">
-    <div class="container">
-        <!-- 헤더 -->
-        <div class="header">
-            <img th:src="@{cid:logoCid}" alt="무비부키 로고"/>
-            <div class="title">대관 확정 안내</div>
-        </div>
-        <div class="content">
-            <!-- 인사말 -->
-            <p>안녕하세요, 무비부키입니다.</p>
-            <p>‘<span th:text="${eventTitle}">이벤트명</span>’의 이벤트 주최자 <span th:text="${hostName}">홍길동</span>님,</p>
-            <p>대관이 최종 확정되었음을 알려드립니다.<br/>
-                영화사로부터 받은 대관 정보 상세 내용을 확인해보세요.</p>
-
-            <div class="divider"></div>
-
-            <!-- 대관 상세 정보 -->
-            <div class="section">
-                <div class="section-title">대관 상세 정보</div>
-                <ul class="info-list">
-                    <li>영화 제목: <span th:text="${mediaTitle}">빌리 엘리어트</span></li>
-                    <li>일시: <span th:text="${date}">2025년 5월 26일 (일)</span></li>
-                    <li>시간: <span th:text="${timeRange}">19:00 – 21:00</span></li>
-                    <li>장소: <span th:text="${venue}">신촌 아트레온</span></li>
-                    <li>상영 인원: <span th:text="${capacity}">24명 (주최자 포함)</span></li>
-                    <li>영화사 담당자 연락처: <span th:text="${contact}">02-0000-0000</span></li>
-                </ul>
-            </div>
-
-            <div class="divider"></div>
-
-            <!-- 참여자 정보 확인 버튼 -->
-            <div class="section" style="text-align:center;">
-                <p>아래 ‘참여자 정보 확인’ 버튼을 눌러 참여자 정보를 확인하실 수 있습니다.<br/>
-                    해당 링크는 상영일까지 유효합니다.</p>
-                <a th:href="${participantsLink}" class="btn">참여자 정보 확인</a>
-            </div>
-
-            <div class="divider"></div>
-
-            <!-- 오픈채팅 안내 -->
-            <div class="section">
-                <div class="section-title">오픈채팅방을 만들어보세요!</div>
-                <p>오픈채팅방으로 참가자들을 초대하여 이벤트 전 자연스럽게 분위기를 만들고, 참여자들과 미리 소통해보세요.</p>
-                <ul class="info-list">
-                    <li>참여자 정보에 포함된 전화번호를 활용해 오픈채팅방에 초대해주세요.</li>
-                    <li>채팅방에서는 공지 위주로 소통하며, 불필요한 대화는 자제 부탁드립니다.</li>
-                </ul>
-                <img th:src="@{cid:chatGuideCid}" alt="오픈채팅 만드는 법" class="chat-guide"/>
-            </div>
-
-            <div class="divider"></div>
-
-            <!-- 푸터 안내 문구 -->
-            <p>본 메일은 모임 운영을 위한 참여자 안내 목적으로 발송되었습니다.<br/>
-                참여자 개인정보는 오직 오픈채팅방 내 소통을 위한 용도로만 사용되며, 외부 유출 또는 다른 용도로 활용 시 주최자에게 법적 책임이 발생할 수 있습니다.</p>
-            <p>안전하고 쾌적한 모임을 위해 개인정보 보호에 협조 부탁드립니다.<br/>
-                감사합니다.</p>
-
-            <!-- 바로가기 버튼 -->
-            <div style="text-align:center; margin-top:24px;">
-                <a href="https://your-domain.com" class="btn" style="background:#e60023;">무비부키 바로가기</a>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            © moviebookie<br/>
-            본 메일은 발신 전용 메일입니다.<br/>
-            문의: <a href="mailto:moviebookie@gmail.com"
-                   style="color:#999; text-decoration:none;">moviebookie@gmail.com</a><br/>
-            All Rights Reserved.
-        </div>
-    </div>
+<body style="margin:0;padding:0;background:#f5f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#1f2329;">
+<!-- preheader 숨김 처리 -->
+<div style="display:none;max-height:0;overflow:hidden;font-size:1px;color:#f5f6f8;">
+    대관이 최종 확정되었습니다. 참여자 정보 확인과 오픈채팅 안내를 확인해보세요.
 </div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f8;">
+    <tr>
+        <td align="center" style="padding:50px 10px;">
+            <table role="presentation" width="560" cellpadding="0" cellspacing="0"
+                   style="background:#ffffff;border-radius:8px;overflow:hidden;">
+                <!-- Header: 테이블로 스택 형태 (로고 아래 제목) -->
+                <tr>
+                    <td style="padding:40px 32px 4px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding-bottom:6px;">
+                                    <div style="width:36px;height:36px;border-radius:8px;overflow:hidden;display:inline-block;background:linear-gradient(135deg,#ff6b9d,#ff8fab);">
+                                        <img th:src="@{'cid:logoCid'}" alt="M"
+                                             style="width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;"/>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style="margin:0;font-size:24px;font-weight:700;line-height:1.1;color:#1f2329;">
+                                        대관 확정 안내</h1>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Greeting -->
+                <tr>
+                    <td style="padding:0 32px 32px;">
+                        <p style="margin:0 0 12px;font-size:14px;line-height:1.45;">안녕하세요, 무비부키입니다.</p>
+                        <p style="margin:0 0 12px;font-size:14px;line-height:1.45;">
+                            '<span th:text="${eventTitle}">이벤트명</span>'의 이벤트 주최자 <span th:text="${hostName}">홍길동</span>님,
+                        </p>
+                        <p style="margin:0;font-size:14px;line-height:1.45;">
+                            대관이 최종 확정되었음을 알려드립니다. 영화사로부터 받은 대관 정보 상세 내용을 확인해보세요.
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Divider -->
+                <tr>
+                    <td style="padding:0 32px;">
+                        <div style="height:1px;background:#e6e8ec;margin:24px 0;"></div>
+                    </td>
+                </tr>
+
+                <!-- Venue Details -->
+                <tr>
+                    <td style="padding:0 32px 32px;">
+                        <div style="font-size:18px;font-weight:600;margin:0 0 12px;color:#1f2329;">대관 상세 정보</div>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                               style="background:#f8f9fc;border:1px solid #e6e8ec;border-radius:12px;">
+                            <tr>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">영화 제목</td>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
+                                    th:text="${mediaTitle}">빌리 엘리어트
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">일시</td>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
+                                    th:text="${date}">2025년 5월 26일 (일)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">시간</td>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;">
+                                    19:00-21:00
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">장소</td>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
+                                    th:text="${venue}">신촌 아트레온
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">상영 인원</td>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
+                                    th:text="${capacity}">24명 (주최자 포함)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">영화사 담당자
+                                    연락처
+                                </td>
+                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
+                                    th:text="${contact}">02-0000-0000
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Participant Info Button (간격 넓힘) -->
+                <tr>
+                    <td style="padding:0 32px 12px;">
+                        <div style="font-size:13px;color:#555;margin:0 0 6px;line-height:1.4;">
+                            아래 '참여자 정보 확인' 버튼을 눌러 참여자 정보를 확인하실 수 있습니다.<br/>
+                            해당 링크는 상영일까지 유효합니다.
+                        </div>
+                        <div style="margin-top:12px;">
+                            <a th:href="${participantsLink}"
+                               style="display:inline-block;background:#4f5561;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:14px 0;line-height:1;text-align:center;border-radius:8px;width:160px;letter-spacing:0.5px;border:none;cursor:pointer;">
+                                참여자 정보 확인
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Open Chat Section -->
+                <tr>
+                    <td style="padding:32px;">
+                        <div style="font-size:18px;font-weight:600;margin:0 0 8px;color:#5f2871;">오픈채팅방을 만들어보세요!</div>
+                        <div style="font-size:14px;color:#2e3239;margin:0 0 12px;line-height:1.4;">
+                            오픈채팅방으로 참가자들을 초대하여 이벤트 전 자연스럽게 분위기를 만들고, 참여자들과 미리 소통해보세요.
+                        </div>
+                        <ul style="padding-left:16px;margin:0 0 16px;font-size:14px;line-height:1.4;color:#2e3239;">
+                            <li style="margin-bottom:6px;">참여자 정보에 포함된 전화번호를 활용해 오픈채팅방에 초대해주세요</li>
+                            <li>채팅방에서는 공지 위주로 소통하며, 불필요한 대화는 자제 부탁드립니다.</li>
+                        </ul>
+                        <div style="font-size:16px;font-weight:600;margin:16px 0 8px;color:#5f2871;">오픈채팅방 만드는 법</div>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                               style="border-collapse:collapse;">
+                            <tr>
+                                <td align="center" style="padding:0;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                                        <tr>
+                                            <td valign="top" style="padding-right:3px;">
+                                                <div style="overflow:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:8px;background:transparent;">
+                                                    <img th:src="@{'cid:groupChatCid'}" alt="그룹채팅방"
+                                                         style="display:block;max-width:100%;max-height:180px;object-fit:contain;"/>
+                                                </div>
+                                            </td>
+                                            <td valign="top" style="padding-left:3px;">
+                                                <div style="overflow:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:8px;background:transparent;">
+                                                    <img th:src="@{'cid:chatCid'}" alt="채팅방 관리"
+                                                         style="display:block;max-width:100%;max-height:180px;object-fit:contain;"/>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Disclaimer -->
+                <tr>
+                    <td style="padding:24px 32px;">
+                        <div style="font-size:12px;color:#555;line-height:1.3;">
+                            <p style="margin:0 0 6px;">본 메일은 모임 운영을 위한 참여자 안내 목적으로 발송되었습니다.</p>
+                            <p style="margin:0 0 6px;">참여자 개인정보는 오직 오픈채팅방 내 소통을 위한 용도로만 사용되며, 외부 유출 또는 다른 용도로 활용 시 주최자에게
+                                법적 책임이 발생할 수 있습니다.</p>
+                            <p style="margin:0;">안전하고 쾌적한 모임을 위해 개인정보 보호에 협조 부탁드립니다. 감사합니다.</p>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- CTA: 무비부키 바로가기 -->
+                <tr>
+                    <td style="padding:0 32px 40px;">
+                        <div style="text-align:left;">
+                            <a th:href="${homeUrl}"
+                               style="display:inline-block;background:#e60023;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:14px 0;line-height:1;text-align:center;border-radius:8px;width:160px;letter-spacing:0.5px;border:none;cursor:pointer;">
+                                무비부키 바로가기
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="padding:16px 32px 40px;">
+                        <div style="font-size:12px;color:#8a8a8a;line-height:1.3;">
+                            <div style="margin-bottom:6px;font-weight:600;color:#ff6b9d;">@moviebookie_</div>
+                            <div style="margin-bottom:4px;">본 메일은 발신 전용 메일입니다.</div>
+                            <div style="margin:0 0 4px;">문의: <a href="mailto:moviebookie@gmail.com"
+                                                                style="color:#8a8a8a;text-decoration:none;">moviebookie@gmail.com</a>
+                            </div>
+                            <div>Copyright © moviebookie. All Rights Reserved.</div>
+                        </div>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
 </body>
 </html>
