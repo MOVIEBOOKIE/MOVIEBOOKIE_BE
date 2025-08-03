@@ -64,13 +64,13 @@ public class MailTemplateService {
             helper.setText(html, true);
 
             // 인라인 이미지들
-            Resource logo = resourceLoader.getResource("classpath:templates/logo.png");
+            Resource logo = resourceLoader.getResource("classpath:images/logo.png");
             helper.addInline("logoCid", logo);
 
-            Resource groupChat = resourceLoader.getResource("classpath:templates/groupChat.png");
+            Resource groupChat = resourceLoader.getResource("classpath:images/groupChat.png");
             helper.addInline("groupChatCid", groupChat);
 
-            Resource chat = resourceLoader.getResource("classpath:templates/chat.png");
+            Resource chat = resourceLoader.getResource("classpath:images/chat.png");
             helper.addInline("chatCid", chat);
 
             mailSender.send(message);
@@ -101,7 +101,7 @@ public class MailTemplateService {
             helper.setText(html, true);
 
             // 인라인 이미지
-            Resource logo = resourceLoader.getResource("classpath:templates/logo.png");
+            Resource logo = resourceLoader.getResource("classpath:images/logo.png");
             helper.addInline("logoCid", logo);
 
             mailSender.send(message);
