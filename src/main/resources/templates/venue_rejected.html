@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>대관 승인 실패 안내</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+</head>
+<body style="margin:0;padding:0;background:#f5f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#1f2329;">
+<!-- preheader (숨김) -->
+<div style="display:none;max-height:0;overflow:hidden;font-size:1px;color:#f5f6f8;">
+    대관 승인 실패 안내: 대관이 승인되지 못했음을 알려드립니다.
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f8;">
+    <tr>
+        <td align="center" style="padding:50px 10px;">
+            <table role="presentation" width="560" cellpadding="0" cellspacing="0"
+                   style="background:#ffffff;border-radius:8px;overflow:hidden;">
+                <!-- Header: 로고 아래에 제목 -->
+                <tr>
+                    <td style="padding:40px 32px 8px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding-bottom:6px;">
+                                    <div style="width:36px;height:36px;border-radius:8px;overflow:hidden;display:inline-block;background:linear-gradient(135deg,#ff6b9d,#ff8fab);">
+                                        <img th:src="@{'cid:logoCid'}" alt="M"
+                                             style="width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;"/>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h1 style="margin:0;font-size:24px;font-weight:700;line-height:1.1;color:#1f2329;">
+                                        대관 승인 실패 안내</h1>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Greeting / 설명 -->
+                <tr>
+                    <td style="padding:0 32px 16px;">
+                        <p style="margin:0 0 12px;font-size:14px;line-height:1.45;">안녕하세요, 무비부키입니다.</p>
+                        <p style="margin:0 0 12px;font-size:14px;line-height:1.45;">
+                            '<span th:text="${eventTitle}">이벤트명</span>'의 이벤트 주최자 <span th:text="${hostName}">000님</span>님,
+                        </p>
+                        <p style="margin:0;font-size:14px;line-height:1.45;">
+                            <span th:text="${hostName}">000님</span>의 대관 정보를 신중히 검토 후 영화사와 컨택했으나, 아쉽게도 대관이 승인되지 못했음을
+                            안내드립니다.
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- 구분선 -->
+                <tr>
+                    <td style="padding:0 32px;">
+                        <div style="height:1px;background:#e6e8ec;margin:24px 0;"></div>
+                    </td>
+                </tr>
+
+                <!-- 불가 사유 -->
+                <tr>
+                    <td style="padding:0 32px 16px;">
+                        <div style="font-size:16px;font-weight:600;margin:0 0 8px;color:#1f2329;">대관 불가 사유</div>
+                        <p style="margin:0 0 8px;font-size:14px;line-height:1.4;">
+                            해당 날짜에 대관하고자 하는 영화관에 이미 다른 이벤트가 예약되어 있어, 대관이 불가능합니다.
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- 추가 사과 / 마무리 -->
+                <tr>
+                    <td style="padding:0 32px 24px;">
+                        <div style="height:1px;background:#e6e8ec;margin:16px 0;"></div>
+
+                        <p style="margin:0 0 12px;font-size:14px;line-height:1.4;">
+                            <span th:text="${hostName}">000님</span>님께 불편을 드리게 되어 진심으로 사과드리며, 더 나은 서비스를 제공할 수 있도록 지속적으로
+                            개선해 나가겠습니다.
+                        </p>
+                        <p style="margin:0 0 12px;font-size:14px;line-height:1.4;">
+                            무비부키는 <span th:text="${hostName}">000님</span>님과 함께 더욱 멋진 추억을 만들 기회를 기다리겠습니다. 감사합니다.
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- CTA 버튼 -->
+                <tr>
+                    <td style="padding:0 32px 32px;">
+                        <a th:href="${homeUrl}"
+                           style="display:inline-block;background:#e60023;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:14px 0;border-radius:8px;width:160px;text-align:center;letter-spacing:0.5px;">
+                            무비부키 바로가기
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="padding:16px 32px 40px;">
+                        <div style="font-size:12px;color:#8a8a8a;line-height:1.3;">
+                            <div style="margin-bottom:6px;font-weight:600;color:#ff6b9d;">@moviebookie_</div>
+                            <div style="margin-bottom:4px;">본 메일은 발신 전용 메일입니다.</div>
+                            <div style="margin:0 0 4px;">이용과 관련해서 궁금한 점이 있으시면 <a href="mailto:moviebookie@gmail.com"
+                                                                                 style="color:#8a8a8a;text-decoration:none;">moviebookie@gmail.com</a>으로
+                                보내주세요.
+                            </div>
+                            <div>Copyright © moviebookie. All Rights Reserved.</div>
+                        </div>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

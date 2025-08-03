@@ -59,25 +59,33 @@ public class ParticipationService {
 
     public List<EventResponse.ReadEventListResultDTO> readEventList(Long userId, Integer type, Integer role,
                                                                     Integer page, Integer size) {
-        // 진행 중, 확정 이벤트 목록 필터링
-        List<EventStatus> statuses = (type == 0)
-                ? List.of(
-                EventStatus.RECRUITING,
-                EventStatus.RECRUITED
-        )
-                : List.of(
-                        EventStatus.COMPLETED,
-                        EventStatus.CANCELLED,
-                        EventStatus.VENUE_CONFIRMED,
-                        EventStatus.RECRUIT_CANCELED,
-                        EventStatus.VENUE_RESERVATION_CANCELED
-                );
 
         // 주최자 / 참여자 판단
         ParticipateRole participateRole = (role == 0) ? ParticipateRole.PARTICIPANT : ParticipateRole.HOST;
-        Page<Event> eventList = participationRepository.findByUserIdAndEventStatuses(userId, participateRole, statuses,
-                PageRequest.of(page, size));
 
+        // 진행 중, 확정 이벤트 목록 필터링
+        List<EventStatus> statuses;
+        Page<Event> eventList;
+        if (type == 0) {
+            statuses = List.of(
+                    EventStatus.RECRUITING,
+                    EventStatus.RECRUITED,
+                    EventStatus.RECRUIT_CANCELED,
+                    EventStatus.VENUE_RESERVATION_CANCELED);
+
+            eventList = participationRepository.findByUserIdAndEventStatusesType1(userId, participateRole, statuses,
+                    PageRequest.of(page, size));
+        } else {
+            statuses = List.of(
+                    EventStatus.VENUE_RESERVATION_IN_PROGRESS,
+                    EventStatus.COMPLETED,
+                    EventStatus.CANCELLED,
+                    EventStatus.VENUE_CONFIRMED);
+
+            eventList = participationRepository.findByUserIdAndEventStatusesType2(userId, participateRole, statuses,
+                    PageRequest.of(page, size));
+
+        }
         return toReadEventListResultDTO(eventList);
     }
 
@@ -88,4 +96,49 @@ public class ParticipationService {
                 }
         ).collect(Collectors.toList());
     }
+
+    /**
+     * 회원 탈퇴 시 연관된 이벤트 취소
+     **/
+    @Transactional
+    public String cancelParticipation(Long userId) {
+        List<Participation> participationList = participationRepository.findByUserId(userId);
+        participationList.stream().forEach(p -> {
+            Event event = p.getEvent();
+            if (p.getParticipateRole().equals(ParticipateRole.HOST)) {
+                switch (event.getHostEventButtonState()) {
+                    case RECRUIT_CANCELLED:
+                        eventService.cancelRecruitEvent(userId, event.getId());
+                        break;
+                    case VENUE_RESERVATION, VENUE_RESERVATION_IN_PROGRESS:
+                        eventService.venueProcess(userId, event.getId(), 1);
+                        break;
+                    case TO_TICKET:
+                        if (event.getEventStatus().equals(EventStatus.VENUE_CONFIRMED)) {
+                            throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                switch (event.getParticipantEventButtonState()) {
+                    case REGISTER_CANCELED:
+                        eventService.cancelEvent(userId, event.getId());
+                        break;
+                    case RECRUIT_DONE, VENUE_RESERVATION_IN_PROGRESS:
+                        throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
+                    case TO_TICKET:
+                        if (event.getEventStatus().equals(EventStatus.VENUE_CONFIRMED)) {
+                            throw new BusinessException(ErrorCode.EVENT_IN_PROGRESS);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+        return "정상 처리되었습니다.";
+    }
+
 }

@@ -5,6 +5,7 @@ import project.luckybooky.domain.event.dto.request.EventRequest;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.location.entity.Location;
+import project.luckybooky.domain.user.entity.User;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -47,12 +48,51 @@ public class EventConverter {
                 .build();
     }
 
+    /** 요일 구하기 **/
+    private static String getDay(LocalDate eventDate) {
+        // 요일 구하기 (한글)
+        DayOfWeek dayOfWeek = eventDate.getDayOfWeek();
+        String[] koreanDays = {"월", "화", "수", "목", "금", "토", "일"};
+
+        // LocalDate의 getDayOfWeek().getValue()는 1(월)~7(일)
+        String day = koreanDays[dayOfWeek.getValue() - 1];
+
+        return day;
+    }
+
+    /**
+     * 날짜 포맷
+     **/
+    private static String getDateFormat(LocalDate eventDate) {
+        String day = getDay(eventDate);
+
+        // 날짜 포맷
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        String date = eventDate.format(formatter) + " (" + day + ")";
+
+        return date;
+    }
+
     public static EventResponse.ReadEventListResultDTO toEventListResultDTO(Event event) {
+        // 날짜 포맷
+        String eventDate = getDateFormat(event.getEventDate());
+
         double percentage = ((double) event.getCurrentParticipants() / event.getMaxParticipants()) * 100;
         int rate = Math.round((float) percentage);
 
         // d-day 계산
-        Integer d_day = LocalDate.now().isAfter(event.getEventDate()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
+        Integer d_day;
+        switch (event.getEventStatus()) {
+            case RECRUITING -> {
+                d_day = LocalDate.now().isAfter(event.getRecruitmentEnd()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getRecruitmentEnd());
+            }
+            case VENUE_RESERVATION_IN_PROGRESS,VENUE_CONFIRMED -> {
+                d_day = LocalDate.now().isAfter(event.getEventDate()) ? null : (int) ChronoUnit.DAYS.between(LocalDate.now(), event.getEventDate());
+            }
+            default -> {
+                d_day = null;
+            }
+        }
         return EventResponse.ReadEventListResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
@@ -60,7 +100,7 @@ public class EventConverter {
                 .description(event.getDescription())
                 .rate(rate)
                 .estimatedPrice(event.getEstimatedPrice())
-                .eventDate(event.getEventDate())
+                .eventDate(eventDate)
                 .eventStatus(event.getEventStatus().getDescription())
                 .d_day(d_day)
                 .locationName(event.getLocation().getLocationName())
@@ -68,11 +108,16 @@ public class EventConverter {
                 .build();
     }
 
+    public static EventResponse.ReadEventListWithPageResultDTO toReadEventListWithPageResult(Integer totalPages, List<EventResponse.ReadEventListResultDTO> eventListResultDTOS) {
+        return EventResponse.ReadEventListWithPageResultDTO.builder()
+                .totalPages(totalPages)
+                .eventList(eventListResultDTOS)
+                .build();
+    }
+
     public static EventResponse.EventReadDetailsResultDTO toEventReadDetailsResultDTO(
             Event event,
-            String username,
-            String userImageUrl,
-            Integer recruitment,
+            User host,
             String userRole,
             String recruitmentDate,
             Integer recruitmentRate,
@@ -81,21 +126,22 @@ public class EventConverter {
         long days = ChronoUnit.DAYS.between(LocalDate.now(), event.getRecruitmentEnd());
         String d_day = days < 0 ? null : "D-" + days;
 
-        // 요일 구하기 (한글)
-        DayOfWeek dayOfWeek = event.getEventDate().getDayOfWeek();
-        String[] koreanDays = {"월", "화", "수", "목", "금", "토", "일"};
-
-        // LocalDate의 getDayOfWeek().getValue()는 1(월)~7(일)
-        String day = koreanDays[dayOfWeek.getValue() - 1];
-
         // 날짜 포맷
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy. MM. dd");
-        String eventDate = event.getEventDate().format(formatter) + " (" + day + ")";
+        String eventDate = getDateFormat(event.getEventDate());
 
         // 시간 포맷
         LocalTime localTime = LocalTime.parse(event.getEventStartTime(), DateTimeFormatter.ofPattern("HH:mm"));
         String eventTime = localTime.format(DateTimeFormatter.ofPattern("HH시 mm분"));
 
+        // 주최자 처리
+        String username = "(탈퇴한 사용자)";
+        String userImageUrl = null;
+        Integer recruitment = 0;
+        if (host != null) {
+            username = host.getUsername();
+            userImageUrl = host.getProfileImage();
+            recruitment = host.getRecruitment();
+        }
         return EventResponse.EventReadDetailsResultDTO.builder()
                 .eventId(event.getId())
                 .mediaType(event.getCategory().getCategoryName())
@@ -127,14 +173,10 @@ public class EventConverter {
                 .build();
     }
 
-    public static EventResponse.EventVenueConfirmedResultDTO toEventVenueConfirmedResultDTO(Long ticketId) {
-        return EventResponse.EventVenueConfirmedResultDTO
-                .builder()
-                .ticketId(ticketId)
-                .build();
-    }
+    public static EventResponse.HomeEventListResultDTO toHomeEventListResultDTO(Event event) {
+        // 날짜 포맷
+        String eventDate = getDateFormat(event.getEventDate());
 
-    public static EventResponse.HomeEventListResultDTO toHomeEventListResultDTO(Event event, String eventDate) {
         return EventResponse.HomeEventListResultDTO.builder()
                 .eventId(event.getId())
                 .type(event.getCategory().getCategoryName())
@@ -146,10 +188,10 @@ public class EventConverter {
                 .build();
     }
 
-    public static EventResponse.ReadEventListWithPageResultDTO toReadEventListWithPageResult(Integer totalPages, List<EventResponse.ReadEventListResultDTO> eventListResultDTOS) {
-        return EventResponse.ReadEventListWithPageResultDTO.builder()
-                .totalPages(totalPages)
-                .eventList(eventListResultDTOS)
+    public static EventResponse.EventVenueConfirmedResultDTO toEventVenueConfirmedResultDTO(Long ticketId) {
+        return EventResponse.EventVenueConfirmedResultDTO
+                .builder()
+                .ticketId(ticketId)
                 .build();
     }
 }

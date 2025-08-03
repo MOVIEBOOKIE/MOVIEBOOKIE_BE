@@ -30,7 +30,7 @@ public enum ErrorCode implements BaseStatus {
     // JWT 관련 에러
     JWT_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "JWT_500", "JWT 토큰 생성 중 오류가 발생했습니다."),
     JWT_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT_401", "유효하지 않은 JWT 토큰입니다."),
-    JWT_EXPIRED_TOKEN(HttpStatus.BAD_REQUEST, "JWT_402", "만료된 JWT 토큰입니다."),
+    JWT_EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "JWT_401", "만료된 JWT 토큰입니다."),
     INVALID_TOKEN_TYPE(HttpStatus.BAD_REQUEST, "AUTH_400", "잘못된 토큰 유형입니다."),
     MULTI_ENV_LOGIN(HttpStatus.UNAUTHORIZED, "AUTH_401", "다른 환경에서 로그인되어 세션이 만료되었습니다."),
 
@@ -74,6 +74,7 @@ public enum ErrorCode implements BaseStatus {
     // Participation 관련
     PARTICIPATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "PARTICIPATION_401", "해당 이벤트를 참여하지 않았습니다."),
     PARTICIPATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PARTICIPATION_402", "해당 이벤트의 주최자가 아닙니다."),
+    EVENT_IN_PROGRESS(HttpStatus.BAD_REQUEST, "PARTICIPATION_403", "아직 끝나지 않은 이벤트가 있습니다."),
 
     // Notification 관련
     NOTIFICATION_FCM_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_400", "FCM 토큰이 등록되지 않았습니다."),

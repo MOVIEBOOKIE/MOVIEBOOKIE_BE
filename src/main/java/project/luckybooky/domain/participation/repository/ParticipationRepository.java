@@ -16,12 +16,24 @@ import project.luckybooky.domain.user.entity.User;
 public interface ParticipationRepository extends JpaRepository<Participation, Long> {
     Optional<Participation> findByUserIdAndEventId(Long userId, Long eventId);
 
-    void deleteByUserIdAndEventId(Long userId, Long eventId);
-
-    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses")
-    Page<Event> findByUserIdAndEventStatuses(@Param("userId") Long userId,
+    /** 진행 중인 이벤트 조회 **/
+    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses " +
+            "ORDER BY CASE " +
+            "WHEN p.event.eventStatus = project.luckybooky.domain.event.entity.type.EventStatus.RECRUITING THEN 0" +
+            "WHEN p.event.eventStatus = project.luckybooky.domain.event.entity.type.EventStatus.RECRUITED THEN 1" +
+            " ELSE 2 END, p.event.recruitmentEnd ASC ")
+    Page<Event> findByUserIdAndEventStatusesType1(@Param("userId") Long userId,
                                              @Param("participateRole") ParticipateRole participateRole,
                                              @Param("statuses") List<EventStatus> statuses, Pageable pageable);
+
+    /** 확정된 이벤트 조회 **/
+    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses " +
+            "ORDER BY CASE " +
+            "WHEN p.event.eventStatus IN (project.luckybooky.domain.event.entity.type.EventStatus.VENUE_RESERVATION_IN_PROGRESS, project.luckybooky.domain.event.entity.type.EventStatus.VENUE_CONFIRMED)  THEN 0" +
+            " ELSE 1 END, p.event.eventDate ASC ")
+    Page<Event> findByUserIdAndEventStatusesType2(@Param("userId") Long userId,
+                                                  @Param("participateRole") ParticipateRole participateRole,
+                                                  @Param("statuses") List<EventStatus> statuses, Pageable pageable);
 
 
     @Query("SELECT p FROM Participation p " + " WHERE p.event.id = :eventId AND p.participateRole = :role")
@@ -35,11 +47,7 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
     @Query("SELECT p.user FROM Participation p WHERE p.event.id = :eventId AND p.participateRole = 'HOST'")
     User findHostParticipationByEventId(@Param("eventId") Long eventId);
 
-    @Query("SELECT p.participateRole FROM Participation p WHERE p.event.id = :eventId AND p.user = :user")
-    Optional<ParticipateRole> findRoleByUser(@Param("eventId") Long eventId, @Param("user") User user);
-
-    @Query("SELECT p FROM Participation p JOIN FETCH p.user WHERE p.event.id = :eventId")
-    List<Participation> findAllWithUserByEventId(@Param("eventId") Long eventId);
+    List<Participation> findByUserId(Long userId);
 
     boolean existsByUserIdAndEventId(Long userId, Long eventId);
 

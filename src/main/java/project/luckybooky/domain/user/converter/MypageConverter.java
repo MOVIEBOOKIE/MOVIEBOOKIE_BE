@@ -19,6 +19,7 @@ public class MypageConverter {
                 .username(user.getUsername())
                 .userTypeTitle(typeTitle)
                 .certificationEmail(user.getCertificationEmail())
+                .email(user.getEmail())
                 .hostExperienceCount(user.getHostExperienceCount())
                 .participationExperienceCount(user.getParticipationExperienceCount())
                 .ticketCount(ticketCount)
