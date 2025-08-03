@@ -3,7 +3,10 @@ package project.luckybooky.domain.notification.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import project.luckybooky.domain.notification.dto.ConfirmedData;
+import project.luckybooky.domain.notification.dto.RejectedData;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
@@ -19,95 +23,110 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 @RequiredArgsConstructor
 public class MailTemplateService {
 
+    @Value("${app.home-url}")
+    private String homeUrl;
+
+    @Value("${mail.from:no-reply@luckybooky.com}")
+    private String fromAddress;
+
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
     private final ResourceLoader resourceLoader;
 
     public void sendVenueConfirmedMail(String to, ConfirmedData data) {
+        Context ctx = new Context();
+        ctx.setVariables(Map.of(
+                "mediaTitle", data.getMediaTitle(),
+                "eventTitle", data.getEventTitle(),
+                "hostName", data.getHostName(),
+                "date", formatDate(data),
+                "time", formatTime(data),
+                "venue", data.getLocationName(),
+                "capacity", formatCapacity(data.getMaxParticipants()),
+                "contact", data.getContact(),
+                "participantsLink", homeUrl + "/events/" + data.getEventId() + "/participants",
+                "homeUrl", homeUrl
+        ));
+
+        // 2) 템플릿과 CID 자원 정보 전달
+        sendTemplateMail(
+                to,
+                "[MovieBookie] 대관 확정 안내: " + data.getEventTitle(),
+                "venue_confirmed",
+                ctx,
+                new InlineResource("logoCid", "classpath:images/logo.png"),
+                new InlineResource("groupChatCid", "classpath:images/groupChat.png"),
+                new InlineResource("chatCid", "classpath:images/chat.png")
+        );
+    }
+
+    public void sendVenueRejectedMail(String to, RejectedData data) {
+        Context ctx = new Context();
+        ctx.setVariables(Map.of(
+                "eventTitle", Optional.ofNullable(data.getEventTitle()).orElse(""),
+                "hostName", Optional.ofNullable(data.getHostName()).orElse("주최자님"),
+                "homeUrl", homeUrl
+        ));
+
+        sendTemplateMail(
+                to,
+                "[MovieBookie] 대관 승인 실패 안내: "
+                        + ctx.getVariable("eventTitle"),
+                "venue_rejected",
+                ctx,
+                new InlineResource("logoCid", "classpath:images/logo.png")
+        );
+    }
+
+    private void sendTemplateMail(
+            String to,
+            String subject,
+            String templateName,
+            Context ctx,
+            InlineResource... inlineResources
+    ) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true, "UTF-8");
 
-            // 기본 설정
             helper.setTo(to);
-            helper.setSubject("[MovieBookie] 대관 확정 안내: " + data.getEventTitle());
-            helper.setFrom("no-reply@luckybooky.com");
+            helper.setFrom(fromAddress);
+            helper.setSubject(subject);
 
-            // Thymeleaf Context
-            Context ctx = new Context();
-            ctx.setVariable("mediaTitle", data.getMediaTitle());
-            ctx.setVariable("eventTitle", data.getEventTitle());
-            ctx.setVariable("hostName", data.getHostName());
-
-            String dateStr = data.getEventDate().format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일"))
-                    + " (" + data.getEventDay() + ") "
-                    + data.getEventStartTime() + " - " + data.getEventEndTime();
-            ctx.setVariable("date", dateStr);
-            ctx.setVariable("venue", data.getLocationName());
-
-            String capacityFormatted;
-            if (data.getMaxParticipants() != null) {
-                capacityFormatted = data.getMaxParticipants() + "명 (주최자 포함)";
-            } else {
-                capacityFormatted = "정보 없음";
-            }
-            ctx.setVariable("capacity", capacityFormatted);
-
-            ctx.setVariable("contact", data.getContact());
-            String url = "https://movie-bookie.shop/events/" + data.getEventId() + "/participants";
-            ctx.setVariable("participantsLink", url);
-
-            ctx.setVariable("homeUrl", "https://movie-bookie.shop");
-
-            // HTML 렌더링
-            String html = templateEngine.process("venue_confirmed", ctx);
+            String html = templateEngine.process(templateName, ctx);
             helper.setText(html, true);
 
-            // 인라인 이미지들
-            Resource logo = resourceLoader.getResource("classpath:images/logo.png");
-            helper.addInline("logoCid", logo);
-
-            Resource groupChat = resourceLoader.getResource("classpath:images/groupChat.png");
-            helper.addInline("groupChatCid", groupChat);
-
-            Resource chat = resourceLoader.getResource("classpath:images/chat.png");
-            helper.addInline("chatCid", chat);
+            for (InlineResource res : inlineResources) {
+                Resource resource = resourceLoader.getResource(res.path);
+                helper.addInline(res.cid, resource);
+            }
 
             mailSender.send(message);
-
         } catch (MessagingException ex) {
             throw new BusinessException(ErrorCode.MAIL_SEND_FAILED);
         }
     }
 
-    public void sendVenueRejectedMail(String to, ConfirmedData data) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+    private String formatDate(ConfirmedData d) {
+        return d.getEventDate()
+                .format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일"))
+                + " (" + d.getEventDay() + ")";
+    }
 
-            String eventTitle = data.getEventTitle() != null ? data.getEventTitle() : "";
-            String hostName = data.getHostName() != null ? data.getHostName() : "주최자님";
+    private String formatTime(ConfirmedData d) {
+        return d.getEventStartTime() + " - " + d.getEventEndTime();
+    }
 
-            helper.setTo(to);
-            helper.setSubject("[MovieBookie] 대관 승인 실패 안내: " + eventTitle);
-            helper.setFrom("no-reply@luckybooky.com");
+    private String formatCapacity(Integer max) {
+        return (max != null)
+                ? max + "명 (주최자 포함)"
+                : "정보 없음";
+    }
 
-            Context ctx = new Context();
-            ctx.setVariable("eventTitle", eventTitle);
-            ctx.setVariable("hostName", hostName);
-            ctx.setVariable("homeUrl", "https://movie-bookie.shop");
-
-            String html = templateEngine.process("venue_rejected", ctx);
-            helper.setText(html, true);
-
-            // 인라인 이미지
-            Resource logo = resourceLoader.getResource("classpath:images/logo.png");
-            helper.addInline("logoCid", logo);
-
-            mailSender.send(message);
-        } catch (MessagingException ex) {
-            throw new BusinessException(ErrorCode.MAIL_SEND_FAILED);
-        }
+    /**
+     * 내부에서만 쓰이는 CID + 리소스 경로 묶음
+     */
+    private static record InlineResource(String cid, String path) {
     }
 }
-

@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,20 +18,27 @@ import project.luckybooky.domain.user.entity.User;
 public interface ParticipationRepository extends JpaRepository<Participation, Long> {
     Optional<Participation> findByUserIdAndEventId(Long userId, Long eventId);
 
-    /** 진행 중인 이벤트 조회 **/
-    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses " +
+    /**
+     * 진행 중인 이벤트 조회
+     **/
+    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses "
+            +
             "ORDER BY CASE " +
             "WHEN p.event.eventStatus = project.luckybooky.domain.event.entity.type.EventStatus.RECRUITING THEN 0" +
             "WHEN p.event.eventStatus = project.luckybooky.domain.event.entity.type.EventStatus.RECRUITED THEN 1" +
             " ELSE 2 END, p.event.recruitmentEnd ASC ")
     Page<Event> findByUserIdAndEventStatusesType1(@Param("userId") Long userId,
-                                             @Param("participateRole") ParticipateRole participateRole,
-                                             @Param("statuses") List<EventStatus> statuses, Pageable pageable);
+                                                  @Param("participateRole") ParticipateRole participateRole,
+                                                  @Param("statuses") List<EventStatus> statuses, Pageable pageable);
 
-    /** 확정된 이벤트 조회 **/
-    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses " +
+    /**
+     * 확정된 이벤트 조회
+     **/
+    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses "
+            +
             "ORDER BY CASE " +
-            "WHEN p.event.eventStatus IN (project.luckybooky.domain.event.entity.type.EventStatus.VENUE_RESERVATION_IN_PROGRESS, project.luckybooky.domain.event.entity.type.EventStatus.VENUE_CONFIRMED)  THEN 0" +
+            "WHEN p.event.eventStatus IN (project.luckybooky.domain.event.entity.type.EventStatus.VENUE_RESERVATION_IN_PROGRESS, project.luckybooky.domain.event.entity.type.EventStatus.VENUE_CONFIRMED)  THEN 0"
+            +
             " ELSE 1 END, p.event.eventDate ASC ")
     Page<Event> findByUserIdAndEventStatusesType2(@Param("userId") Long userId,
                                                   @Param("participateRole") ParticipateRole participateRole,
@@ -53,7 +62,10 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
 
     List<Participation> findAllByEventIdAndParticipateRole(Long eventId, ParticipateRole role);
 
-    // 이미 정의하신 메서드
+    @EntityGraph(
+            value = "Participation.withUserAndEvent",
+            type = EntityGraphType.FETCH
+    )
     Optional<Participation> findByUser_IdAndEvent_IdAndParticipateRole(
             Long userId,
             Long eventId,

@@ -3,9 +3,14 @@ package project.luckybooky.domain.notification.converter;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import java.time.LocalDateTime;
+import java.time.format.TextStyle;
+import java.util.Locale;
+import project.luckybooky.domain.notification.dto.ConfirmedData;
+import project.luckybooky.domain.notification.dto.RejectedData;
 import project.luckybooky.domain.notification.entity.NotificationInfo;
 import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
+import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.user.entity.User;
 
 public class NotificationConverter {
@@ -99,5 +104,36 @@ public class NotificationConverter {
                 .build();
     }
 
+    public static ConfirmedData toConfirmedData(Participation hostParticipation, String homeUrl) {
+        var ev = hostParticipation.getEvent();
+
+        return ConfirmedData.builder()
+                .mediaTitle(ev.getMediaTitle())
+                .eventTitle(ev.getEventTitle())
+                .eventDate(ev.getEventDate())
+                .eventDay(ev.getEventDate()
+                        .getDayOfWeek()
+                        .getDisplayName(TextStyle.SHORT, Locale.KOREAN))
+                .eventStartTime(ev.getEventStartTime())
+                .eventEndTime(ev.getEventEndTime())
+                .locationName(ev.getLocation().getLocationName())
+                .maxParticipants(ev.getMaxParticipants())
+                .contact("")
+                .participantsLink(homeUrl + "/events/" + ev.getId() + "/participants")
+                .build();
+    }
+
+    public static RejectedData toRejectedData(Participation hostPart, String homeUrl) {
+        var user = hostPart.getUser();
+        var event = hostPart.getEvent();
+
+        return RejectedData.builder()
+                .eventTitle(event.getEventTitle())
+                .hostName(
+                        user.getUsername() != null ? user.getUsername() : "주최자님"
+                )
+                .homeUrl(homeUrl)
+                .build();
+    }
 
 }

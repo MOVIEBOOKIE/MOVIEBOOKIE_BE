@@ -2,12 +2,13 @@ package project.luckybooky.domain.notification.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import project.luckybooky.domain.notification.dto.ConfirmedData;
+import project.luckybooky.domain.notification.converter.NotificationConverter;
+import project.luckybooky.domain.notification.dto.RejectedData;
 import project.luckybooky.domain.notification.event.HostNotificationEvent;
 import project.luckybooky.domain.notification.service.MailTemplateService;
-import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
@@ -22,25 +23,28 @@ public class VenueRejectedMailListener {
     private final ParticipationRepository participationRepository;
     private final MailTemplateService mailTemplateService;
 
-    @EventListener
-    public void onHostReservationDenied(HostNotificationEvent evt) {
-        if (evt.getType() != HostNotificationType.RESERVATION_DENIED) {
-            return;
-        }
+    @Value("${app.home-url}")
+    private String homeUrl;
 
+    @EventListener
+    public void sendVenueRejectedMail(HostNotificationEvent evt) {
+        // 1) 참여정보 + 연관 엔티티(fetch join)를 한방에 조회
         Participation hostPart = participationRepository
-                .findByUser_IdAndEvent_IdAndParticipateRole(evt.getHostUserId(), evt.getEventId(), ParticipateRole.HOST)
+                .findByUser_IdAndEvent_IdAndParticipateRole(
+                        evt.getHostUserId(),
+                        evt.getEventId(),
+                        ParticipateRole.HOST
+                )
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
-        String hostEmail = hostPart.getUser().getCertificationEmail();
-        String hostName = hostPart.getUser().getUsername() != null ? hostPart.getUser().getUsername() : "주최자님";
-        String eventTitle = hostPart.getEvent().getEventTitle();
+        // 2) DTO 변환 로직 위임
+        RejectedData data = NotificationConverter.toRejectedData(hostPart, homeUrl);
 
-        ConfirmedData data = ConfirmedData.builder()
-                .eventTitle(eventTitle)
-                .hostName(hostName)
-                .build();
+        // 3) 메일 발송
+        String to = hostPart.getUser().getCertificationEmail();
+        mailTemplateService.sendVenueRejectedMail(to, data);
 
-        mailTemplateService.sendVenueRejectedMail(hostEmail, data);
+        log.info("✅ 대관거절 메일 발송 완료: hostEmail={}, eventId={}", to, evt.getEventId());
     }
 }
+
