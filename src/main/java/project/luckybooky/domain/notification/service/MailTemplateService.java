@@ -35,18 +35,16 @@ public class MailTemplateService {
 
     public void sendVenueConfirmedMail(String to, ConfirmedData data) {
         Context ctx = new Context();
-        ctx.setVariables(Map.of(
-                "mediaTitle", data.getMediaTitle(),
-                "eventTitle", data.getEventTitle(),
-                "hostName", data.getHostName(),
-                "date", formatDate(data),
-                "time", formatTime(data),
-                "venue", data.getLocationName(),
-                "capacity", formatCapacity(data.getMaxParticipants()),
-                "contact", data.getContact(),
-                "participantsLink", homeUrl + "/events/" + data.getEventId() + "/participants",
-                "homeUrl", homeUrl
-        ));
+        ctx.setVariable("mediaTitle", data.getMediaTitle());
+        ctx.setVariable("eventTitle", data.getEventTitle());
+        ctx.setVariable("hostName", data.getHostName());
+        ctx.setVariable("date", formatDate(data));
+        ctx.setVariable("time", formatTime(data));
+        ctx.setVariable("venue", data.getLocationName());
+        ctx.setVariable("capacity", formatCapacity(data.getMaxParticipants()));
+        ctx.setVariable("contact", data.getContact() != null ? data.getContact() : "");
+        ctx.setVariable("participantsLink", String.format("%s/events/%d/participants", homeUrl, data.getEventId()));
+        ctx.setVariable("homeUrl", homeUrl);
 
         // 2) 템플릿과 CID 자원 정보 전달
         sendTemplateMail(
@@ -54,9 +52,9 @@ public class MailTemplateService {
                 "[MovieBookie] 대관 확정 안내: " + data.getEventTitle(),
                 "venue_confirmed",
                 ctx,
-                new InlineResource("logoCid", "classpath:images/logo.png"),
-                new InlineResource("groupChatCid", "classpath:images/groupChat.png"),
-                new InlineResource("chatCid", "classpath:images/chat.png")
+                new InlineResource("logoCid", "classpath:static/images/logo.png"),
+                new InlineResource("groupChatCid", "classpath:static/images/groupChat.png"),
+                new InlineResource("chatCid", "classpath:static/images/chat.png")
         );
     }
 
@@ -74,7 +72,7 @@ public class MailTemplateService {
                         + ctx.getVariable("eventTitle"),
                 "venue_rejected",
                 ctx,
-                new InlineResource("logoCid", "classpath:images/logo.png")
+                new InlineResource("logoCid", "classpath:static/images/logo.png")
         );
     }
 
