@@ -9,6 +9,7 @@ import project.luckybooky.domain.notification.converter.NotificationConverter;
 import project.luckybooky.domain.notification.dto.RejectedData;
 import project.luckybooky.domain.notification.event.HostNotificationEvent;
 import project.luckybooky.domain.notification.service.MailTemplateService;
+import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
@@ -28,7 +29,11 @@ public class VenueRejectedMailListener {
 
     @EventListener
     public void sendVenueRejectedMail(HostNotificationEvent evt) {
-        // 1) 참여정보 + 연관 엔티티(fetch join)를 한방에 조회
+
+        if (evt.getType() != HostNotificationType.RESERVATION_DENIED) {
+            return;
+        }
+
         Participation hostPart = participationRepository
                 .findByUser_IdAndEvent_IdAndParticipateRole(
                         evt.getHostUserId(),
