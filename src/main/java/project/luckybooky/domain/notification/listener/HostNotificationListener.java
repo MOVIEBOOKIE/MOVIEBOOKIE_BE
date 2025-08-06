@@ -4,20 +4,19 @@ import com.google.api.core.ApiFuture;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
-import java.time.format.TextStyle;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
 import project.luckybooky.domain.notification.dto.ConfirmedData;
 import project.luckybooky.domain.notification.entity.NotificationInfo;
@@ -44,6 +43,9 @@ public class HostNotificationListener {
     private final ParticipationRepository participationRepository;
     private final MailTemplateService mailTemplateService;
 
+    @Value("${app.home-url}")
+    private String homeUrl;
+    
     private static final Set<String> sentKeys = ConcurrentHashMap.newKeySet();
 
     @Async("notificationExecutor")
@@ -89,38 +91,27 @@ public class HostNotificationListener {
     }
 
     @EventListener
-    public void handleHostNotification(HostNotificationEvent event) {
+    @Transactional(readOnly = true)
+    public void handleHostNotification(HostNotificationEvent evt) {
+        String key = evt.getType() + ":" + evt.getEventId() + ":" + evt.getHostUserId();
+        log.info("▶ HostNotification start [{}]", key);
 
         Participation hostPart = participationRepository
                 .findByUser_IdAndEvent_IdAndParticipateRole(
-                        event.getHostUserId(),
-                        event.getEventId(),
+                        evt.getHostUserId(),
+                        evt.getEventId(),
                         ParticipateRole.HOST
                 )
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
-        Event ev = hostPart.getEvent();
-
-        // DTO 빌더
-        ConfirmedData data = ConfirmedData.builder()
-                .mediaTitle(ev.getMediaTitle())
-                .eventTitle(ev.getEventTitle())
-                .eventDate(ev.getEventDate())
-                .eventDay(ev.getEventDate()
-                        .getDayOfWeek()
-                        .getDisplayName(TextStyle.SHORT, Locale.KOREAN))
-                .eventStartTime(ev.getEventStartTime())
-                .eventEndTime(ev.getEventEndTime())
-                .locationName(ev.getLocation().getLocationName())
-                .maxParticipants(ev.getMaxParticipants())
-                .contact("")
-                .participantsLink("https://your-domain.com/events/" + ev.getId() + "/participants")
-                .build();
+        ConfirmedData data = NotificationConverter.toConfirmedData(hostPart, homeUrl);
 
         mailTemplateService.sendVenueConfirmedMail(
                 hostPart.getUser().getEmail(),
                 data
         );
+        log.info("✅ Mail sent [{}]", key);
     }
+
 
 }

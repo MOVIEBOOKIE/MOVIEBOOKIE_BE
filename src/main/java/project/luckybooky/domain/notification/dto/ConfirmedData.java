@@ -4,9 +4,6 @@ import java.time.LocalDate;
 import lombok.Builder;
 import lombok.Getter;
 
-/**
- * 대관 확정 이메일에 전달할 데이터 DTO
- */
 @Getter
 @Builder
 public class ConfirmedData {
@@ -51,7 +48,7 @@ public class ConfirmedData {
      */
     private final String participantsLink;
 
-    private String hostName;
+    private final String hostName;
 
-    private Long eventId;
+    private final Long eventId;
 }
