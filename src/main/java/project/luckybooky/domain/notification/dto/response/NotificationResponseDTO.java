@@ -16,7 +16,7 @@ public class NotificationResponseDTO {
 
     public static NotificationResponseDTO fromEntity(NotificationInfo e) {
         return new NotificationResponseDTO(
-                e.getId(),
+                e.getEventId(),
                 e.getTitle(),
                 e.getBody(),
                 calculateTimeAgo(e.getSentAt())
