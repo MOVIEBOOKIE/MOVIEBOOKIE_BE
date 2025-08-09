@@ -18,20 +18,15 @@ public class ParticipantInfoController {
     private final UserContextService userContextService;
 
     @GetMapping("/participants")
-    public String showParticipants(
-            @PathVariable Long eventId,
-            Model model
-    ) {
+    public String showParticipants(@PathVariable Long eventId, Model model) {
         // 현재 로그인한 사용자 ID 가져오기
         Long currentUserId = userContextService.getUserId();
-        
+
         // 주최자 권한 확인 및 참여자 정보와 이벤트 정보 조회
         ParticipantInfoResult result = participantInfoService.getParticipantInfoForHost(eventId, currentUserId);
-        
-        String dateLabel = participantInfoService.formatEventDate(result.getEvent());
 
         model.addAttribute("participants", result.getParticipants());
-        model.addAttribute("dateLabel", dateLabel);
+        model.addAttribute("dateLabel", result.getViewDate());
         return "participants";
     }
 }

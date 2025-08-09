@@ -18,6 +18,9 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 @Service
 @RequiredArgsConstructor
 public class ParticipantInfoService {
+
+    private static final DateTimeFormatter DATE_LABEL_FORMATTER = DateTimeFormatter.ofPattern("yyyy년 M월 dd일");
+
     private final ParticipationRepository participationRepository;
     private final EventRepository eventRepository;
 
@@ -42,10 +45,10 @@ public class ParticipantInfoService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
-        participationRepository
-                .findByUser_IdAndEvent_IdAndParticipateRole(userId, eventId, ParticipateRole.HOST)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_ALLOWED));
-
+        if (!participationRepository.existsByUser_IdAndEvent_IdAndParticipateRole(userId, eventId,
+                ParticipateRole.HOST)) {
+            throw new BusinessException(ErrorCode.PARTICIPATION_NOT_ALLOWED);
+        }
         return event;
     }
 
@@ -66,14 +69,13 @@ public class ParticipantInfoService {
         // 참여자 정보 조회
         List<ParticipantInfoDto> participants = getParticipantInfo(eventId);
 
-        return new ParticipantInfoResult(event, participants);
+        return new ParticipantInfoResult(participants, formatEventDate(event));
     }
 
     /**
      * 이벤트 날짜 포맷팅
      */
     public String formatEventDate(Event event) {
-        return event.getEventDate()
-                .format(DateTimeFormatter.ofPattern("yyyy년 M월 dd일"));
+        return event.getEventDate().format(DATE_LABEL_FORMATTER);
     }
 }
