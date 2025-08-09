@@ -86,7 +86,7 @@ public class Event extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "host_event_button_state", length = 20)
     @Builder.Default
-    private HostEventButtonState hostEventButtonState = HostEventButtonState.RECRUIT_CANCELLED;
+    private HostEventButtonState hostEventButtonState = HostEventButtonState.RECRUIT_CANCELED;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "participant_event_button_state", length = 20)
@@ -146,9 +146,9 @@ public class Event extends BaseEntity {
      **/
     public void recruitCancel() {
         // 이벤트의 현재 상태 검증
-        if (eventStatus == EventStatus.RECRUITING && hostEventButtonState == HostEventButtonState.RECRUIT_CANCELLED && participantEventButtonState == ParticipantEventButtonState.REGISTER_CANCELED) {
+        if (eventStatus == EventStatus.RECRUITING && hostEventButtonState == HostEventButtonState.RECRUIT_CANCELED && participantEventButtonState == ParticipantEventButtonState.REGISTER_CANCELED) {
             eventStatus = EventStatus.RECRUIT_CANCELED;
-            hostEventButtonState = HostEventButtonState.RECRUIT_CANCELLED;
+            hostEventButtonState = HostEventButtonState.RECRUIT_CANCELED;
             participantEventButtonState = ParticipantEventButtonState.RECRUIT_CANCELED;
             anonymousButtonState = AnonymousButtonState.RECRUIT_CANCELED;
         } else {
@@ -161,8 +161,8 @@ public class Event extends BaseEntity {
      **/
     public void recruitDone() {
         // 이벤트의 현재 상태 검증
-        if (eventStatus == EventStatus.RECRUITING && hostEventButtonState == HostEventButtonState.RECRUIT_CANCELLED && participantEventButtonState == ParticipantEventButtonState.REGISTER_CANCELED) {
-            eventStatus = EventStatus.RECRUITED;
+        if (eventStatus == EventStatus.RECRUITING && hostEventButtonState == HostEventButtonState.RECRUIT_CANCELED && participantEventButtonState == ParticipantEventButtonState.REGISTER_CANCELED) {
+            eventStatus = EventStatus.RECRUIT_DONE;
             hostEventButtonState = HostEventButtonState.VENUE_RESERVATION;
             participantEventButtonState = ParticipantEventButtonState.RECRUIT_DONE;
             anonymousButtonState = AnonymousButtonState.RECRUIT_DONE;
@@ -176,7 +176,7 @@ public class Event extends BaseEntity {
      **/
     public void venueRegister() {
         // 이벤트의 현재 상태 검증
-        if (eventStatus == EventStatus.RECRUITED && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION && participantEventButtonState == ParticipantEventButtonState.RECRUIT_DONE) {
+        if (eventStatus == EventStatus.RECRUIT_DONE && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION && participantEventButtonState == ParticipantEventButtonState.RECRUIT_DONE) {
             eventStatus = EventStatus.VENUE_RESERVATION_IN_PROGRESS;
             hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
             participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
@@ -190,7 +190,7 @@ public class Event extends BaseEntity {
      **/
     public void venueCancel() {
         // 주최자가 임의로 취소하는 경우
-        boolean canCancelByHost = eventStatus == EventStatus.RECRUITED
+        boolean canCancelByHost = eventStatus == EventStatus.RECRUIT_DONE
                             && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION
                             && participantEventButtonState == ParticipantEventButtonState.RECRUIT_DONE;
 
