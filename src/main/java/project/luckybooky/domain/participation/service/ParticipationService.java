@@ -69,7 +69,7 @@ public class ParticipationService {
         if (type == 0) {
             statuses = List.of(
                     EventStatus.RECRUITING,
-                    EventStatus.RECRUITED);
+                    EventStatus.RECRUIT_DONE);
 
             eventList = participationRepository.findByUserIdAndEventStatusesType1(userId, participateRole, statuses,
                     PageRequest.of(page, size));
@@ -111,7 +111,7 @@ public class ParticipationService {
             Event event = p.getEvent();
             if (p.getParticipateRole().equals(ParticipateRole.HOST)) {
                 switch (event.getHostEventButtonState()) {
-                    case RECRUIT_CANCELLED:
+                    case RECRUIT_CANCELED:
                         eventService.cancelRecruitEvent(userId, event.getId());
                         break;
                     case VENUE_RESERVATION, VENUE_RESERVATION_IN_PROGRESS:
