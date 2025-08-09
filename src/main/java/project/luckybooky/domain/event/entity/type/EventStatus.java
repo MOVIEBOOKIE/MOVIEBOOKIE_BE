@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum EventStatus {
     RECRUITING("모집 중"),
-    RECRUITED("모집 완료"),
+    RECRUIT_DONE("모집 완료"),
     COMPLETED("상영 완료"),
     CANCELLED("상영 취소"),
     VENUE_RESERVATION_IN_PROGRESS("대관 진행 중"),

@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum HostEventButtonState {
-    RECRUIT_CANCELLED("모집 취소"),
+    RECRUIT_CANCELED("모집 취소"),
     VENUE_RESERVATION("대관 신청하기"),
     VENUE_RESERVATION_IN_PROGRESS("대관 진행 중"),
     VENUE_RESERVATION_CANCELED("대관 취소"),
