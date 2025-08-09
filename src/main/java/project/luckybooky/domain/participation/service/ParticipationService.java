@@ -69,22 +69,26 @@ public class ParticipationService {
         if (type == 0) {
             statuses = List.of(
                     EventStatus.RECRUITING,
-                    EventStatus.RECRUITED,
-                    EventStatus.RECRUIT_CANCELED,
-                    EventStatus.VENUE_RESERVATION_CANCELED);
+                    EventStatus.RECRUIT_DONE);
 
             eventList = participationRepository.findByUserIdAndEventStatusesType1(userId, participateRole, statuses,
                     PageRequest.of(page, size));
-        } else {
+        } else if (type == 1) {
             statuses = List.of(
                     EventStatus.VENUE_RESERVATION_IN_PROGRESS,
-                    EventStatus.COMPLETED,
-                    EventStatus.CANCELLED,
-                    EventStatus.VENUE_CONFIRMED);
+                    EventStatus.VENUE_CONFIRMED,
+                    EventStatus.COMPLETED);
 
             eventList = participationRepository.findByUserIdAndEventStatusesType2(userId, participateRole, statuses,
                     PageRequest.of(page, size));
-
+        }
+        else {
+            statuses = List.of(
+                    EventStatus.RECRUIT_CANCELED,
+                    EventStatus.VENUE_RESERVATION_CANCELED,
+                    EventStatus.CANCELLED
+            );
+            eventList = participationRepository.findByUserIdAndEventStatusesType3(userId, participateRole, statuses, PageRequest.of(page, size));
         }
         return toReadEventListResultDTO(eventList);
     }
@@ -107,7 +111,7 @@ public class ParticipationService {
             Event event = p.getEvent();
             if (p.getParticipateRole().equals(ParticipateRole.HOST)) {
                 switch (event.getHostEventButtonState()) {
-                    case RECRUIT_CANCELLED:
+                    case RECRUIT_CANCELED:
                         eventService.cancelRecruitEvent(userId, event.getId());
                         break;
                     case VENUE_RESERVATION, VENUE_RESERVATION_IN_PROGRESS:
