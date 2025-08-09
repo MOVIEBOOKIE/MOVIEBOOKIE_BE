@@ -162,7 +162,7 @@ public class Event extends BaseEntity {
     public void recruitDone() {
         // 이벤트의 현재 상태 검증
         if (eventStatus == EventStatus.RECRUITING && hostEventButtonState == HostEventButtonState.RECRUIT_CANCELED && participantEventButtonState == ParticipantEventButtonState.REGISTER_CANCELED) {
-            eventStatus = EventStatus.RECRUITED;
+            eventStatus = EventStatus.RECRUIT_DONE;
             hostEventButtonState = HostEventButtonState.VENUE_RESERVATION;
             participantEventButtonState = ParticipantEventButtonState.RECRUIT_DONE;
             anonymousButtonState = AnonymousButtonState.RECRUIT_DONE;
@@ -176,7 +176,7 @@ public class Event extends BaseEntity {
      **/
     public void venueRegister() {
         // 이벤트의 현재 상태 검증
-        if (eventStatus == EventStatus.RECRUITED && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION && participantEventButtonState == ParticipantEventButtonState.RECRUIT_DONE) {
+        if (eventStatus == EventStatus.RECRUIT_DONE && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION && participantEventButtonState == ParticipantEventButtonState.RECRUIT_DONE) {
             eventStatus = EventStatus.VENUE_RESERVATION_IN_PROGRESS;
             hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
             participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_IN_PROGRESS;
@@ -190,7 +190,7 @@ public class Event extends BaseEntity {
      **/
     public void venueCancel() {
         // 주최자가 임의로 취소하는 경우
-        boolean canCancelByHost = eventStatus == EventStatus.RECRUITED
+        boolean canCancelByHost = eventStatus == EventStatus.RECRUIT_DONE
                             && hostEventButtonState == HostEventButtonState.VENUE_RESERVATION
                             && participantEventButtonState == ParticipantEventButtonState.RECRUIT_DONE;
 
