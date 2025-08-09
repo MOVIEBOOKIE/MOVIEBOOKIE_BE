@@ -25,22 +25,20 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
             +
             "ORDER BY CASE " +
             "WHEN p.event.eventStatus = project.luckybooky.domain.event.entity.type.EventStatus.RECRUITING THEN 0" +
-            "WHEN p.event.eventStatus = project.luckybooky.domain.event.entity.type.EventStatus.RECRUITED THEN 1" +
-            " ELSE 2 END, p.event.recruitmentEnd ASC ")
+            " ELSE 1 END, p.event.recruitmentEnd ASC ")
     Page<Event> findByUserIdAndEventStatusesType1(@Param("userId") Long userId,
                                                   @Param("participateRole") ParticipateRole participateRole,
                                                   @Param("statuses") List<EventStatus> statuses, Pageable pageable);
 
-    /**
-     * 확정된 이벤트 조회
-     **/
-    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses "
-            +
-            "ORDER BY CASE " +
-            "WHEN p.event.eventStatus IN (project.luckybooky.domain.event.entity.type.EventStatus.VENUE_RESERVATION_IN_PROGRESS, project.luckybooky.domain.event.entity.type.EventStatus.VENUE_CONFIRMED)  THEN 0"
-            +
-            " ELSE 1 END, p.event.eventDate ASC ")
+    /** 확정된 이벤트 조회 **/
+    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses ORDER BY p.event.eventDate")
     Page<Event> findByUserIdAndEventStatusesType2(@Param("userId") Long userId,
+                                                  @Param("participateRole") ParticipateRole participateRole,
+                                                  @Param("statuses") List<EventStatus> statuses, Pageable pageable);
+
+    /** 취소된 이벤트 조회 **/
+    @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses ORDER BY p.event.eventDate DESC")
+    Page<Event> findByUserIdAndEventStatusesType3(@Param("userId") Long userId,
                                                   @Param("participateRole") ParticipateRole participateRole,
                                                   @Param("statuses") List<EventStatus> statuses, Pageable pageable);
 
