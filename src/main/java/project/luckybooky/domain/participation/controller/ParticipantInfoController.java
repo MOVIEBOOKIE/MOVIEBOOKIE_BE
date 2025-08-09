@@ -28,7 +28,6 @@ public class ParticipantInfoController {
         // 주최자 권한 확인 및 참여자 정보와 이벤트 정보 조회
         ParticipantInfoResult result = participantInfoService.getParticipantInfoForHost(eventId, currentUserId);
         
-        // 이벤트 날짜 포맷팅
         String dateLabel = participantInfoService.formatEventDate(result.getEvent());
 
         model.addAttribute("participants", result.getParticipants());

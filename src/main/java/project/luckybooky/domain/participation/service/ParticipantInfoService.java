@@ -38,11 +38,10 @@ public class ParticipantInfoService {
      */
     @Transactional(readOnly = true)
     public Event validateHostAndGetEvent(Long eventId, Long userId) {
-        // 이벤트 존재 확인
+
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
-        // 현재 사용자가 해당 이벤트의 주최자인지 확인
         participationRepository
                 .findByUser_IdAndEvent_IdAndParticipateRole(userId, eventId, ParticipateRole.HOST)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_ALLOWED));
