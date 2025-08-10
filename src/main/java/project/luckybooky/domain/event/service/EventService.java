@@ -27,6 +27,7 @@ import project.luckybooky.domain.event.dto.response.EventParticipantsResponse;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.dto.response.ParticipantDTO;
 import project.luckybooky.domain.event.entity.Event;
+import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.location.entity.Location;
@@ -67,6 +68,9 @@ public class EventService {
 
     private final ConcurrentHashMap<Long, Object> eventLocks = new ConcurrentHashMap<>();
 
+    /**
+     * 이벤트 생성
+     **/
     @Transactional
     public Long createEvent(Long userId, EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
         String eventImageUrl = s3Service.uploadFile(eventImage);
@@ -75,6 +79,11 @@ public class EventService {
         String eventEndTime = toEventEndTime(request.getEventStartTime(), request.getEventProgressTime());
         Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(),
                 request.getMinParticipants());
+
+        // 해당 날짜에 이미 참여한 이벤트 없는지 검증
+        if (isNotParticipatedOnDate(userId, request.getEventDate())) {
+            throw new BusinessException(ErrorCode.EVENT_ALREADY_EXIST);
+        }
 
         Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime, estimatedPrice);
         eventRepository.save(event);
@@ -118,6 +127,7 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
+    /** 이벤트 검색 **/
     public EventResponse.ReadEventListWithPageResultDTO readEventListBySearch(String content, Integer page,
                                                                               Integer size) {
         Page<Event> eventList = eventRepository.findEventsBySearch(content, PageRequest.of(page, size));
@@ -220,51 +230,6 @@ public class EventService {
      * 이벤트 신청
      **/
     @Transactional
-    public void registerEvent2(Long userId, Long eventId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        // user 조회는 락 밖에서 미리 수행
-
-        RLock lock = redissonClient.getLock("event:" + eventId + ":lock");
-        boolean acquired;
-        try {
-            long start = System.currentTimeMillis();
-            // 최대 50ms만 대기, 획득 후 자동 해제(10s)
-            acquired = lock.tryLock(50, 10, TimeUnit.SECONDS);
-            long waited = System.currentTimeMillis() - start;
-            log.info("Lock wait: {}ms", waited);
-
-            if (!acquired) {
-                throw new BusinessException(ErrorCode.SYSTEM_BUSY);
-            }
-
-            Event event = eventRepository.findByIdWithLock(eventId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
-            if (event.getCurrentParticipants() + 1 > event.getMaxParticipants()) {
-                throw new BusinessException(ErrorCode.EVENT_FULL);
-            }
-
-            // 카운트 증감 + 저장
-            event.updateCurrentParticipants(true);
-            Participation p = ParticipationConverter.toParticipation(
-                    user, event, ParticipateRole.PARTICIPANT
-            );
-            participationRepository.save(p);
-
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new BusinessException(ErrorCode.SYSTEM_BUSY);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
-    }
-
-    /**
-     * 이벤트 신청
-     **/
-    @Transactional
     public void registerEvent(Long userId, Long eventId) {
         // 사용자 조회를 락 외부에서 미리 수행
         User user = userRepository.findById(userId)
@@ -287,10 +252,15 @@ public class EventService {
                 throw new BusinessException(ErrorCode.EVENT_FULL);
             }
 
-            // 3) 참여자 수 증가
+            // 3) 해당 날짜에 이미 참여한 이벤트 없는지 검증
+            if (isNotParticipatedOnDate(userId, event.getEventDate())) {
+                throw new BusinessException(ErrorCode.EVENT_ALREADY_EXIST);
+            }
+
+            // 4) 참여자 수 증가
             event.updateCurrentParticipants(true);
 
-            // 4) 참여자 저장
+            // 5) 참여자 저장
             Participation p = ParticipationConverter.toParticipation(user, event, ParticipateRole.PARTICIPANT);
             participationRepository.save(p);
 
@@ -301,7 +271,7 @@ public class EventService {
                     event.getMediaTitle()
             ));
 
-            // 5) 모집 인원 달성 시 미신청자 이벤트 신청 버튼 상태 변경 ('신청하기' -> '신청 마감')
+            // 6) 모집 인원 달성 시 미신청자 이벤트 신청 버튼 상태 변경 ('신청하기' -> '신청 마감')
             if (event.getCurrentParticipants() == event.getMaxParticipants()) {
                 event.changeAnonymousButtonState();
             }
@@ -309,12 +279,6 @@ public class EventService {
         // synchronized 블록이 끝난 후 락 오브젝트 제거
         eventLocks.remove(eventId);
     }
-
-    @Transactional
-    public void cleanupEventLock(Long eventId) {
-        eventLocks.remove(eventId);
-    }
-
 
     /**
      * 이벤트 신청 취소
@@ -350,9 +314,7 @@ public class EventService {
         }
     }
 
-    /**
-     * 이벤트 주최자인지 검증 로직
-     **/
+    /** 이벤트 주최자인지 검증 로직 **/
     private Boolean isEventHost(Long userId, Long eventId) {
         Participation participation = participationRepository.findByUserIdAndEventId(userId, eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
@@ -456,7 +418,8 @@ public class EventService {
         });
     }
 
-    private List<Event> findExpiredEvents() { // 모집 기간이 지난 이벤트 탐색
+    /** 모집 기간이 지난 이벤트 탐색 **/
+    private List<Event> findExpiredEvents() {
         return eventRepository.findExpiredEvent(LocalDate.now());
     }
 
@@ -593,6 +556,9 @@ public class EventService {
         return EventConstants.SCREENING_CANCEL_SUCCESS.getMessage();
     }
 
+    /**
+     * 홈 화면 맞춤형 컨텐츠 조회
+     **/
     public List<EventResponse.HomeEventListResultDTO> readHomeEventList(Long userId) {
         UserType userType = userTypeService.findUserType(userId);
         ContentCategory preferCategory = userType.getCategory();
@@ -656,6 +622,11 @@ public class EventService {
 
         int totalCount = event.getCurrentParticipants();
         return new EventParticipantsResponse(dtos, totalCount);
+    }
+
+    /** 해당 날짜에 이미 참여 중인 이벤트 없는지 검증 **/
+    private boolean isNotParticipatedOnDate(Long userId, LocalDate date) {
+        return participationRepository.existsByUserIdAndEventDate(userId, date);
     }
 
 }
