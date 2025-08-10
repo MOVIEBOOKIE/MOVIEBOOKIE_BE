@@ -50,7 +50,8 @@ public class ParticipationController {
     }
 
     @Operation(summary = "선택된 날짜에 이벤트 모집 가능 여부 조회", description = "선택된 날짜를 date에 아래 형식대로 넣어주세요! <br>" +
-            "date: 2025-05-24")
+            "date: 2025-05-24 <br>" +
+            "결과: TRUE <- 가능, FALSE <- 불가능")
     @GetMapping("/recruitable")
     public CommonResponse<String> venueProcess(@RequestParam String date) {
         Long userId = userContextService.getUserId();
