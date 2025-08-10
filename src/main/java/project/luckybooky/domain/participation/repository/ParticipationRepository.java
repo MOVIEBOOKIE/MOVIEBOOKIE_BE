@@ -1,5 +1,6 @@
 package project.luckybooky.domain.participation.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -76,5 +77,10 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
 
     Optional<Participation> findFirstByEventIdAndParticipateRole(Long eventId, ParticipateRole role);
 
+    /** 특정 날짜에 계획된 이벤트 존재 여부 조회 **/
+    @Query("SELECT COUNT(p) > 0 FROM Participation p WHERE p.user.id = :id AND p.event.eventDate = :date")
+    boolean existsByUserIdAndEventDate(@Param("id") Long userId, @Param("date") LocalDate date);
+
     boolean existsByUser_IdAndEvent_IdAndParticipateRole(Long userId, Long eventId, ParticipateRole role);
+
 }

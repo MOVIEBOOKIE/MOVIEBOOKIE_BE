@@ -1,5 +1,6 @@
 package project.luckybooky.domain.participation.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -143,6 +144,14 @@ public class ParticipationService {
             }
         });
         return "정상 처리되었습니다.";
+    }
+
+    /**
+     * 해당 날짜에 이벤트 모집 가능 여부 체크
+     **/
+    public String isRecruitableOnDate(Long userId, String date) {
+        boolean result = participationRepository.existsByUserIdAndEventDate(userId, LocalDate.parse(date));
+        return result ? "FALSE" : "TRUE";
     }
 
 }
