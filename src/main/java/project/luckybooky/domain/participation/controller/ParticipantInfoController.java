@@ -1,44 +1,32 @@
 package project.luckybooky.domain.participation.controller;
 
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import project.luckybooky.domain.event.entity.Event;
-import project.luckybooky.domain.event.repository.EventRepository;
-import project.luckybooky.domain.participation.dto.ParticipantInfoDto;
+import project.luckybooky.domain.participation.dto.ParticipantInfoResult;
 import project.luckybooky.domain.participation.service.ParticipantInfoService;
-import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
-import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.service.UserContextService;
 
 @Controller
 @RequestMapping("/events/{eventId}")
 @RequiredArgsConstructor
 public class ParticipantInfoController {
     private final ParticipantInfoService participantInfoService;
-    private final EventRepository eventRepository;
+    private final UserContextService userContextService;
 
     @GetMapping("/participants")
-    public String showParticipants(
-            @PathVariable Long eventId,
-            Model model
-    ) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+    public String showParticipants(@PathVariable Long eventId, Model model) {
+        // 현재 로그인한 사용자 ID 가져오기
+        Long currentUserId = userContextService.getUserId();
 
-        List<ParticipantInfoDto> participants
-                = participantInfoService.getParticipantInfo(eventId);
+        // 주최자 권한 확인 및 참여자 정보와 이벤트 정보 조회
+        ParticipantInfoResult result = participantInfoService.getParticipantInfoForHost(eventId, currentUserId);
 
-        // 뷰에서 사용할 날짜 포맷
-        String dateLabel = event.getEventDate()
-                .format(DateTimeFormatter.ofPattern("yyyy년 M월 dd일"));
-
-        model.addAttribute("participants", participants);
-        model.addAttribute("dateLabel", dateLabel);
-        return "participants";  // resources/templates/participants.html
+        model.addAttribute("participants", result.getParticipants());
+        model.addAttribute("dateLabel", result.getViewDate());
+        return "participants";
     }
 }
