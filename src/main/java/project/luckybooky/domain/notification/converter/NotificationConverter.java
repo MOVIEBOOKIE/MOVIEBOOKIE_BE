@@ -108,6 +108,8 @@ public class NotificationConverter {
         var ev = hostParticipation.getEvent();
 
         return ConfirmedData.builder()
+                .eventId(ev.getId())
+                .hostName(hostParticipation.getUser().getUsername())
                 .mediaTitle(ev.getMediaTitle())
                 .eventTitle(ev.getEventTitle())
                 .eventDate(ev.getEventDate())
@@ -119,7 +121,6 @@ public class NotificationConverter {
                 .locationName(ev.getLocation().getLocationName())
                 .maxParticipants(ev.getMaxParticipants())
                 .contact("")
-                .participantsLink(homeUrl + "/events/" + ev.getId() + "/participants")
                 .build();
     }
 

@@ -34,6 +34,11 @@ public class MailTemplateService {
     private final ResourceLoader resourceLoader;
 
     public void sendVenueConfirmedMail(String to, ConfirmedData data) {
+
+        if (data.getEventId() == null) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
+
         Context ctx = new Context();
         ctx.setVariable("mediaTitle", data.getMediaTitle());
         ctx.setVariable("eventTitle", data.getEventTitle());
@@ -43,10 +48,9 @@ public class MailTemplateService {
         ctx.setVariable("venue", data.getLocationName());
         ctx.setVariable("capacity", formatCapacity(data.getMaxParticipants()));
         ctx.setVariable("contact", data.getContact() != null ? data.getContact() : "");
-        ctx.setVariable("participantsLink", String.format("%s/events/%d/participants", homeUrl, data.getEventId()));
+        ctx.setVariable("participantsLink", buildParticipantsLink(data.getEventId()));
         ctx.setVariable("homeUrl", homeUrl);
 
-        // 2) 템플릿과 CID 자원 정보 전달
         sendTemplateMail(
                 to,
                 "[MovieBookie] 대관 확정 안내: " + data.getEventTitle(),
@@ -122,9 +126,13 @@ public class MailTemplateService {
                 : "정보 없음";
     }
 
-    /**
-     * 내부에서만 쓰이는 CID + 리소스 경로 묶음
-     */
     private static record InlineResource(String cid, String path) {
+    }
+
+    private String buildParticipantsLink(Long eventId) {
+        String base = (homeUrl != null && homeUrl.endsWith("/"))
+                ? homeUrl.substring(0, homeUrl.length() - 1)
+                : homeUrl;
+        return base + "/events/" + eventId + "/participants";
     }
 }
