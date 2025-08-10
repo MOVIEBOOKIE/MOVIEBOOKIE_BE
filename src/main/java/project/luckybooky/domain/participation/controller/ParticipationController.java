@@ -4,17 +4,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.participation.service.ParticipationService;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
 import project.luckybooky.global.service.UserContextService;
 
-@Tag(name = "Participation", description = "이벤트 참여자 관련 API")
+@Tag(name = "Participation", description = "이벤트 참여 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/participation")
@@ -50,5 +47,14 @@ public class ParticipationController {
         List<EventResponse.ReadEventListResultDTO> list =
                 participationService.readEventList(userId, type, 1, page, size);
         return CommonResponse.of(ResultCode.OK, list);
+    }
+
+    @Operation(summary = "선택된 날짜에 이벤트 모집 가능 여부 조회", description = "선택된 날짜를 date에 아래 형식대로 넣어주세요! <br>" +
+            "date: 2025-05-24")
+    @GetMapping("/recruitable")
+    public CommonResponse<String> venueProcess(@RequestParam String date) {
+        Long userId = userContextService.getUserId();
+        String result = participationService.isRecruitableOnDate(userId, date);
+        return CommonResponse.of(ResultCode.OK, result);
     }
 }
