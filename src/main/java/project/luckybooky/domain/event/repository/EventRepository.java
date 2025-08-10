@@ -39,4 +39,16 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM Event e WHERE e.id = :id")
     Optional<Event> findByIdWithLock(@Param("id") Long id);
+
+    /**
+     * 시간대 겹치는 영화관 ID 목록
+     **/
+    @Query("SELECT e.location.id FROM Event e " +
+            "WHERE e.eventDate = :date " +
+            "AND (e.eventStartTime < :endTime) AND (:startTime < e.eventEndTime)")
+    List<Long> findOverlappingLocationsByTime(
+            @Param("date") LocalDate date,
+            @Param("startTime") String startTime,
+            @Param("endTime") String endTime
+    );
 }

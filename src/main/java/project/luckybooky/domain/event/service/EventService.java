@@ -64,7 +64,6 @@ public class EventService {
     private final TicketService ticketService;
     private final ApplicationEventPublisher publisher;
     private final UserRepository userRepository;
-    private final RedissonClient redissonClient;
 
     private final ConcurrentHashMap<Long, Object> eventLocks = new ConcurrentHashMap<>();
 
