@@ -14,12 +14,15 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
             "AND (l.isStartTimeRestricted = FALSE OR " +
             "    (l.isStartTimeRestricted = TRUE AND :startTime IN (SELECT a FROM l.allowedStartTimes a))) " +
             "AND (l.availableTimes = 0 OR l.availableTimes = :progressTime)" +
+            "AND (:disabledSize = 0 OR l.id NOT IN :disabledList) " +
             "ORDER BY l.seatCount")
     List<Location> findLocationsByEventOptions(
             @Param("min") int min,
             @Param("max") int max,
             @Param("mediaType") String mediaType,
             @Param("startTime") String startTime,
-            @Param("progressTime") int progressTime
+            @Param("progressTime") int progressTime,
+            @Param("disabledSize") int disabledSize,
+            @Param("disabledList") List<Long> disabledList
     );
 }
