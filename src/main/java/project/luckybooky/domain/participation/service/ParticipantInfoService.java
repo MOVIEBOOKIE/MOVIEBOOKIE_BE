@@ -73,6 +73,18 @@ public class ParticipantInfoService {
     }
 
     /**
+     * 비인증 공개용: 이벤트의 참여자 정보를 조회합니다.
+     */
+    @Transactional(readOnly = true)
+    public ParticipantInfoResult getParticipantInfoTemplate(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+
+        List<ParticipantInfoDto> participants = getParticipantInfo(eventId);
+        return new ParticipantInfoResult(participants, formatEventDate(event));
+    }
+
+    /**
      * 이벤트 날짜 포맷팅
      */
     public String formatEventDate(Event event) {
