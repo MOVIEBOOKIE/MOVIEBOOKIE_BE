@@ -49,6 +49,7 @@ public class LocationService {
                 request.getMediaType(),
                 request.getStartTime(),
                 request.getProgressTime(),
+                disabledList.size(),
                 disabledList
                 );
 
