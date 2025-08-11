@@ -31,13 +31,17 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
                                                   @Param("participateRole") ParticipateRole participateRole,
                                                   @Param("statuses") List<EventStatus> statuses, Pageable pageable);
 
-    /** 확정된 이벤트 조회 **/
+    /**
+     * 확정된 이벤트 조회
+     **/
     @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses ORDER BY p.event.eventDate")
     Page<Event> findByUserIdAndEventStatusesType2(@Param("userId") Long userId,
                                                   @Param("participateRole") ParticipateRole participateRole,
                                                   @Param("statuses") List<EventStatus> statuses, Pageable pageable);
 
-    /** 취소된 이벤트 조회 **/
+    /**
+     * 취소된 이벤트 조회
+     **/
     @Query("SELECT p.event FROM Participation p WHERE p.user.id = :userId AND p.participateRole = :participateRole AND p.event.eventStatus IN :statuses ORDER BY p.event.eventDate DESC")
     Page<Event> findByUserIdAndEventStatusesType3(@Param("userId") Long userId,
                                                   @Param("participateRole") ParticipateRole participateRole,
@@ -76,4 +80,7 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
     /** 특정 날짜에 계획된 이벤트 존재 여부 조회 **/
     @Query("SELECT COUNT(p) > 0 FROM Participation p WHERE p.user.id = :id AND p.event.eventDate = :date")
     boolean existsByUserIdAndEventDate(@Param("id") Long userId, @Param("date") LocalDate date);
+
+    boolean existsByUser_IdAndEvent_IdAndParticipateRole(Long userId, Long eventId, ParticipateRole role);
+
 }
