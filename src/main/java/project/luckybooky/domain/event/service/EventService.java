@@ -5,12 +5,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +24,6 @@ import project.luckybooky.domain.event.dto.response.EventParticipantsResponse;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.dto.response.ParticipantDTO;
 import project.luckybooky.domain.event.entity.Event;
-import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.location.entity.Location;
@@ -48,6 +44,7 @@ import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.repository.LockRepository;
 import project.luckybooky.global.service.NCPStorageService;
 
 @Slf4j
@@ -64,6 +61,7 @@ public class EventService {
     private final TicketService ticketService;
     private final ApplicationEventPublisher publisher;
     private final UserRepository userRepository;
+    private final LockRepository lockRepository;
 
     private final ConcurrentHashMap<Long, Object> eventLocks = new ConcurrentHashMap<>();
 
@@ -72,37 +70,64 @@ public class EventService {
      **/
     @Transactional
     public Long createEvent(Long userId, EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
-        String eventImageUrl = s3Service.uploadFile(eventImage);
-        Category category = categoryService.findByName(request.getMediaType());
-        Location location = locationService.findOne(request.getLocationId());
-        String eventEndTime = toEventEndTime(request.getEventStartTime(), request.getEventProgressTime());
-        Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(),
-                request.getMinParticipants());
-
         // 해당 날짜에 이미 참여한 이벤트 없는지 검증
         if (isNotParticipatedOnDate(userId, request.getEventDate())) {
             throw new BusinessException(ErrorCode.EVENT_ALREADY_EXIST);
         }
 
-        Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime, estimatedPrice);
-        eventRepository.save(event);
+        String lockKey = buildLockKey(request.getLocationId(), request.getEventDate());
+        boolean locked = false;
+        try {
+            // 락 획득 시도
+            locked = lockRepository.getLock(lockKey, 2);
+            if (!locked) {
+                throw new BusinessException(ErrorCode.LOCATION_DATE_LOCKED);
+            }
 
-        // 2) 호스트 Participation 저장
-        Participation hostParticipation = Participation.builder()
-                .user(userTypeService.findOne(userId))  // User 엔티티 조회
-                .event(event)
-                .participateRole(ParticipateRole.HOST)
-                .build();
-        participationRepository.save(hostParticipation);
+            // 영화관 검증
+            String eventEndTime = toEventEndTime(request.getEventStartTime(), request.getEventProgressTime());
+            Integer isDuplicated = eventRepository.isExistOverlappingLocationsByTime(request.getLocationId(), request.getEventDate(), request.getEventStartTime(), eventEndTime);
+            if (isDuplicated > 0) {
+                throw new BusinessException(ErrorCode.LOCATION_ALREADY_RESERVED);
+            }
 
-        // 호스트 생성 알림
-        publisher.publishEvent(new HostNotificationEvent(
-                event.getId(),
-                userId, // hostId
-                HostNotificationType.EVENT_CREATED,
-                event.getMediaTitle()
-        ));
-        return event.getId();
+            // 이벤트 생성
+            String eventImageUrl = s3Service.uploadFile(eventImage);
+            Category category = categoryService.findByName(request.getMediaType());
+            Location location = locationService.findOne(request.getLocationId());
+            Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(),
+                    request.getMinParticipants());
+
+            Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime, estimatedPrice);
+            eventRepository.save(event);
+
+            // 호스트 Participation 저장
+            Participation hostParticipation = Participation.builder()
+                    .user(userTypeService.findOne(userId))  // User 엔티티 조회
+                    .event(event)
+                    .participateRole(ParticipateRole.HOST)
+                    .build();
+            participationRepository.save(hostParticipation);
+
+            // 호스트 생성 알림
+            publisher.publishEvent(new HostNotificationEvent(
+                    event.getId(),
+                    userId, // hostId
+                    HostNotificationType.EVENT_CREATED,
+                    event.getMediaTitle()
+            ));
+
+            return event.getId();
+        } finally {
+            if (locked) {
+                try { lockRepository.releaseLock(lockKey); } catch (Exception ignore) {}
+            }
+        }
+    }
+
+    // 문자열 Lock 키 생성
+    private String buildLockKey(Long locationId, LocalDate date) {
+        return "event:loc:" + locationId + ":" + date; // 64자 제한 고려
     }
 
     private Integer toEstimatedPrice(Integer eventProgressTime, Integer pricePerHour, Integer minParticipants) {
