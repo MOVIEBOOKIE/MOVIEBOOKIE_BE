@@ -70,18 +70,18 @@ public class EventService {
      **/
     @Transactional
     public Long createEvent(Long userId, EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
-        // 해당 날짜에 이미 참여한 이벤트 없는지 검증
-        if (isNotParticipatedOnDate(userId, request.getEventDate())) {
-            throw new BusinessException(ErrorCode.EVENT_ALREADY_EXIST);
-        }
-
         String lockKey = buildLockKey(request.getLocationId(), request.getEventDate());
         boolean locked = false;
         try {
             // 락 획득 시도
-            locked = lockRepository.getLock(lockKey, 2);
+            locked = lockRepository.getLock(lockKey, 5);
             if (!locked) {
                 throw new BusinessException(ErrorCode.LOCATION_DATE_LOCKED);
+            }
+
+            // 해당 날짜에 이미 참여한 이벤트 없는지 검증
+            if (isNotParticipatedOnDate(userId, request.getEventDate())) {
+                throw new BusinessException(ErrorCode.EVENT_ALREADY_EXIST);
             }
 
             // 영화관 검증
