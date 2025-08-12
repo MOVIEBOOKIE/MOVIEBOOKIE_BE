@@ -51,4 +51,17 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             @Param("startTime") String startTime,
             @Param("endTime") String endTime
     );
+
+    /** 시간대 겹치는 영화관 개수 **/
+    @Query("SELECT COUNT(e) FROM Event e " +
+            "where e.location.id = :locationId " +
+            "AND e.eventDate = :date " +
+            "AND (e.eventStartTime < :endTime) AND (:startTime < e.eventEndTime)")
+    Integer isExistOverlappingLocationsByTime(
+            @Param("locationId") Long locationId,
+            @Param("date") LocalDate date,
+            @Param("startTime") String startTime,
+            @Param("endTime") String endTime
+    );
+
 }

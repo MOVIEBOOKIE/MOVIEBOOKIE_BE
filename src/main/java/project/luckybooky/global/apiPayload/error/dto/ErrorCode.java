@@ -55,6 +55,8 @@ public enum ErrorCode implements BaseStatus {
 
     // location 관련
     LOCATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "LOCATION_401", "영화관을 찾을 수 없습니다."),
+    LOCATION_ALREADY_RESERVED(HttpStatus.BAD_REQUEST, "LOCATION_402", "이미 같은 시간대에 예약된 영화관입니다."),
+    LOCATION_DATE_LOCKED(HttpStatus.BAD_REQUEST, "LOCATION_403", "동일 영화관/날짜 작업 중입니다. 잠시 후 재시도 바랍니다."),
 
     // category 관련
     CATEGORY_NOT_FOUND(HttpStatus.BAD_REQUEST, "CATEGORY_401", "카테고리를 찾을 수 없습니다."),
