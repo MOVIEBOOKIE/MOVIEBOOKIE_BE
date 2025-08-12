@@ -74,7 +74,7 @@ public class EventService {
         boolean locked = false;
         try {
             // 락 획득 시도
-            locked = lockRepository.getLock(lockKey, 5);
+            locked = lockRepository.getLock(lockKey, 10);
             if (!locked) {
                 throw new BusinessException(ErrorCode.LOCATION_DATE_LOCKED);
             }
