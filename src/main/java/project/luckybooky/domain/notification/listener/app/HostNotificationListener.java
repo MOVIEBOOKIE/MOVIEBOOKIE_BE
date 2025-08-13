@@ -1,4 +1,4 @@
-package project.luckybooky.domain.notification.listener;
+package project.luckybooky.domain.notification.listener.app;
 
 import com.google.api.core.ApiFuture;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -20,7 +20,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
 import project.luckybooky.domain.notification.dto.ConfirmedData;
 import project.luckybooky.domain.notification.entity.NotificationInfo;
-import project.luckybooky.domain.notification.event.HostNotificationEvent;
+import project.luckybooky.domain.notification.event.app.HostNotificationEvent;
 import project.luckybooky.domain.notification.repository.NotificationRepository;
 import project.luckybooky.domain.notification.service.MailTemplateService;
 import project.luckybooky.domain.participation.entity.Participation;
@@ -45,7 +45,7 @@ public class HostNotificationListener {
 
     @Value("${app.home-url}")
     private String homeUrl;
-    
+
     private static final Set<String> sentKeys = ConcurrentHashMap.newKeySet();
 
     @Async("notificationExecutor")

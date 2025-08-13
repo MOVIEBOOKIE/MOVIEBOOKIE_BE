@@ -1,4 +1,4 @@
-package project.luckybooky.domain.notification.listener;
+package project.luckybooky.domain.notification.listener.mail;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,7 +7,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
 import project.luckybooky.domain.notification.dto.RejectedData;
-import project.luckybooky.domain.notification.event.HostNotificationEvent;
+import project.luckybooky.domain.notification.event.app.HostNotificationEvent;
 import project.luckybooky.domain.notification.service.MailTemplateService;
 import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.participation.entity.Participation;
