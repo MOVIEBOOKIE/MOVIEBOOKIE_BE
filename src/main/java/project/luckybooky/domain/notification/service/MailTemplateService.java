@@ -26,6 +26,9 @@ public class MailTemplateService {
     @Value("${app.home-url}")
     private String homeUrl;
 
+    @Value("${app.static-base-url}")
+    private String staticBaseUrl;
+
     @Value("${mail.from:no-reply@luckybooky.com}")
     private String fromAddress;
 
@@ -50,7 +53,8 @@ public class MailTemplateService {
         ctx.setVariable("contact", data.getContact() != null ? data.getContact() : "");
         ctx.setVariable("participantsLink", buildParticipantsLink(data.getEventId()));
         ctx.setVariable("homeUrl", homeUrl);
-
+        ctx.setVariable("staticBaseUrl", staticBaseUrl);
+        
         sendTemplateMail(
                 to,
                 "[MovieBookie] 대관 확정 안내: " + data.getEventTitle(),
