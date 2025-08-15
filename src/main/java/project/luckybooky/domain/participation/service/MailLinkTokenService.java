@@ -1,4 +1,4 @@
-package project.luckybooky.domain.notification.service;
+package project.luckybooky.domain.participation.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
