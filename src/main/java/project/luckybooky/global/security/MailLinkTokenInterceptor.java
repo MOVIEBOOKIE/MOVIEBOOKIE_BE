@@ -29,14 +29,14 @@ public class MailLinkTokenInterceptor implements HandlerInterceptor {
             return true; // 다른 엔드포인트
         }
 
-        Long pathEventId = Long.valueOf(uriVars.get("eventId"));
+        long pathEventId = Long.parseLong(uriVars.get("eventId"));
         String mt = req.getParameter("mt");
 
         if (mt == null || mt.isBlank()) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        tokenService.validateOrThrow(mt, pathEventId);
+        tokenService.validateOrNotFound(mt, pathEventId);
         return true;
     }
 }

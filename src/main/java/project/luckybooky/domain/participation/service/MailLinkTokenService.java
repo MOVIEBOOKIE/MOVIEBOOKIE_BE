@@ -48,9 +48,10 @@ public class MailLinkTokenService {
     }
 
     /**
-     * 유효성, 만료, eventId=pathEventId 확인. single-use=true면 jti를 즉시 소모 처리.
+     * 유효성, 만료, eventId=pathEventId 확인
      */
-    public void validateOrThrow(String token, Long pathEventId) {
+    // MailLinkTokenService.java (핵심 메서드만)
+    public void validateOrNotFound(String token, long pathEventId) {
         try {
             Jws<Claims> jws = Jwts.parserBuilder()
                     .setSigningKey(key())
@@ -59,25 +60,25 @@ public class MailLinkTokenService {
                     .parseClaimsJws(token);
 
             Claims c = jws.getBody();
-            Long claimEventId = c.get("eventId", Number.class).longValue();
-            if (!claimEventId.equals(pathEventId)) {
-                throw new BusinessException(ErrorCode.FORBIDDEN); // 이벤트 불일치
+            long claimEventId = c.get("eventId", Number.class).longValue();
+
+            if (claimEventId != pathEventId) {
+                throw new BusinessException(ErrorCode.NOT_FOUND);
             }
 
             if (Boolean.TRUE.equals(props.getSingleUse())) {
                 String jti = c.getId();
                 String redisKey = "mail-link:jti:" + jti;
-                Boolean alreadyUsed = redisTemplate.hasKey(redisKey);
-                if (Boolean.TRUE.equals(alreadyUsed)) {
-                    throw new BusinessException(ErrorCode.FORBIDDEN); // 재사용 금지
+                if (Boolean.TRUE.equals(redisTemplate.hasKey(redisKey))) {
+                    throw new BusinessException(ErrorCode.NOT_FOUND);
                 }
-                long ttl = Math.max(1L,
-                        (c.getExpiration().getTime() - System.currentTimeMillis()) / 1000);
+                long ttl = Math.max(1L, (c.getExpiration().getTime() - System.currentTimeMillis()) / 1000);
                 redisTemplate.opsForValue().set(redisKey, "1", Duration.ofSeconds(ttl));
             }
         } catch (JwtException e) {
-            log.debug("Mail link token invalid: {}", e.toString());
-            throw new BusinessException(ErrorCode.UNAUTHORIZED); // 토큰 오류/만료
+            throw new BusinessException(ErrorCode.NOT_FOUND);
         }
     }
+
+
 }
