@@ -1,4 +1,4 @@
-package project.luckybooky.domain.notification.event;
+package project.luckybooky.domain.notification.event.app;
 
 import lombok.Getter;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;

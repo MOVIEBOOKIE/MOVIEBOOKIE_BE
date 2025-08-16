@@ -1,4 +1,4 @@
-package project.luckybooky.domain.notification.listener;
+package project.luckybooky.domain.notification.listener.app;
 
 import com.google.api.core.ApiFuture;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -16,7 +16,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
 import project.luckybooky.domain.notification.entity.NotificationInfo;
-import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
+import project.luckybooky.domain.notification.event.app.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.repository.NotificationRepository;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;

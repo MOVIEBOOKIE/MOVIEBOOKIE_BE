@@ -28,8 +28,10 @@ import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.event.util.EventConstants;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
-import project.luckybooky.domain.notification.event.HostNotificationEvent;
-import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
+import project.luckybooky.domain.notification.event.app.HostNotificationEvent;
+import project.luckybooky.domain.notification.event.app.ParticipantNotificationEvent;
+import project.luckybooky.domain.notification.event.mail.EventVenueCancelledEvent;
+import project.luckybooky.domain.notification.event.mail.EventVenueConfirmedEvent;
 import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.participation.converter.ParticipationConverter;
@@ -86,7 +88,8 @@ public class EventService {
 
             // 영화관 검증
             String eventEndTime = toEventEndTime(request.getEventStartTime(), request.getEventProgressTime());
-            Integer isDuplicated = eventRepository.isExistOverlappingLocationsByTime(request.getLocationId(), request.getEventDate(), request.getEventStartTime(), eventEndTime);
+            Integer isDuplicated = eventRepository.isExistOverlappingLocationsByTime(request.getLocationId(),
+                    request.getEventDate(), request.getEventStartTime(), eventEndTime);
             if (isDuplicated > 0) {
                 throw new BusinessException(ErrorCode.LOCATION_ALREADY_RESERVED);
             }
@@ -98,7 +101,8 @@ public class EventService {
             Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(),
                     request.getMinParticipants());
 
-            Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime, estimatedPrice);
+            Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime,
+                    estimatedPrice);
             eventRepository.save(event);
 
             // 호스트 Participation 저장
@@ -120,7 +124,10 @@ public class EventService {
             return event.getId();
         } finally {
             if (locked) {
-                try { lockRepository.releaseLock(lockKey); } catch (Exception ignore) {}
+                try {
+                    lockRepository.releaseLock(lockKey);
+                } catch (Exception ignore) {
+                }
             }
         }
     }
@@ -151,7 +158,9 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
-    /** 이벤트 검색 **/
+    /**
+     * 이벤트 검색
+     **/
     public EventResponse.ReadEventListWithPageResultDTO readEventListBySearch(String content, Integer page,
                                                                               Integer size) {
         Page<Event> eventList = eventRepository.findEventsBySearch(content, PageRequest.of(page, size));
@@ -338,7 +347,9 @@ public class EventService {
         }
     }
 
-    /** 이벤트 주최자인지 검증 로직 **/
+    /**
+     * 이벤트 주최자인지 검증 로직
+     **/
     private Boolean isEventHost(Long userId, Long eventId) {
         Participation participation = participationRepository.findByUserIdAndEventId(userId, eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
@@ -442,7 +453,9 @@ public class EventService {
         });
     }
 
-    /** 모집 기간이 지난 이벤트 탐색 **/
+    /**
+     * 모집 기간이 지난 이벤트 탐색
+     **/
     private List<Event> findExpiredEvents() {
         return eventRepository.findExpiredEvent(LocalDate.now());
     }
@@ -491,6 +504,8 @@ public class EventService {
                 ));
             }
 
+            publisher.publishEvent(new EventVenueCancelledEvent(eventId, hostId));
+
             return EventConstants.VENUE_CANCEL_SUCCESS.getMessage();
         }
     }
@@ -530,6 +545,8 @@ public class EventService {
                     event.getMediaTitle()
             ));
         }
+
+        publisher.publishEvent(new EventVenueConfirmedEvent(eventId, hostId));
 
         return EventConverter.toEventVenueConfirmedResultDTO(ticketId);
     }
@@ -648,7 +665,9 @@ public class EventService {
         return new EventParticipantsResponse(dtos, totalCount);
     }
 
-    /** 해당 날짜에 이미 참여 중인 이벤트 없는지 검증 **/
+    /**
+     * 해당 날짜에 이미 참여 중인 이벤트 없는지 검증
+     **/
     private boolean isNotParticipatedOnDate(Long userId, LocalDate date) {
         return participationRepository.existsByUserIdAndEventDate(userId, date);
     }

@@ -16,6 +16,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import project.luckybooky.domain.notification.dto.ConfirmedData;
 import project.luckybooky.domain.notification.dto.RejectedData;
+import project.luckybooky.domain.participation.service.MailLinkTokenService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
@@ -26,12 +27,16 @@ public class MailTemplateService {
     @Value("${app.home-url}")
     private String homeUrl;
 
+    @Value("${app.static-base-url}")
+    private String staticBaseUrl;
+
     @Value("${mail.from:no-reply@luckybooky.com}")
     private String fromAddress;
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
     private final ResourceLoader resourceLoader;
+    private final MailLinkTokenService mailLinkTokenService;
 
     public void sendVenueConfirmedMail(String to, ConfirmedData data) {
 
@@ -50,6 +55,7 @@ public class MailTemplateService {
         ctx.setVariable("contact", data.getContact() != null ? data.getContact() : "");
         ctx.setVariable("participantsLink", buildParticipantsLink(data.getEventId()));
         ctx.setVariable("homeUrl", homeUrl);
+        ctx.setVariable("staticBaseUrl", staticBaseUrl);
 
         sendTemplateMail(
                 to,
@@ -133,6 +139,7 @@ public class MailTemplateService {
         String base = (homeUrl != null && homeUrl.endsWith("/"))
                 ? homeUrl.substring(0, homeUrl.length() - 1)
                 : homeUrl;
-        return base + "/events/" + eventId + "/participants";
+        String mt = mailLinkTokenService.issueForEvent(eventId);
+        return base + "/events/" + eventId + "/participants?mt=" + mt;
     }
 }

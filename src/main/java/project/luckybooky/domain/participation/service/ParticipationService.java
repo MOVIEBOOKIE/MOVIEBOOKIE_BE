@@ -14,7 +14,7 @@ import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.service.EventService;
-import project.luckybooky.domain.notification.event.ParticipantNotificationEvent;
+import project.luckybooky.domain.notification.event.app.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.participation.converter.ParticipationConverter;
 import project.luckybooky.domain.participation.entity.Participation;
@@ -82,14 +82,14 @@ public class ParticipationService {
 
             eventList = participationRepository.findByUserIdAndEventStatusesType2(userId, participateRole, statuses,
                     PageRequest.of(page, size));
-        }
-        else {
+        } else {
             statuses = List.of(
                     EventStatus.RECRUIT_CANCELED,
                     EventStatus.VENUE_RESERVATION_CANCELED,
                     EventStatus.CANCELLED
             );
-            eventList = participationRepository.findByUserIdAndEventStatusesType3(userId, participateRole, statuses, PageRequest.of(page, size));
+            eventList = participationRepository.findByUserIdAndEventStatusesType3(userId, participateRole, statuses,
+                    PageRequest.of(page, size));
         }
         return toReadEventListResultDTO(eventList);
     }
