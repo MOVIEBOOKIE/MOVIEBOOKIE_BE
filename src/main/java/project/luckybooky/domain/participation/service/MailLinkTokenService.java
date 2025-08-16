@@ -63,20 +63,20 @@ public class MailLinkTokenService {
             long claimEventId = c.get("eventId", Number.class).longValue();
 
             if (claimEventId != pathEventId) {
-                throw new BusinessException(ErrorCode.NOT_FOUND);
+                throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
             }
 
             if (Boolean.TRUE.equals(props.getSingleUse())) {
                 String jti = c.getId();
                 String redisKey = "mail-link:jti:" + jti;
                 if (Boolean.TRUE.equals(redisTemplate.hasKey(redisKey))) {
-                    throw new BusinessException(ErrorCode.NOT_FOUND);
+                    throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
                 }
                 long ttl = Math.max(1L, (c.getExpiration().getTime() - System.currentTimeMillis()) / 1000);
                 redisTemplate.opsForValue().set(redisKey, "1", Duration.ofSeconds(ttl));
             }
         } catch (JwtException e) {
-            throw new BusinessException(ErrorCode.NOT_FOUND);
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
         }
     }
 

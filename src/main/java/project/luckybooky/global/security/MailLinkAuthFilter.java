@@ -41,7 +41,7 @@ public class MailLinkAuthFilter extends OncePerRequestFilter {
         String mt = req.getParameter("mt");
 
         if (mt == null || mt.isBlank()) {
-            throw new BusinessException(ErrorCode.NOT_FOUND);
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
         }
 
         tokenService.validateOrNotFound(mt, pathEventId);

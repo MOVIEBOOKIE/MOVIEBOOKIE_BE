@@ -6,6 +6,9 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.servlet.ModelAndView;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.dto.ErrorResponse;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
@@ -26,8 +30,7 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 public class GlobalExceptionHandler {
 
     /**
-     * 예외 응답을 생성하면서 동시에 로그를 찍는 편의 메서드
-     * - traceId(또는 correlationId)가 필요하다면 이 메서드 안에서 세팅
+     * 예외 응답을 생성하면서 동시에 로그를 찍는 편의 메서드 - traceId(또는 correlationId)가 필요하다면 이 메서드 안에서 세팅
      */
     private ResponseEntity<ErrorResponse> buildErrorResponse(ErrorCode errorCode,
                                                              String message,
@@ -231,6 +234,47 @@ public class GlobalExceptionHandler {
                 request,
                 e
         );
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public Object handleBusiness(BusinessException ex, HttpServletRequest req) {
+        ErrorCode code = ex.getErrorCode();
+
+        if (code == ErrorCode.RESOURCE_NOT_FOUND) {
+            if (isApi(req) || acceptsJson(req)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(new ErrorBody(false, "NOT_FOUND"));
+            } else {
+                ModelAndView mv = new ModelAndView("error/404");
+                mv.setStatus(HttpStatus.NOT_FOUND);
+                return mv;
+            }
+        }
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ErrorBody(false, code.name()));
+    }
+
+    @ExceptionHandler(NoSuchMethodError.class)
+    public ResponseEntity<ErrorBody> handleNoSuchMethod(NoSuchMethodError e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorBody(false, "NOT_FOUND"));
+    }
+
+    private boolean isApi(HttpServletRequest req) {
+        String uri = req.getRequestURI();
+        return uri != null && uri.startsWith("/api/");
+    }
+
+    private boolean acceptsJson(HttpServletRequest req) {
+        String accept = req.getHeader(HttpHeaders.ACCEPT);
+        return accept != null && accept.contains("application/json");
+    }
+
+    private record ErrorBody(boolean success, String message) {
     }
 
 }
