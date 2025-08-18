@@ -13,7 +13,7 @@ import org.springframework.data.repository.query.Param;
 import project.luckybooky.domain.event.entity.Event;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
-    @Query("SELECT e FROM Event e WHERE e.eventStatus='RECRUITING' ORDER BY e.createdAt")
+    @Query("SELECT e FROM Event e WHERE e.eventStatus='RECRUITING' ORDER BY e.createdAt DESC")
     Page<Event> findOrderByCreatedAt(Pageable pageable);
 
     @Query("SELECT e FROM Event e JOIN e.category c WHERE c.categoryName = :categoryName AND e.eventStatus='RECRUITING' ORDER BY e.recruitmentEnd")
