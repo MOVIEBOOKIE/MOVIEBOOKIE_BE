@@ -62,15 +62,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/test/users/tokens/**").permitAll()
-                        .requestMatchers("/", "/api/health").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()
+                        .requestMatchers("/api/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/login/kakao").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/reissue").permitAll()
                         .requestMatchers("/events/*/participants", "/events/*/participants/link").permitAll()
                         .requestMatchers(
-                                "index.html",
+                                "/index.html",
                                 "/favicon.ico",
                                 "/css/**",
                                 "/js/**",
