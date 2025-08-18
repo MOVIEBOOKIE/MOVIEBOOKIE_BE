@@ -34,7 +34,6 @@ public class MailLinkTokenInterceptor implements HandlerInterceptor {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        // 실제 접근 경로와 토큰의 path를 묶어 위변조/경로 전용화
         tokenService.validateOrThrow(et, pathEventId, req.getRequestURI());
         return true;
     }

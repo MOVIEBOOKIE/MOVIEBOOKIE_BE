@@ -68,7 +68,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/login/kakao").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/reissue").permitAll()
-                        .requestMatchers("/events/*/participants").permitAll()
+                        .requestMatchers("/events/*/participants", "/events/*/participants/link").permitAll()
                         .requestMatchers(
                                 "index.html",
                                 "/favicon.ico",

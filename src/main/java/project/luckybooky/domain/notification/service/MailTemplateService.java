@@ -139,8 +139,7 @@ public class MailTemplateService {
         String base = (homeUrl != null && homeUrl.endsWith("/"))
                 ? homeUrl.substring(0, homeUrl.length() - 1)
                 : homeUrl;
-        String path = "/events/" + eventId + "/participants";
-        String et = mailLinkTokenService.issueForEvent(eventId, path);
-        return base + path + "?et=" + et;
+        String path = "/events/" + eventId + "/participants/link";
+        return base + path;
     }
 }

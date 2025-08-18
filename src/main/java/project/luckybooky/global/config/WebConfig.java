@@ -20,7 +20,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(linkInterceptor)
-                .addPathPatterns("/events/*/participants"); // 필요 경로만
+                .addPathPatterns("/events/*/participants")
+                .excludePathPatterns("/events/*/participants/link");
+
     }
 
     @Override
