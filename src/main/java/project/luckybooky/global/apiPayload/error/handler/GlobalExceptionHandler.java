@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -33,8 +34,7 @@ public class GlobalExceptionHandler {
                                                              String field,
                                                              HttpServletRequest request,
                                                              Throwable ex) {
-        // 예: MDC나 UUID로 traceId를 생성할 수 있음. 여기서는 간단히 null 처리
-        String traceId = null;
+        String traceId = MDC.get("traceId");
 
         if (errorCode.getHttpStatus().is5xxServerError()) {
             log.error("{}: {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);

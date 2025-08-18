@@ -12,7 +12,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.jwt.JwtAuthenticationFilter;
 import project.luckybooky.global.jwt.JwtUtil;
 import project.luckybooky.global.oauth.handler.AuthFailureHandler;
@@ -28,8 +27,7 @@ public class SecurityConfig {
     private final AuthFailureHandler authFailureHandler;  // 인증 실패 처리기
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   UserRepository userRepository) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // 1) CORS 설정
                 .cors(cors -> cors.configurationSource(request -> {
@@ -65,7 +63,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/test/users/tokens/**").permitAll()
                         .requestMatchers("/", "/api/health").permitAll()
-                        .requestMatchers("/index.html", "/static/**", "/favicon.ico").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
@@ -73,6 +70,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/reissue").permitAll()
                         .requestMatchers(HttpMethod.GET, "/events/*/participants/**").permitAll()
                         .requestMatchers(
+                                "index.html",
                                 "/favicon.ico",
                                 "/css/**",
                                 "/js/**",

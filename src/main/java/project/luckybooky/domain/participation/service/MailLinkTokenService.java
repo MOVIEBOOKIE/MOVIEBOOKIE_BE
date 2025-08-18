@@ -66,14 +66,17 @@ public class MailLinkTokenService {
 
             if (Boolean.TRUE.equals(props.getSingleUse())) {
                 String jti = c.getId();
+                Date exp = c.getExpiration();
+                if (jti == null || jti.isBlank() || exp == null) {
+                    throw new BusinessException(ErrorCode.UNAUTHORIZED);
+                }
                 String redisKey = "mail-link:jti:" + jti;
-                Boolean alreadyUsed = redisTemplate.hasKey(redisKey);
-                if (Boolean.TRUE.equals(alreadyUsed)) {
+                long ttl = Math.max(1L, (exp.getTime() - System.currentTimeMillis()) / 1000);
+                boolean firstUse = Boolean.TRUE.equals(
+                        redisTemplate.opsForValue().setIfAbsent(redisKey, "1", Duration.ofSeconds(ttl)));
+                if (!firstUse) {
                     throw new BusinessException(ErrorCode.FORBIDDEN); // 재사용 금지
                 }
-                long ttl = Math.max(1L,
-                        (c.getExpiration().getTime() - System.currentTimeMillis()) / 1000);
-                redisTemplate.opsForValue().set(redisKey, "1", Duration.ofSeconds(ttl));
             }
         } catch (JwtException e) {
             log.debug("Mail link token invalid: {}", e.toString());

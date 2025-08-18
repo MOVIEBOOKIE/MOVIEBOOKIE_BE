@@ -21,7 +21,7 @@ public enum HostNotificationType {
     SCREENING_COMPLETED("7", "이벤트 상영 완료",
             "\"%s\"\n이벤트가 잘 마무리됐나요?\n함께한 시간의 후기를 남겨주세요 🙂"),
     RECRUITMENT_HOST_CANCELLED("8", "이벤트 모집 취소",
-            "\"%s\"\n이벤트가 취소가 완료됐어요.\n아쉽지만, 다음에 꼭 함께해요!");
+            "\"%s\"\n이벤트 취소가 완료됐어요.\n아쉽지만, 다음에 꼭 함께해요!");
 
     private final String code;
     private final String title;
