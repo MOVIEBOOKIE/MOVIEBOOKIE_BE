@@ -233,9 +233,9 @@ public class GlobalExceptionHandler {
                 e
         );
     }
-    
+
     @ControllerAdvice
-    public class NotFoundExceptionHandler {
+    public static class NotFoundExceptionHandler {
 
         @ExceptionHandler(NoHandlerFoundException.class)
         public ModelAndView handleNotFound(HttpServletRequest request, NoHandlerFoundException ex) {

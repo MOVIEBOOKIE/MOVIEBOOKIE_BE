@@ -60,22 +60,34 @@ public class MailLinkTokenService {
                     .parseClaimsJws(token);
 
             Claims c = jws.getBody();
-            long claimEventId = c.get("eventId", Number.class).longValue();
 
+            Number eventIdNum = c.get("eventId", Number.class);
+            if (eventIdNum == null) {
+                throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+            }
+            long claimEventId = eventIdNum.longValue();
             if (claimEventId != pathEventId) {
                 throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
             }
 
             if (Boolean.TRUE.equals(props.getSingleUse())) {
                 String jti = c.getId();
-                String redisKey = "mail-link:jti:" + jti;
-                if (Boolean.TRUE.equals(redisTemplate.hasKey(redisKey))) {
+                if (jti == null || jti.isBlank()) {
                     throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
                 }
-                long ttl = Math.max(1L, (c.getExpiration().getTime() - System.currentTimeMillis()) / 1000);
-                redisTemplate.opsForValue().set(redisKey, "1", Duration.ofSeconds(ttl));
+                Date exp = c.getExpiration();
+                if (exp == null) {
+                    throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+                }
+                String redisKey = "mail-link:jti:" + jti;
+                long ttl = Math.max(1L, (exp.getTime() - System.currentTimeMillis()) / 1000);
+                Boolean acquired = redisTemplate.opsForValue()
+                        .setIfAbsent(redisKey, "1", Duration.ofSeconds(ttl));
+                if (Boolean.FALSE.equals(acquired)) {
+                    throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+                }
             }
-        } catch (JwtException e) {
+        } catch (JwtException | IllegalArgumentException | NullPointerException e) {
             throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
         }
     }
