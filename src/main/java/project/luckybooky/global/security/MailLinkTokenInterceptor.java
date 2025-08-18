@@ -22,27 +22,20 @@ public class MailLinkTokenInterceptor implements HandlerInterceptor {
     @Override
     @SuppressWarnings("unchecked")
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
-        // pathVariable에서 eventId 구함
         Map<String, String> uriVars =
                 (Map<String, String>) req.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         if (uriVars == null || !uriVars.containsKey("eventId")) {
-            return true; // 다른 엔드포인트
+            return true;
         }
 
-        final String rawEventId = uriVars.get("eventId");
-        final long pathEventId;
-        try {
-            pathEventId = Long.parseLong(rawEventId);
-        } catch (NumberFormatException ex) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
-
+        long pathEventId = Long.parseLong(uriVars.get("eventId"));
         String mt = req.getParameter("mt");
+
         if (mt == null || mt.isBlank()) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        tokenService.validateOrNotFound(mt, pathEventId);
+        tokenService.validateOrThrow(mt, pathEventId);
         return true;
     }
 }
