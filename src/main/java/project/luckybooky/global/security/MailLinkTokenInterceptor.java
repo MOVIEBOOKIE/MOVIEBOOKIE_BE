@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
-import project.luckybooky.domain.participation.service.MailLinkTokenService;
+import project.luckybooky.domain.secureMail.service.MailLinkTokenService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
@@ -29,13 +29,13 @@ public class MailLinkTokenInterceptor implements HandlerInterceptor {
         }
 
         long pathEventId = Long.parseLong(uriVars.get("eventId"));
-        String mt = req.getParameter("mt");
-
-        if (mt == null || mt.isBlank()) {
+        String et = req.getParameter("et");
+        if (et == null || et.isBlank()) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        tokenService.validateOrThrow(mt, pathEventId);
+        // 실제 접근 경로와 토큰의 path를 묶어 위변조/경로 전용화
+        tokenService.validateOrThrow(et, pathEventId, req.getRequestURI());
         return true;
     }
 }
