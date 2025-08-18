@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -14,9 +15,12 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.dto.ErrorResponse;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
@@ -26,8 +30,7 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 public class GlobalExceptionHandler {
 
     /**
-     * 예외 응답을 생성하면서 동시에 로그를 찍는 편의 메서드
-     * - traceId(또는 correlationId)가 필요하다면 이 메서드 안에서 세팅
+     * 예외 응답을 생성하면서 동시에 로그를 찍는 편의 메서드 - traceId(또는 correlationId)가 필요하다면 이 메서드 안에서 세팅
      */
     private ResponseEntity<ErrorResponse> buildErrorResponse(ErrorCode errorCode,
                                                              String message,
@@ -81,9 +84,7 @@ public class GlobalExceptionHandler {
             log.info("BusinessException: {}", e.getMessage(), e);
         }
 
-        // ErrorResponse를 직접 생성
-        // (필드 에러가 여러 개 있을 수 있으므로, of(...) 메서드 중 List<FieldError>를 받는 것을 사용)
-        String traceId = null; // 필요 시 MDC에서 뽑아서 세팅
+        String traceId = null;
         ErrorResponse errorResponse = ErrorResponse.of(errorCode, fieldErrors, request.getRequestURI(), traceId);
         return new ResponseEntity<>(errorResponse, errorCode.getHttpStatus());
     }
@@ -231,6 +232,18 @@ public class GlobalExceptionHandler {
                 request,
                 e
         );
+    }
+
+    @ControllerAdvice
+    public static class NotFoundExceptionHandler {
+
+        @ExceptionHandler(NoHandlerFoundException.class)
+        public ModelAndView handleNotFound(HttpServletRequest request, NoHandlerFoundException ex) {
+            ModelAndView mv = new ModelAndView("error/404");
+            mv.setStatus(HttpStatus.NOT_FOUND);
+            mv.addObject("path", request.getRequestURI());
+            return mv;
+        }
     }
 
 }
