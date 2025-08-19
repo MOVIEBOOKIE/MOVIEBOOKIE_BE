@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
                 version = "v1"))
 @Configuration
 public class SwaggerConfig {
-    @Value("${springdoc.server.url}")
+    @Value("${spring.springdoc.server.url}")
     private String serverUrl;
 
     @Bean
