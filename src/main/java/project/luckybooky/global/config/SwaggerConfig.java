@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
         info = @io.swagger.v3.oas.annotations.info.Info(title = "MOVIEBOOKIE API 명세서",
                 description = "MOVIEBOOKIE API 명세서",
                 version = "v1"),
-        servers = @Server(url = "/", description = "Default Server URL"))
+        servers = @Server(url = "/dev", description = "Default Server URL"))
 @Configuration
 public class SwaggerConfig {
 
