@@ -21,7 +21,9 @@ public enum ParticipantNotificationType {
     RESERVATION_CONFIRMED("16", "이벤트 대관 확정",
             "\"%s\"\n이벤트 대관이 확정됐어요.\n주최자의 연락을 꼭 확인해 주세요!"),
     SCREENING_COMPLETED("17", "이벤트 상영 완료",
-            "\"%s\"\n이벤트가 잘 마무리됐나요?\n함께한 시간의 후기를 남겨주세요 🙂");
+            "\"%s\"\n이벤트가 잘 마무리됐나요?\n함께한 시간의 후기를 남겨주세요 🙂"),
+    RECRUITMENT_CANCELLED_BY_HOST("8", "이벤트 모집 취소",
+            "\"%s\"\n이벤트가 취소됐어요.\n아쉽지만, 다음에 꼭 함께해요!");
 
     private final String code;
     private final String title;

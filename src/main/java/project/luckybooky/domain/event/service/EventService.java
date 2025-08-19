@@ -372,7 +372,7 @@ public class EventService {
         publisher.publishEvent(new HostNotificationEvent(
                 eventId,
                 userId, // hostId
-                HostNotificationType.RECRUITMENT_CANCELLED,
+                HostNotificationType.RECRUITMENT_HOST_CANCELLED,
                 event.getMediaTitle()
         ));
 
@@ -383,7 +383,7 @@ public class EventService {
             publisher.publishEvent(new ParticipantNotificationEvent(
                     eventId,        // ← eventId
                     p.getUser().getId(),
-                    ParticipantNotificationType.RECRUITMENT_CANCELLED,
+                    ParticipantNotificationType.RECRUITMENT_CANCELLED_BY_HOST,
                     event.getMediaTitle()
             ));
         }

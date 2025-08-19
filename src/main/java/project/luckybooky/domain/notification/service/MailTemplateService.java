@@ -16,7 +16,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import project.luckybooky.domain.notification.dto.ConfirmedData;
 import project.luckybooky.domain.notification.dto.RejectedData;
-import project.luckybooky.domain.participation.service.MailLinkTokenService;
+import project.luckybooky.domain.secureMail.service.MailLinkTokenService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
@@ -139,7 +139,7 @@ public class MailTemplateService {
         String base = (homeUrl != null && homeUrl.endsWith("/"))
                 ? homeUrl.substring(0, homeUrl.length() - 1)
                 : homeUrl;
-        String mt = mailLinkTokenService.issueForEvent(eventId);
-        return base + "/events/" + eventId + "/participants?mt=" + mt;
+        String path = "/events/" + eventId + "/participants/link";
+        return base + path;
     }
 }

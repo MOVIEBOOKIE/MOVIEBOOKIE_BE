@@ -12,12 +12,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.jwt.JwtAuthenticationFilter;
 import project.luckybooky.global.jwt.JwtUtil;
 import project.luckybooky.global.oauth.handler.AuthFailureHandler;
 import project.luckybooky.global.oauth.handler.OAuth2LoginSuccessHandler;
-import project.luckybooky.global.security.MailLinkAuthFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -26,17 +24,12 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-    private final AuthFailureHandler authFailureHandler;
+    private final AuthFailureHandler authFailureHandler;  // 인증 실패 처리기
 
     @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            MailLinkAuthFilter mailLinkAuthFilter,
-            UserRepository userRepository
-    ) throws Exception {
-
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1) CORS
+                // 1) CORS 설정
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration cfg = new CorsConfiguration();
                     cfg.addAllowedOriginPattern("*");
@@ -47,44 +40,49 @@ public class SecurityConfig {
                     return cfg;
                 }))
 
-                // 2) CSRF 비활성 + Stateless
+                // 2) CSRF, 세션 무상태(Stateless) 처리
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // 3) 필터 순서: MailLinkAuth → JwtAuth → UsernamePassword
-                .addFilterBefore(mailLinkAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(new JwtAuthenticationFilter(jwtUtil), MailLinkAuthFilter.class)
-
-                // 4) 인가 규칙
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 3) 인증·인가 실패 핸들러
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authFailureHandler)
+                )
+                // 4) 공개 API
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers("/api/**/participants/**").authenticated()
-
-                        // 공개 라우트들
                         .requestMatchers(
-                                "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**",
-                                "/swagger-resources/**", "/webjars/**",
-                                "/", "/index.html", "/static/**", "/favicon.ico",
-                                "/css/**", "/js/**", "/images/**"
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/"
                         ).permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/test/users/tokens/**").permitAll()
+                        .requestMatchers("/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/login/kakao").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/reissue").permitAll()
-
-                        // 프론트 라우트(HTML)는 서버에서 열어둡니다 (Nginx/게이트에서 mt 체크 가능)
-                        .requestMatchers(HttpMethod.GET, "/events/*/participants/**").permitAll()
-
-                        // 나머지는 필요 정책에 맞게 — 보통 permitAll 또는 authenticated
-                        .anyRequest().permitAll()
+                        .requestMatchers("/events/*/participants", "/events/*/participants/link").permitAll()
+                        .requestMatchers(
+                                "/index.html",
+                                "/favicon.ico",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/static/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 )
-
-                // 5) 인증 실패 핸들러
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(authFailureHandler))
-
-                // 6) OAuth2 로그인
-                .oauth2Login(oauth2 -> oauth2.successHandler(oAuth2LoginSuccessHandler));
+                // 5) OAuth2 로그인 핸들러
+                .oauth2Login(oauth2 ->
+                        oauth2.successHandler(oAuth2LoginSuccessHandler)
+                )
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

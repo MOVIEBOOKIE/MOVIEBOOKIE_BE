@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
-import project.luckybooky.domain.participation.service.MailLinkTokenService;
+import project.luckybooky.domain.secureMail.service.MailLinkTokenService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
@@ -22,27 +22,19 @@ public class MailLinkTokenInterceptor implements HandlerInterceptor {
     @Override
     @SuppressWarnings("unchecked")
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
-        // pathVariable에서 eventId 구함
         Map<String, String> uriVars =
                 (Map<String, String>) req.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         if (uriVars == null || !uriVars.containsKey("eventId")) {
-            return true; // 다른 엔드포인트
+            return true;
         }
 
-        final String rawEventId = uriVars.get("eventId");
-        final long pathEventId;
-        try {
-            pathEventId = Long.parseLong(rawEventId);
-        } catch (NumberFormatException ex) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
+        long pathEventId = Long.parseLong(uriVars.get("eventId"));
+        String et = req.getParameter("et");
+        if (et == null || et.isBlank()) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        String mt = req.getParameter("mt");
-        if (mt == null || mt.isBlank()) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
-
-        tokenService.validateOrNotFound(mt, pathEventId);
+        tokenService.validateOrThrow(et, pathEventId, req.getRequestURI());
         return true;
     }
 }
