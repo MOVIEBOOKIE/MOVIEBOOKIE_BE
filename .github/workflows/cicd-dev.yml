@@ -1,8 +1,10 @@
-name: MovieBookie CD Pipeline
+name: MovieBookie CI/CD For Dev Pipeline
 
 on:
+  pull_request:
+    branches: [ "develop" ]
   push:
-    branches: [ "main" ]
+    branches: [ "develop" ]
 
 jobs:
   build:
@@ -44,7 +46,7 @@ jobs:
         shell: bash
 
       - name: Build with Gradle
-        run: ./gradlew clean bootJar -x test -Pprofile=prod
+        run: ./gradlew clean bootJar -x test -Pprofile=dev
         shell: bash
 
       - name: Login to NCP Container Registry
@@ -56,10 +58,10 @@ jobs:
 
       # Docker 이미지 빌드, 태그 및 레지스트리에 푸시
       - name: docker image build
-        run: docker build -f Dockerfile -t ${{ secrets.NCP_CONTAINER_REGISTRY }}/moviebookie .
+        run: docker build -f Dockerfile -t ${{ secrets.NCP_CONTAINER_REGISTRY }}/moviebookie-dev .
 
       - name: docker Hub push
-        run: docker push ${{ secrets.NCP_CONTAINER_REGISTRY }}/moviebookie
+        run: docker push ${{ secrets.NCP_CONTAINER_REGISTRY }}/moviebookie-dev
 
       # 컨테이너로 실행
       - name: Deploy to NCP Server
@@ -70,7 +72,7 @@ jobs:
           password: ${{ secrets.NCP_SERVER_PASSWORD }}
           port: 22
           script: |
-            sudo docker rm -f moviebookie || true
-            sudo docker image rm ${{ secrets.NCP_CONTAINER_REGISTRY }}/moviebookie:latest || true
-            sudo docker pull ${{ secrets.NCP_CONTAINER_REGISTRY }}/moviebookie
-            sudo docker run -d -p 8080:8080 -e TZ=Asia/Seoul --name moviebookie ${{ secrets.NCP_CONTAINER_REGISTRY }}/moviebookie
+            sudo docker rm -f moviebookie-dev || true
+            sudo docker image rm ${{ secrets.NCP_CONTAINER_REGISTRY }}/moviebookie-dev:latest || true
+            sudo docker pull ${{ secrets.NCP_CONTAINER_REGISTRY }}/moviebookie-dev
+            sudo docker run -d -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev -e TZ=Asia/Seoul --name moviebookie-dev ${{ secrets.NCP_CONTAINER_REGISTRY }}/moviebookie-dev

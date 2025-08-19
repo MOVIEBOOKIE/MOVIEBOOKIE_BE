@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Profile({"dev", "prod"})
+@Profile({"local", "dev", "prod"})
 @Transactional
 @Component
 public @interface DummyDataInit {
