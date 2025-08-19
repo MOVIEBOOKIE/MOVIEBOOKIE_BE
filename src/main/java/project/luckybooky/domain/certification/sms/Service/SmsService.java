@@ -69,7 +69,7 @@ public class SmsService {
         try {
             // 전화번호 형식 검증
             validatePhoneNumber(phone);
-            
+
             // 중복 발송 방지
             if (!acquireLock(lockKey, LOCK_TTL)) {
                 throw new BusinessException(ErrorCode.CERTIFICATION_DUPLICATED);
@@ -87,7 +87,6 @@ public class SmsService {
                     smsUtil.sendSMS(phone, code);
                     log.info("SMS 인증번호 발송 성공: {}", phone);
                 } catch (BusinessException e) {
-                    // BusinessException은 그대로 던짐 (이미 적절한 에러 코드가 설정됨)
                     throw e;
                 } catch (Exception e) {
                     log.error("SMS 전송 중 예상치 못한 오류: phone={}, error={}", phone, e.getMessage(), e);
@@ -99,7 +98,7 @@ public class SmsService {
             enqueue.stop(meterRegistry.timer("sms.send.enqueue"));
 
             log.info("SMS 인증번호 발송 요청 성공: {}", phone);
-            
+
         } catch (BusinessException e) {
             log.warn("SMS 인증번호 발송 실패: phone={}, error={}", phone, e.getErrorCode());
             throw e;
@@ -117,12 +116,12 @@ public class SmsService {
         String phone = dto.getPhoneNum();
         String code = dto.getCertificationCode();
         String key = PREFIX + phone;
-        
+
         try {
             // 입력값 검증
             validatePhoneNumber(phone);
             validateCertificationCode(code);
-            
+
             String saved = cache.get(key);
 
             if (saved == null) {
@@ -149,7 +148,7 @@ public class SmsService {
             user.setPhoneNumber(phone);
             cache.remove(key);
             log.info("SMS 인증번호 검증 성공: phone={}, user={}", phone, loginEmail);
-            
+
         } catch (BusinessException e) {
             log.warn("SMS 인증번호 검증 실패: phone={}, error={}", phone, e.getErrorCode());
             throw e;
@@ -186,8 +185,7 @@ public class SmsService {
         if (phone == null || phone.trim().isEmpty()) {
             throw new BusinessException(ErrorCode.SMS_INVALID_PHONE_FORMAT);
         }
-        
-        // 하이픈 제거 후 검증
+
         String cleanPhone = phone.replaceAll("-", "");
         if (!cleanPhone.matches("^01[0-9][0-9]{8}$")) {
             log.error("잘못된 전화번호 형식: {}", phone);
@@ -199,7 +197,7 @@ public class SmsService {
         if (code == null || code.trim().isEmpty()) {
             throw new BusinessException(ErrorCode.CERTIFICATION_INVALID_FORMAT);
         }
-        
+
         if (!code.matches("^[0-9]{" + CODE_LEN + "}$")) {
             log.error("잘못된 인증번호 형식: {}", code);
             throw new BusinessException(ErrorCode.CERTIFICATION_INVALID_FORMAT);

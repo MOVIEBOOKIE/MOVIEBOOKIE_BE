@@ -64,7 +64,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         boolean firstLogin = (user.getUserType() == null);
 
-        // 환경별 base URL 설정
         String baseUrl;
         String host = request.getHeader("Host");
         if (isLocal) {

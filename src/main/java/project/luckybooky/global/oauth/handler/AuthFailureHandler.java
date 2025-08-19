@@ -28,15 +28,12 @@ public class AuthFailureHandler implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        
+
         String requestURI = request.getRequestURI();
-        
-        // participants 페이지에 접근할 때는 로그인 페이지로 리다이렉트
+
         if (requestURI.matches("/events/\\d+/participants")) {
-            // 프론트엔드 로그인 페이지로 리다이렉트
             String loginUrl = homeUrl + "/login";
-            
-            // 환경별 로그인 URL 설정
+
             String host = request.getHeader("Host");
             if (host != null && (host.contains("localhost") || host.contains("127.0.0.1"))) {
                 loginUrl = "http://localhost:3000/login";
@@ -45,12 +42,11 @@ public class AuthFailureHandler implements AuthenticationEntryPoint {
             } else {
                 loginUrl = "https://movie-bookie.shop/login";
             }
-            
+
             response.sendRedirect(loginUrl);
             return;
         }
-        
-        // 기존 JSON 에러 응답 (API 요청의 경우)
+
         response.setStatus(ERROR.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
         response.setCharacterEncoding("UTF-8");

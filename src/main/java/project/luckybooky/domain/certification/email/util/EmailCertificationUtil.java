@@ -2,6 +2,8 @@ package project.luckybooky.domain.certification.email.util;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.io.UnsupportedEncodingException;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,9 +18,6 @@ import org.thymeleaf.context.Context;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
-import java.io.UnsupportedEncodingException;
-import java.util.regex.Pattern;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -31,7 +30,7 @@ public class EmailCertificationUtil {
     private String from;
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
-        "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+            "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
     );
 
     @Async
@@ -39,7 +38,7 @@ public class EmailCertificationUtil {
         try {
             // 이메일 형식 검증
             validateEmailFormat(to);
-            
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(
                     message,
@@ -49,8 +48,7 @@ public class EmailCertificationUtil {
 
             Context ctx = new Context();
             ctx.setVariable("code", code);
-            
-            // 템플릿 처리
+
             String html;
             try {
                 html = templateEngine.process("email-certification", ctx);
@@ -64,13 +62,11 @@ public class EmailCertificationUtil {
             helper.setSubject("[무비부키] 이메일 인증번호");
             helper.setText(html, true);
 
-            // 로고 이미지 추가
             try {
                 ClassPathResource logo = new ClassPathResource("static/images/logo.png");
                 helper.addInline("logoImage", logo);
             } catch (Exception e) {
                 log.warn("로고 이미지 추가 실패: {}", e.getMessage());
-                // 로고 추가 실패는 치명적이지 않으므로 계속 진행
             }
 
             mailSender.send(message);
@@ -86,7 +82,7 @@ public class EmailCertificationUtil {
             log.error("이메일 인코딩 오류: to={}, error={}", to, e.getMessage(), e);
             throw new BusinessException(ErrorCode.EMAIL_SEND_FAIL);
         } catch (BusinessException e) {
-            throw e; // 이미 BusinessException인 경우 그대로 던짐
+            throw e;
         } catch (Exception e) {
             log.error("이메일 전송 중 예상치 못한 오류: to={}, error={}", to, e.getMessage(), e);
             throw new BusinessException(ErrorCode.EMAIL_SEND_FAIL);
@@ -97,7 +93,7 @@ public class EmailCertificationUtil {
         if (email == null || email.trim().isEmpty()) {
             throw new BusinessException(ErrorCode.EMAIL_INVALID_FORMAT);
         }
-        
+
         if (!EMAIL_PATTERN.matcher(email).matches()) {
             log.error("잘못된 이메일 형식: {}", email);
             throw new BusinessException(ErrorCode.EMAIL_INVALID_FORMAT);
@@ -106,7 +102,7 @@ public class EmailCertificationUtil {
 
     private void handleEmailError(Exception e) {
         String errorMessage = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-        
+
         if (errorMessage.contains("authentication") || errorMessage.contains("인증")) {
             throw new BusinessException(ErrorCode.EMAIL_SERVER_ERROR);
         } else if (errorMessage.contains("quota") || errorMessage.contains("할당량")) {

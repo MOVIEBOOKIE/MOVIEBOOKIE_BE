@@ -1,10 +1,9 @@
 package project.luckybooky.domain.certification.sms.util;
 
 import jakarta.annotation.PostConstruct;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import net.nurigo.sdk.NurigoApp;
-import net.nurigo.sdk.message.exception.NurigoMessageNotReceivedException;
-import net.nurigo.sdk.message.exception.NurigoUnknownException;
 import net.nurigo.sdk.message.model.Message;
 import net.nurigo.sdk.message.request.SingleMessageSendingRequest;
 import net.nurigo.sdk.message.response.SingleMessageSentResponse;
@@ -13,8 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
-
-import java.util.regex.Pattern;
 
 @Slf4j
 @Component
@@ -30,7 +27,7 @@ public class SmsCertificationUtil {
     private String fromNumber;
 
     private static final Pattern PHONE_PATTERN = Pattern.compile("^01[0-9]-?[0-9]{4}-?[0-9]{4}$");
-    private static final int MAX_MESSAGE_LENGTH = 90; // SMS 최대 길이
+    private static final int MAX_MESSAGE_LENGTH = 90;
 
     DefaultMessageService messageService;
 
@@ -43,10 +40,10 @@ public class SmsCertificationUtil {
         try {
             // 전화번호 형식 검증
             validatePhoneNumber(to);
-            
+
             // 메시지 생성
             String messageText = "[무비부키] 본인확인 인증번호는 " + certificationCode + "입니다.";
-            
+
             // 메시지 길이 검증
             if (messageText.length() > MAX_MESSAGE_LENGTH) {
                 log.error("SMS 메시지가 너무 깁니다. length: {}", messageText.length());
@@ -59,9 +56,9 @@ public class SmsCertificationUtil {
             message.setText(messageText);
 
             log.debug("SMS 전송 시도: {} → {}", fromNumber, to);
-            
+
             SingleMessageSentResponse response = this.messageService.sendOne(new SingleMessageSendingRequest(message));
-            
+
             // 응답 상태 확인
             if (response != null) {
                 log.debug("SMS 전송 성공: messageId={}", response.getMessageId());
@@ -72,8 +69,7 @@ public class SmsCertificationUtil {
 
         } catch (Exception e) {
             log.error("SMS 전송 중 오류: to={}, error={}", to, e.getMessage(), e);
-            
-            // 일반적인 SMS 전송 실패로 처리
+
             if (e.getMessage() != null) {
                 String errorMessage = e.getMessage().toLowerCase();
                 if (errorMessage.contains("잔액") || errorMessage.contains("balance")) {
@@ -90,7 +86,7 @@ public class SmsCertificationUtil {
                     throw new BusinessException(ErrorCode.SMS_RATE_LIMIT_EXCEEDED);
                 }
             }
-            
+
             throw new BusinessException(ErrorCode.SMS_SEND_FAIL);
         }
     }
@@ -99,8 +95,7 @@ public class SmsCertificationUtil {
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
             throw new BusinessException(ErrorCode.SMS_INVALID_PHONE_FORMAT);
         }
-        
-        // 하이픈 제거 후 검증
+
         String cleanPhone = phoneNumber.replaceAll("-", "");
         if (!PHONE_PATTERN.matcher(cleanPhone).matches()) {
             log.error("잘못된 전화번호 형식: {}", phoneNumber);
