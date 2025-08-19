@@ -16,7 +16,7 @@ import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.jwt.JwtUtil;
 
 @Component
-@Profile("dev")
+@Profile("local")
 @RequiredArgsConstructor
 @Order(0)
 public class UserInitializer implements ApplicationRunner {

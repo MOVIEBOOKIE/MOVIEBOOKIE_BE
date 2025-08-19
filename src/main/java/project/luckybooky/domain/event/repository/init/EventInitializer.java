@@ -18,14 +18,14 @@ import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
-import project.luckybooky.global.util.DummyDataInitForDev;
+import project.luckybooky.global.util.DummyDataInitForLocal;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-@DummyDataInitForDev
+@DummyDataInitForLocal
 @RequiredArgsConstructor
 @Order(3)
 public class EventInitializer implements ApplicationRunner {
