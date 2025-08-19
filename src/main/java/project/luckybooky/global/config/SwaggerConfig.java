@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @OpenAPIDefinition(
         info = @io.swagger.v3.oas.annotations.info.Info(title = "MOVIEBOOKIE API 명세서",
                 description = "MOVIEBOOKIE API 명세서",
@@ -39,14 +41,15 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(apiInfo())
                 .addSecurityItem(securityRequirement)
-                .components(components);
+                .components(components)
+                .servers(List.of(server));
     }
 
 
     private Info apiInfo() {
         return new Info()
-                .title("MOVIEBOOKIE API")
-                .description("MOVIEBOOKIE API Docs")
+                .title("LUCKYBOOKY API")
+                .description("LUCKYBOOKY API Docs")
                 .version("1.0");
     }
 }
