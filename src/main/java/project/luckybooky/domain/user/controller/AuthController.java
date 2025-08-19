@@ -43,7 +43,7 @@ public class AuthController {
     @GetMapping("/login/kakao")
     public BaseResponse<JoinResultDTO> kakaoLogin(
             @Parameter(description = "카카오에서 제공한 인가 코드", required = true) @RequestParam("code") String accessCode,
-            @Parameter(description = "카카오 OAuth2 인증 후 리다이렉트할 URI (로컬 환경 -> http://localhost:3000/login/kakao / 배포 환경 -> https://movie-bookie.shop/login/kakao)", required = true) String redirectUri,
+            @Parameter(description = "카카오 OAuth2 인증 후 리다이렉트할 URI (로컬 환경 -> http://localhost:3000/login/kakao / 개발 환경 -> https://moviebookie-git-dev-luckybookie.vercel.app/login/kakao / 운영 환경 -> https://movie-bookie.shop/login/kakao)", required = true) String redirectUri,
             HttpServletResponse httpServletResponse,
             @Parameter(description = "directUri가 로컬인지 배포 환경인지에 따라서 true/false 사용") boolean isLocal) {
         User user = authService.oAuthLogin(accessCode, redirectUri, httpServletResponse, isLocal);

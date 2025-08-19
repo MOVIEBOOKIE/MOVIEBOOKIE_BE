@@ -64,7 +64,16 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         boolean firstLogin = (user.getUserType() == null);
 
-        String baseUrl = isLocal ? "http://localhost:3000" : "https://movie-bookie.shop";
+        // 환경별 base URL 설정
+        String baseUrl;
+        String host = request.getHeader("Host");
+        if (isLocal) {
+            baseUrl = "http://localhost:3000";
+        } else if (host != null && host.contains("moviebookie-git-dev-luckybookie.vercel.app")) {
+            baseUrl = "https://moviebookie-git-dev-luckybookie.vercel.app";
+        } else {
+            baseUrl = "https://movie-bookie.shop";
+        }
         String targetPath = firstLogin ? "/agreement" : "/";
 
         String redirectUrl = baseUrl + targetPath;
