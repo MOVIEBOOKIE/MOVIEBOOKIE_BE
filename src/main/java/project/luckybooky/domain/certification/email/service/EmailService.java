@@ -77,7 +77,7 @@ public class EmailService {
         try {
             // 이메일 형식 검증
             validateEmailFormat(email);
-
+            
             // 중복 발송 방지
             if (!acquireLock(lockKey, LOCK_TTL)) {
                 throw new BusinessException(ErrorCode.CERTIFICATION_DUPLICATED);
@@ -94,11 +94,10 @@ public class EmailService {
                 Timer.Sample execSample = Timer.start(meterRegistry);
                 try {
                     mailUtil.sendMail(email, code);
-                    log.info("이메일 인증번호 발송 성공: {}", email);
                 } catch (BusinessException e) {
                     throw e;
                 } catch (Exception e) {
-                    log.error("이메일 전송 중 예상치 못한 오류: email={}, error={}", email, e.getMessage(), e);
+                    log.error("이메일 전송 실패: email={}, error={}", email, e.getMessage());
                     throw new BusinessException(ErrorCode.EMAIL_SEND_FAIL);
                 } finally {
                     execSample.stop(meterRegistry.timer("email.send.execution"));
@@ -106,13 +105,13 @@ public class EmailService {
             });
             enqueueSample.stop(meterRegistry.timer("email.send.enqueue"));
 
-            log.info("이메일 인증번호 발송 요청 성공: {}", email);
-
+            log.info("이메일 인증번호 발송 완료: {}", email);
+            
         } catch (BusinessException e) {
             log.warn("이메일 인증번호 발송 실패: email={}, error={}", email, e.getErrorCode());
             throw e;
         } catch (Exception e) {
-            log.error("이메일 인증번호 발송 중 예상치 못한 오류: email={}, error={}", email, e.getMessage(), e);
+            log.error("이메일 인증번호 발송 중 오류: email={}, error={}", email, e.getMessage());
             throw new BusinessException(ErrorCode.EMAIL_SEND_FAIL);
         }
     }
@@ -125,12 +124,12 @@ public class EmailService {
         String email = dto.getEmail();
         String code = dto.getCertificationCode();
         String codeKey = PREFIX + email;
-
+        
         try {
             // 입력값 검증
             validateEmailFormat(email);
             validateCertificationCode(code);
-
+            
             CacheEntry entry = codeCache.get(codeKey);
             if (entry == null || entry.isExpired()) {
                 codeCache.remove(codeKey);
@@ -142,21 +141,21 @@ public class EmailService {
 
             User user = userRepository.findByEmail(loginEmail)
                     .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
+            
             // 이미 인증된 이메일인지 확인
             if (email.equals(user.getCertificationEmail())) {
                 throw new BusinessException(ErrorCode.CERTIFICATION_ALREADY_VERIFIED);
             }
-
+            
             user.setCertificationEmail(email);
             codeCache.remove(codeKey);
             log.info("이메일 인증번호 검증 성공: email={}, user={}", email, loginEmail);
-
+            
         } catch (BusinessException e) {
             log.warn("이메일 인증번호 검증 실패: email={}, error={}", email, e.getErrorCode());
             throw e;
         } catch (Exception e) {
-            log.error("이메일 인증번호 검증 중 예상치 못한 오류: email={}, error={}", email, e.getMessage(), e);
+            log.error("이메일 인증번호 검증 중 오류: email={}, error={}", email, e.getMessage());
             throw new BusinessException(ErrorCode.CERTIFICATION_MISMATCH);
         }
     }

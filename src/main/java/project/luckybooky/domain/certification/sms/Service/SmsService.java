@@ -69,7 +69,7 @@ public class SmsService {
         try {
             // 전화번호 형식 검증
             validatePhoneNumber(phone);
-
+            
             // 중복 발송 방지
             if (!acquireLock(lockKey, LOCK_TTL)) {
                 throw new BusinessException(ErrorCode.CERTIFICATION_DUPLICATED);
@@ -85,11 +85,10 @@ public class SmsService {
                 Timer.Sample exec = Timer.start(meterRegistry);
                 try {
                     smsUtil.sendSMS(phone, code);
-                    log.info("SMS 인증번호 발송 성공: {}", phone);
                 } catch (BusinessException e) {
                     throw e;
                 } catch (Exception e) {
-                    log.error("SMS 전송 중 예상치 못한 오류: phone={}, error={}", phone, e.getMessage(), e);
+                    log.error("SMS 전송 실패: phone={}, error={}", phone, e.getMessage());
                     throw new BusinessException(ErrorCode.SMS_SEND_FAIL);
                 } finally {
                     exec.stop(meterRegistry.timer("sms.send.execution"));
@@ -97,13 +96,13 @@ public class SmsService {
             });
             enqueue.stop(meterRegistry.timer("sms.send.enqueue"));
 
-            log.info("SMS 인증번호 발송 요청 성공: {}", phone);
-
+            log.info("SMS 인증번호 발송 완료: {}", phone);
+            
         } catch (BusinessException e) {
             log.warn("SMS 인증번호 발송 실패: phone={}, error={}", phone, e.getErrorCode());
             throw e;
         } catch (Exception e) {
-            log.error("SMS 인증번호 발송 중 예상치 못한 오류: phone={}, error={}", phone, e.getMessage(), e);
+            log.error("SMS 인증번호 발송 중 오류: phone={}, error={}", phone, e.getMessage());
             throw new BusinessException(ErrorCode.SMS_SEND_FAIL);
         }
     }
@@ -116,12 +115,12 @@ public class SmsService {
         String phone = dto.getPhoneNum();
         String code = dto.getCertificationCode();
         String key = PREFIX + phone;
-
+        
         try {
             // 입력값 검증
             validatePhoneNumber(phone);
             validateCertificationCode(code);
-
+            
             String saved = cache.get(key);
 
             if (saved == null) {
@@ -148,12 +147,12 @@ public class SmsService {
             user.setPhoneNumber(phone);
             cache.remove(key);
             log.info("SMS 인증번호 검증 성공: phone={}, user={}", phone, loginEmail);
-
+            
         } catch (BusinessException e) {
             log.warn("SMS 인증번호 검증 실패: phone={}, error={}", phone, e.getErrorCode());
             throw e;
         } catch (Exception e) {
-            log.error("SMS 인증번호 검증 중 예상치 못한 오류: phone={}, error={}", phone, e.getMessage(), e);
+            log.error("SMS 인증번호 검증 중 오류: phone={}, error={}", phone, e.getMessage());
             throw new BusinessException(ErrorCode.CERTIFICATION_MISMATCH);
         }
     }

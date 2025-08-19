@@ -54,7 +54,7 @@ public class EmailCertificationUtil {
                 html = templateEngine.process("email-certification", ctx);
             } catch (Exception e) {
                 log.error("이메일 템플릿 처리 실패: to={}, error={}", to, e.getMessage(), e);
-                throw new BusinessException(ErrorCode.EMAIL_TEMPLATE_ERROR);
+                throw new BusinessException(ErrorCode.EMAIL_SEND_FAIL);
             }
 
             helper.setTo(to);
@@ -102,16 +102,30 @@ public class EmailCertificationUtil {
 
     private void handleEmailError(Exception e) {
         String errorMessage = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+        String fullErrorMessage = e.toString().toLowerCase();
 
-        if (errorMessage.contains("authentication") || errorMessage.contains("인증")) {
-            throw new BusinessException(ErrorCode.EMAIL_SERVER_ERROR);
-        } else if (errorMessage.contains("quota") || errorMessage.contains("할당량")) {
+        log.error("이메일 전송 에러: {}", e.getMessage());
+
+        if (fullErrorMessage.contains("quota") || fullErrorMessage.contains("할당량") || fullErrorMessage.contains("limit")
+                || fullErrorMessage.contains("552")) {
+            log.error("이메일 할당량 초과: {}", e.getMessage());
             throw new BusinessException(ErrorCode.EMAIL_RATE_LIMIT_EXCEEDED);
-        } else if (errorMessage.contains("invalid") || errorMessage.contains("잘못된")) {
+        } else if (fullErrorMessage.contains("authentication") || fullErrorMessage.contains("인증")
+                || fullErrorMessage.contains("535")) {
+            log.error("이메일 인증 실패: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.EMAIL_SERVER_ERROR);
+        } else if (fullErrorMessage.contains("mailbox not found") || fullErrorMessage.contains("메일박스 없음")
+                || fullErrorMessage.contains("550")) {
+            log.error("이메일 메일박스 없음: {}", e.getMessage());
             throw new BusinessException(ErrorCode.EMAIL_INVALID_FORMAT);
-        } else if (errorMessage.contains("connection") || errorMessage.contains("연결")) {
+        } else if (fullErrorMessage.contains("timeout") || fullErrorMessage.contains("타임아웃")) {
+            log.error("이메일 타임아웃: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.EMAIL_SERVER_ERROR);
+        } else if (fullErrorMessage.contains("connection") || fullErrorMessage.contains("연결")) {
+            log.error("이메일 연결 오류: {}", e.getMessage());
             throw new BusinessException(ErrorCode.EMAIL_SERVER_ERROR);
         } else {
+            log.error("이메일 전송 실패: {}", e.getMessage());
             throw new BusinessException(ErrorCode.EMAIL_SEND_FAIL);
         }
     }

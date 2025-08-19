@@ -47,7 +47,7 @@ public class SmsCertificationUtil {
             // 메시지 길이 검증
             if (messageText.length() > MAX_MESSAGE_LENGTH) {
                 log.error("SMS 메시지가 너무 깁니다. length: {}", messageText.length());
-                throw new BusinessException(ErrorCode.SMS_MESSAGE_TOO_LONG);
+                throw new BusinessException(ErrorCode.SMS_SEND_FAIL);
             }
 
             Message message = new Message();
@@ -59,7 +59,6 @@ public class SmsCertificationUtil {
 
             SingleMessageSentResponse response = this.messageService.sendOne(new SingleMessageSendingRequest(message));
 
-            // 응답 상태 확인
             if (response != null) {
                 log.debug("SMS 전송 성공: messageId={}", response.getMessageId());
             } else {
@@ -70,24 +69,25 @@ public class SmsCertificationUtil {
         } catch (Exception e) {
             log.error("SMS 전송 중 오류: to={}, error={}", to, e.getMessage(), e);
 
-            if (e.getMessage() != null) {
-                String errorMessage = e.getMessage().toLowerCase();
-                if (errorMessage.contains("잔액") || errorMessage.contains("balance")) {
-                    throw new BusinessException(ErrorCode.SMS_INSUFFICIENT_BALANCE);
-                } else if (errorMessage.contains("발신번호") || errorMessage.contains("from")) {
-                    throw new BusinessException(ErrorCode.SMS_INVALID_SENDER_NUMBER);
-                } else if (errorMessage.contains("수신번호") || errorMessage.contains("to")) {
-                    throw new BusinessException(ErrorCode.SMS_INVALID_PHONE_FORMAT);
-                } else if (errorMessage.contains("차단") || errorMessage.contains("block")) {
-                    throw new BusinessException(ErrorCode.SMS_BLOCKED_NUMBER);
-                } else if (errorMessage.contains("길이") || errorMessage.contains("length")) {
-                    throw new BusinessException(ErrorCode.SMS_MESSAGE_TOO_LONG);
-                } else if (errorMessage.contains("제한") || errorMessage.contains("limit")) {
-                    throw new BusinessException(ErrorCode.SMS_RATE_LIMIT_EXCEEDED);
-                }
-            }
+            String errorMessage = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+            String fullErrorMessage = e.toString().toLowerCase();
 
-            throw new BusinessException(ErrorCode.SMS_SEND_FAIL);
+            if (fullErrorMessage.contains("잔액") || fullErrorMessage.contains("balance") || fullErrorMessage.contains(
+                    "credit") || fullErrorMessage.contains("e004")) {
+                log.error("SMS 잔액 부족: {}", e.getMessage());
+                throw new BusinessException(ErrorCode.SMS_INSUFFICIENT_BALANCE);
+            } else if (fullErrorMessage.contains("제한") || fullErrorMessage.contains("limit")
+                    || fullErrorMessage.contains("rate") || fullErrorMessage.contains("e006")) {
+                log.error("SMS 발송 제한 초과: {}", e.getMessage());
+                throw new BusinessException(ErrorCode.SMS_RATE_LIMIT_EXCEEDED);
+            } else if (fullErrorMessage.contains("수신번호") || fullErrorMessage.contains("to")
+                    || fullErrorMessage.contains("e002")) {
+                log.error("SMS 잘못된 수신번호: {}", e.getMessage());
+                throw new BusinessException(ErrorCode.SMS_INVALID_PHONE_FORMAT);
+            } else {
+                log.error("SMS 전송 실패: {}", e.getMessage());
+                throw new BusinessException(ErrorCode.SMS_SEND_FAIL);
+            }
         }
     }
 
