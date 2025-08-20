@@ -142,7 +142,10 @@ public class AuthService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        jwtUtil.validateToken(refreshToken);
+        if (!jwtUtil.validateToken(refreshToken)) {
+            throw new BusinessException(ErrorCode.JWT_INVALID_TOKEN);
+        }
+        
         if (!"refresh".equals(jwtUtil.extractCategory(refreshToken))) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN_TYPE);
         }

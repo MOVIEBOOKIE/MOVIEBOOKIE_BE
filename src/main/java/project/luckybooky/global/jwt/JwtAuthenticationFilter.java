@@ -17,7 +17,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final List<String> EXCLUDED_URLS = List.of(
             "/api/auth/login/kakao", "/swagger-ui", "/v3/api-docs", "/swagger-resources", "/api/events/anonymous",
             "/api/test/users/tokens", "api/test/events/", "/actuator/prometheus", "/actuator/metrics",
-            "/api/email/send", "/api/auth/reissue", "/dev/swagger-ui", "/dev/v3/api-docs", "/dev/swagger-resources"
+            "/api/email/send", "/api/auth/reissue", "/dev/swagger-ui", "/dev/v3/api-docs", "/dev/swagger-resources",
+            "/events/", "/images/", "/css/", "/js/", "/static/"
     );
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil) {
@@ -47,15 +48,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 ? bearer.substring(7)
                 : CookieUtil.getCookieValue(request, "accessToken");
 
-        if (token != null && jwtUtil.validateToken(token)) {
-            String email = jwtUtil.extractEmail(token);
-            SecurityContextHolder.getContext()
-                    .setAuthentication(new JwtAuthenticationToken(email));
-            filterChain.doFilter(request, response);
-        } else {
-            log.warn("[JWT 필터] 인증 실패 → 401");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증이 필요합니다.");
+        log.debug("[JWT 필터] 요청 URI: {}, 토큰 존재: {}", uri, token != null);
+
+        if (token != null) {
+            if (jwtUtil.validateToken(token)) {
+                String email = jwtUtil.extractEmail(token);
+                log.debug("[JWT 필터] 토큰 검증 성공, 이메일: {}", email);
+                SecurityContextHolder.getContext()
+                        .setAuthentication(new JwtAuthenticationToken(email));
+                filterChain.doFilter(request, response);
+                return;
+            } else {
+                log.warn("[JWT 필터] 토큰 검증 실패");
+            }
         }
+        
+        log.warn("[JWT 필터] 인증 실패 → 401");
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증이 필요합니다.");
     }
 
     private boolean isExcluded(String requestURI) {
