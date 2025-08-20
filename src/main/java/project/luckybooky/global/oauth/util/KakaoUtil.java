@@ -33,6 +33,7 @@ public class KakaoUtil {
     private final ObjectMapper objectMapper;
     private final Set<String> allowedRedirectUris = Set.of(
             "http://localhost:3000/login/kakao",
+            "https://moviebookie-git-dev-luckybookie.vercel.app/login/kakao",
             "https://movie-bookie.shop/login/kakao",
             "https://www.movie-bookie.shop/login/kakao"
     );

@@ -73,6 +73,21 @@ public enum ErrorCode implements BaseStatus {
     CERTIFICATION_MISMATCH(HttpStatus.BAD_REQUEST, "AUTH_002", "인증번호가 일치하지 않습니다."),
     CERTIFICATION_DUPLICATED(HttpStatus.BAD_REQUEST, "AUTH_003", "이미 유효한 인증번호가 발송되었습니다."),
     EMAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "EMAIL_001", "이메일 전송에 실패했습니다."),
+    
+    // 인증 관련 핵심 에러
+    CERTIFICATION_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "AUTH_004", "인증번호 형식이 올바르지 않습니다."),
+    CERTIFICATION_ALREADY_VERIFIED(HttpStatus.BAD_REQUEST, "AUTH_005", "이미 인증이 완료된 계정입니다."),
+    
+    // 이메일 인증 핵심 에러
+    EMAIL_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "EMAIL_002", "이메일 형식이 올바르지 않습니다."),
+    EMAIL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "EMAIL_003", "이메일 서버 오류가 발생했습니다."),
+    EMAIL_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "EMAIL_004", "이메일 발송 빈도 제한을 초과했습니다."),
+    
+    // SMS 인증 핵심 에러
+    SMS_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "SMS_001", "SMS 전송에 실패했습니다."),
+    SMS_INVALID_PHONE_FORMAT(HttpStatus.BAD_REQUEST, "SMS_002", "전화번호 형식이 올바르지 않습니다."),
+    SMS_INSUFFICIENT_BALANCE(HttpStatus.SERVICE_UNAVAILABLE, "SMS_003", "SMS 잔액이 부족합니다."),
+    SMS_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "SMS_004", "SMS 발송 빈도 제한을 초과했습니다."),
 
     // Participation 관련
     PARTICIPATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "PARTICIPATION_401", "해당 이벤트를 참여하지 않았습니다."),

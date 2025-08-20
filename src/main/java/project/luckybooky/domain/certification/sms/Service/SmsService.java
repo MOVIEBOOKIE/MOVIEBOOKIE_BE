@@ -66,29 +66,45 @@ public class SmsService {
         String phone = dto.getPhoneNum();
         String lockKey = PREFIX + phone + ":lock";
 
-        if (!acquireLock(lockKey, LOCK_TTL)) {
-            throw new BusinessException(ErrorCode.CERTIFICATION_DUPLICATED);
-        }
-
-        // 코드 생성 및 저장
-        String code = generateCode();
-        cache.remove(PREFIX + phone);
-        cache.store(PREFIX + phone, code, CODE_TTL);
-
-        Timer.Sample enqueue = Timer.start(meterRegistry);
-        smsExecutor.execute(() -> {
-            Timer.Sample exec = Timer.start(meterRegistry);
-            try {
-                smsUtil.sendSMS(phone, code);
-            } catch (Exception e) {
-                log.error("Failed to send SMS to {}: {}", phone, e.getMessage(), e);
-            } finally {
-                exec.stop(meterRegistry.timer("sms.send.execution"));
+        try {
+            // 전화번호 형식 검증
+            validatePhoneNumber(phone);
+            
+            // 중복 발송 방지
+            if (!acquireLock(lockKey, LOCK_TTL)) {
+                throw new BusinessException(ErrorCode.CERTIFICATION_DUPLICATED);
             }
-        });
-        enqueue.stop(meterRegistry.timer("sms.send.enqueue"));
 
-        log.debug("Queued SMS send for {}", phone);
+            // 코드 생성 및 저장
+            String code = generateCode();
+            cache.remove(PREFIX + phone);
+            cache.store(PREFIX + phone, code, CODE_TTL);
+
+            Timer.Sample enqueue = Timer.start(meterRegistry);
+            smsExecutor.execute(() -> {
+                Timer.Sample exec = Timer.start(meterRegistry);
+                try {
+                    smsUtil.sendSMS(phone, code);
+                } catch (BusinessException e) {
+                    throw e;
+                } catch (Exception e) {
+                    log.error("SMS 전송 실패: phone={}, error={}", phone, e.getMessage());
+                    throw new BusinessException(ErrorCode.SMS_SEND_FAIL);
+                } finally {
+                    exec.stop(meterRegistry.timer("sms.send.execution"));
+                }
+            });
+            enqueue.stop(meterRegistry.timer("sms.send.enqueue"));
+
+            log.info("SMS 인증번호 발송 완료: {}", phone);
+            
+        } catch (BusinessException e) {
+            log.warn("SMS 인증번호 발송 실패: phone={}, error={}", phone, e.getErrorCode());
+            throw e;
+        } catch (Exception e) {
+            log.error("SMS 인증번호 발송 중 오류: phone={}, error={}", phone, e.getMessage());
+            throw new BusinessException(ErrorCode.SMS_SEND_FAIL);
+        }
     }
 
     /**
@@ -97,28 +113,48 @@ public class SmsService {
     @Transactional
     public void verifyCertificationCode(SmsVerifyRequestDTO dto, String loginEmail) {
         String phone = dto.getPhoneNum();
+        String code = dto.getCertificationCode();
         String key = PREFIX + phone;
-        String saved = cache.get(key);
+        
+        try {
+            // 입력값 검증
+            validatePhoneNumber(phone);
+            validateCertificationCode(code);
+            
+            String saved = cache.get(key);
 
-        if (saved == null) {
-            throw new BusinessException(ErrorCode.CERTIFICATION_EXPIRED);
-        }
-        if (!saved.equals(dto.getCertificationCode())) {
+            if (saved == null) {
+                throw new BusinessException(ErrorCode.CERTIFICATION_EXPIRED);
+            }
+            if (!saved.equals(code)) {
+                throw new BusinessException(ErrorCode.CERTIFICATION_MISMATCH);
+            }
+
+            User user = userRepository.findByEmail(loginEmail)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+            // 이미 인증된 전화번호인지 확인
+            if (phone.equals(user.getPhoneNumber())) {
+                throw new BusinessException(ErrorCode.CERTIFICATION_ALREADY_VERIFIED);
+            }
+
+            userRepository.findByPhoneNumber(phone)
+                    .filter(other -> !other.getId().equals(user.getId()))
+                    .ifPresent(any -> {
+                        throw new BusinessException(ErrorCode.PHONE_ALREADY_USED);
+                    });
+
+            user.setPhoneNumber(phone);
+            cache.remove(key);
+            log.info("SMS 인증번호 검증 성공: phone={}, user={}", phone, loginEmail);
+            
+        } catch (BusinessException e) {
+            log.warn("SMS 인증번호 검증 실패: phone={}, error={}", phone, e.getErrorCode());
+            throw e;
+        } catch (Exception e) {
+            log.error("SMS 인증번호 검증 중 오류: phone={}, error={}", phone, e.getMessage());
             throw new BusinessException(ErrorCode.CERTIFICATION_MISMATCH);
         }
-
-        User user = userRepository.findByEmail(loginEmail)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        userRepository.findByPhoneNumber(phone)
-                .filter(other -> !other.getId().equals(user.getId()))
-                .ifPresent(any -> {
-                    throw new BusinessException(ErrorCode.PHONE_ALREADY_USED);
-                });
-
-        user.setPhoneNumber(phone);
-        cache.remove(key);
-        log.debug("✅ {} verified & saved to user {}", phone, loginEmail);
     }
 
     private boolean acquireLock(String key, Duration ttl) {
@@ -142,5 +178,28 @@ public class SmsService {
     private String generateCode() {
         int bound = (int) Math.pow(10, CODE_LEN);
         return String.format("%0" + CODE_LEN + "d", random.nextInt(bound));
+    }
+
+    private void validatePhoneNumber(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            throw new BusinessException(ErrorCode.SMS_INVALID_PHONE_FORMAT);
+        }
+
+        String cleanPhone = phone.replaceAll("-", "");
+        if (!cleanPhone.matches("^01[0-9][0-9]{8}$")) {
+            log.error("잘못된 전화번호 형식: {}", phone);
+            throw new BusinessException(ErrorCode.SMS_INVALID_PHONE_FORMAT);
+        }
+    }
+
+    private void validateCertificationCode(String code) {
+        if (code == null || code.trim().isEmpty()) {
+            throw new BusinessException(ErrorCode.CERTIFICATION_INVALID_FORMAT);
+        }
+
+        if (!code.matches("^[0-9]{" + CODE_LEN + "}$")) {
+            log.error("잘못된 인증번호 형식: {}", code);
+            throw new BusinessException(ErrorCode.CERTIFICATION_INVALID_FORMAT);
+        }
     }
 }

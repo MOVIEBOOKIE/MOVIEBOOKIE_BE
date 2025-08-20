@@ -67,38 +67,53 @@ public class EmailService {
     }
 
     /**
-     * 인증번호 발송 (비동기 처리 및 메트릭 계측 포함)
+     * 인증번호 발송 (비동기 처리)
      **/
     public void sendCode(EmailRequestDTO dto) {
         String email = dto.getEmail();
         String lockKey = PREFIX + email + ":lock";
         String codeKey = PREFIX + email;
 
-        if (!acquireLock(lockKey, LOCK_TTL)) {
-            throw new BusinessException(ErrorCode.CERTIFICATION_DUPLICATED);
-        }
-
-        codeCache.remove(codeKey);
-        String code = generate();
-        codeCache.put(codeKey, new CacheEntry(code, Instant.now().plus(CODE_TTL)));
-
-        // 큐잉 시간 측정
-        Timer.Sample enqueueSample = Timer.start(meterRegistry);
-        mailExecutor.execute(() -> {
-            // 전송 실행 시간 측정
-            Timer.Sample execSample = Timer.start(meterRegistry);
-            try {
-                mailUtil.sendMail(email, code);
-                log.info("Asynchronously sent email code {} → {}", code, email);
-            } catch (Exception e) {
-                log.error("Failed to send mail to {}: {}", email, e.getMessage(), e);
-            } finally {
-                execSample.stop(meterRegistry.timer("email.send.execution"));
+        try {
+            // 이메일 형식 검증
+            validateEmailFormat(email);
+            
+            // 중복 발송 방지
+            if (!acquireLock(lockKey, LOCK_TTL)) {
+                throw new BusinessException(ErrorCode.CERTIFICATION_DUPLICATED);
             }
-        });
-        enqueueSample.stop(meterRegistry.timer("email.send.enqueue"));
 
-        log.info("Queued mail send for {}", email);
+            codeCache.remove(codeKey);
+            String code = generate();
+            codeCache.put(codeKey, new CacheEntry(code, Instant.now().plus(CODE_TTL)));
+
+            // 큐잉 시간 측정
+            Timer.Sample enqueueSample = Timer.start(meterRegistry);
+            mailExecutor.execute(() -> {
+                // 전송 실행 시간 측정
+                Timer.Sample execSample = Timer.start(meterRegistry);
+                try {
+                    mailUtil.sendMail(email, code);
+                } catch (BusinessException e) {
+                    throw e;
+                } catch (Exception e) {
+                    log.error("이메일 전송 실패: email={}, error={}", email, e.getMessage());
+                    throw new BusinessException(ErrorCode.EMAIL_SEND_FAIL);
+                } finally {
+                    execSample.stop(meterRegistry.timer("email.send.execution"));
+                }
+            });
+            enqueueSample.stop(meterRegistry.timer("email.send.enqueue"));
+
+            log.info("이메일 인증번호 발송 완료: {}", email);
+            
+        } catch (BusinessException e) {
+            log.warn("이메일 인증번호 발송 실패: email={}, error={}", email, e.getErrorCode());
+            throw e;
+        } catch (Exception e) {
+            log.error("이메일 인증번호 발송 중 오류: email={}, error={}", email, e.getMessage());
+            throw new BusinessException(ErrorCode.EMAIL_SEND_FAIL);
+        }
     }
 
     /**
@@ -106,21 +121,43 @@ public class EmailService {
      **/
     @Transactional
     public void verify(EmailVerifyRequestDTO dto, String loginEmail) {
-        String codeKey = PREFIX + dto.getEmail();
-        CacheEntry entry = codeCache.get(codeKey);
-        if (entry == null || entry.isExpired()) {
+        String email = dto.getEmail();
+        String code = dto.getCertificationCode();
+        String codeKey = PREFIX + email;
+        
+        try {
+            // 입력값 검증
+            validateEmailFormat(email);
+            validateCertificationCode(code);
+            
+            CacheEntry entry = codeCache.get(codeKey);
+            if (entry == null || entry.isExpired()) {
+                codeCache.remove(codeKey);
+                throw new BusinessException(ErrorCode.CERTIFICATION_EXPIRED);
+            }
+            if (!entry.value.equals(code)) {
+                throw new BusinessException(ErrorCode.CERTIFICATION_MISMATCH);
+            }
+
+            User user = userRepository.findByEmail(loginEmail)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+            
+            // 이미 인증된 이메일인지 확인
+            if (email.equals(user.getCertificationEmail())) {
+                throw new BusinessException(ErrorCode.CERTIFICATION_ALREADY_VERIFIED);
+            }
+            
+            user.setCertificationEmail(email);
             codeCache.remove(codeKey);
-            throw new BusinessException(ErrorCode.CERTIFICATION_EXPIRED);
-        }
-        if (!entry.value.equals(dto.getCertificationCode())) {
+            log.info("이메일 인증번호 검증 성공: email={}, user={}", email, loginEmail);
+            
+        } catch (BusinessException e) {
+            log.warn("이메일 인증번호 검증 실패: email={}, error={}", email, e.getErrorCode());
+            throw e;
+        } catch (Exception e) {
+            log.error("이메일 인증번호 검증 중 오류: email={}, error={}", email, e.getMessage());
             throw new BusinessException(ErrorCode.CERTIFICATION_MISMATCH);
         }
-
-        User user = userRepository.findByEmail(loginEmail)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        user.setCertificationEmail(dto.getEmail());
-        codeCache.remove(codeKey);
-        log.debug("✅ {} verified & saved to user {}", dto.getEmail(), loginEmail);
     }
 
     private boolean acquireLock(String key, Duration ttl) {
@@ -145,6 +182,28 @@ public class EmailService {
     private String generate() {
         int bound = (int) Math.pow(10, CODE_LEN);
         return String.format("%0" + CODE_LEN + "d", random.nextInt(bound));
+    }
+
+    private void validateEmailFormat(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new BusinessException(ErrorCode.EMAIL_INVALID_FORMAT);
+        }
+
+        if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+            log.error("잘못된 이메일 형식: {}", email);
+            throw new BusinessException(ErrorCode.EMAIL_INVALID_FORMAT);
+        }
+    }
+
+    private void validateCertificationCode(String code) {
+        if (code == null || code.trim().isEmpty()) {
+            throw new BusinessException(ErrorCode.CERTIFICATION_INVALID_FORMAT);
+        }
+
+        if (!code.matches("^[0-9]{" + CODE_LEN + "}$")) {
+            log.error("잘못된 인증번호 형식: {}", code);
+            throw new BusinessException(ErrorCode.CERTIFICATION_INVALID_FORMAT);
+        }
     }
 
     private static class CacheEntry {
