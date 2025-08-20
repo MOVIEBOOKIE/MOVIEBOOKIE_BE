@@ -9,12 +9,14 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.Date;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
 @Component
+@Slf4j
 public class JwtUtil {
 
     @Value("${jwt.secret}")
@@ -58,9 +60,11 @@ public class JwtUtil {
             Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
-            throw new BusinessException(ErrorCode.JWT_EXPIRED_TOKEN);
+            log.warn("JWT 토큰 만료: {}", e.getMessage());
+            return false;
         } catch (JwtException e) {
-            throw new BusinessException(ErrorCode.JWT_INVALID_TOKEN);
+            log.warn("JWT 토큰 검증 실패: {}", e.getMessage());
+            return false;
         }
     }
 
