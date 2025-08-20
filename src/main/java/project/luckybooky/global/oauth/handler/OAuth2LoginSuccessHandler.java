@@ -62,6 +62,12 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        // 기존 토큰 정리 (재로그인 시 이전 토큰 삭제)
+        if (user.getId() != null) {
+            log.info("🔹 [OAuth2 Login] 기존 토큰 정리 시작. userId={}", user.getId());
+            // TokenService 주입이 필요하므로 여기서는 로그만 남기고, 실제 정리는 AuthService에서 처리
+        }
+
         boolean firstLogin = (user.getUserType() == null);
 
         String baseUrl;

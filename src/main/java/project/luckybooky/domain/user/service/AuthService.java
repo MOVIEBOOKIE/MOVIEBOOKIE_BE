@@ -52,6 +52,12 @@ public class AuthService {
             User user = userRepository.findByEmail(email)
                     .orElseGet(() -> createNewUser(email, nickname, profileImage));
 
+            // 기존 토큰 정리 (재로그인 시 이전 토큰 삭제)
+            if (user.getId() != null) {
+                log.info("🔹 [Login] 기존 토큰 정리 시작. userId={}", user.getId());
+                tokenService.deleteAllRefreshTokens(user.getId());
+            }
+
             // JWT 토큰 생성
             String accessToken = jwtUtil.createAccessToken(user.getEmail());
             String refreshToken = jwtUtil.createRefreshToken(user.getEmail());
@@ -157,7 +163,13 @@ public class AuthService {
 
         // 4) Redis 에 저장된 토큰과 비교
         String saved = tokenService.getStoredRefreshToken(userId);
-        if (saved == null || !saved.equals(refreshToken)) {
+        if (saved == null) {
+            log.warn("🔹 [Token Reissue] Redis에 저장된 리프레시 토큰이 없음. userId={}", userId);
+            tokenService.deleteAllRefreshTokens(userId);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+        if (!saved.equals(refreshToken)) {
+            log.warn("🔹 [Token Reissue] Redis 토큰과 쿠키 토큰 불일치. userId={}", userId);
             tokenService.deleteAllRefreshTokens(userId);
             throw new BusinessException(ErrorCode.MULTI_ENV_LOGIN);
         }
