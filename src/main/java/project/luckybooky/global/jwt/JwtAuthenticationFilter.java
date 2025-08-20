@@ -13,12 +13,30 @@ import project.luckybooky.global.oauth.util.CookieUtil;
 
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     private final JwtUtil jwtUtil;
+
+    // ✅ 로그인/공개 경로는 '아예' 필터 스킵
     private static final List<String> EXCLUDED_URLS = List.of(
-            "/api/auth/login/kakao", "/swagger-ui", "/v3/api-docs", "/swagger-resources", "/api/events/anonymous",
-            "/api/test/users/tokens", "api/test/events/", "/actuator/prometheus", "/actuator/metrics",
-            "/api/email/send", "/api/auth/reissue", "/dev/swagger-ui", "/dev/v3/api-docs", "/dev/swagger-resources",
-            "/events/", "/images/", "/css/", "/js/", "/static/"
+            "/api/auth/login/kakao",
+            "/dev/api/auth/login/kakao",
+            "/v3/api-docs",
+            "/swagger-resources",
+            "/api/events/anonymous",
+            "/api/test/users/tokens",
+            "/api/test/events/",
+            "/actuator/prometheus",
+            "/actuator/metrics",
+            "/api/email/send",
+            "/api/auth/reissue",
+            "/dev/swagger-ui",
+            "/dev/v3/api-docs",
+            "/dev/swagger-resources",
+            "/events/",
+            "/images/",
+            "/css/",
+            "/js/",
+            "/static/"
     );
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil) {
@@ -31,40 +49,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String uri = request.getRequestURI();
-        if (EXCLUDED_URLS.stream().anyMatch(uri::startsWith)) {
+        final String uri = request.getRequestURI();
+
+        if (isExcluded(uri)) {
+            log.info("[JWT 필터] EXCLUDED URI → pass: {}", uri);
             filterChain.doFilter(request, response);
             return;
         }
 
-        if (request.getCookies() != null) {
-            for (var c : request.getCookies()) {
-                log.debug("[JWT 필터] Cookie: {}={}", c.getName(), c.getValue());
+        String token = resolveToken(request);
+        log.info("[JWT 필터] URI: {}, token 존재: {}", uri, token != null);
+
+        if (token != null && jwtUtil.validateToken(token)) {
+            String email = jwtUtil.extractEmail(token);
+            log.info("[JWT 필터] 토큰 검증 성공 - email: {}", email);
+            SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(email));
+        } else {
+            SecurityContextHolder.clearContext();
+            if (token != null) {
+                log.info("[JWT 필터] 토큰 유효하지 않음 → 인증 미설정 상태로 통과");
             }
         }
 
-        String bearer = request.getHeader("Authorization");
-        String token = bearer != null && bearer.startsWith("Bearer ")
-                ? bearer.substring(7)
-                : CookieUtil.getCookieValue(request, "accessToken");
-
-        log.debug("[JWT 필터] 요청 URI: {}, 토큰 존재: {}", uri, token != null);
-
-        if (token != null) {
-            if (jwtUtil.validateToken(token)) {
-                String email = jwtUtil.extractEmail(token);
-                log.debug("[JWT 필터] 토큰 검증 성공, 이메일: {}", email);
-                SecurityContextHolder.getContext()
-                        .setAuthentication(new JwtAuthenticationToken(email));
-                filterChain.doFilter(request, response);
-                return;
-            } else {
-                log.warn("[JWT 필터] 토큰 검증 실패");
-            }
-        }
-        
-        log.warn("[JWT 필터] 인증 실패 → 401");
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증이 필요합니다.");
+        filterChain.doFilter(request, response);
     }
 
     private boolean isExcluded(String requestURI) {
@@ -72,9 +79,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        String bearer = request.getHeader("Authorization");
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
         }
         return CookieUtil.getCookieValue(request, "accessToken");
     }
