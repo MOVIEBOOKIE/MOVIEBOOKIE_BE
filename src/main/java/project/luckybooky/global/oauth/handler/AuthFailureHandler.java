@@ -37,8 +37,8 @@ public class AuthFailureHandler implements AuthenticationEntryPoint {
             String host = request.getHeader("Host");
             if (host != null && (host.contains("localhost") || host.contains("127.0.0.1"))) {
                 loginUrl = "http://localhost:3000/login";
-            } else if (host != null && host.contains("moviebookie-git-dev-luckybookie.vercel.app")) {
-                loginUrl = "https://moviebookie-git-dev-luckybookie.vercel.app/login";
+            } else if (host != null && host.contains("dev-movie-bookie.shop/login")) {
+                loginUrl = "https://dev-movie-bookie.shop/login";
             } else {
                 loginUrl = "https://movie-bookie.shop/login";
             }
