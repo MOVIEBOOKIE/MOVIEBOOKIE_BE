@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface LocationRepository extends JpaRepository<Location, Long> {
     @Query("SELECT l FROM Location l " +
-            "WHERE (:min BETWEEN 1 AND l.seatCount OR :max BETWEEN 1 AND l.seatCount) " +
+            "WHERE (:max <= l.seatCount) " +
             "AND (:mediaType = '기타' OR l.availableMediaType = 'ALL') " +
             "AND (l.isStartTimeRestricted = FALSE OR " +
             "    (l.isStartTimeRestricted = TRUE AND :startTime IN (SELECT a FROM l.allowedStartTimes a))) " +
@@ -17,7 +17,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
             "AND (:disabledSize = 0 OR l.id NOT IN :disabledList) " +
             "ORDER BY l.seatCount")
     List<Location> findLocationsByEventOptions(
-            @Param("min") int min,
             @Param("max") int max,
             @Param("mediaType") String mediaType,
             @Param("startTime") String startTime,
