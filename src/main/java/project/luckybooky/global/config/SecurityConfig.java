@@ -56,6 +56,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
+                                "/actuator/prometheus",
+                                "/actuator/metrics",
                                 "/"
                         ).permitAll()
 
