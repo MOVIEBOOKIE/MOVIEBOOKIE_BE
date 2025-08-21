@@ -36,7 +36,8 @@ public class KakaoUtil {
             "https://moviebookie-git-dev-luckybookie.vercel.app/login/kakao",
             "https://movie-bookie.shop/login/kakao",
             "https://www.movie-bookie.shop/login/kakao",
-            "https://dev-movie-bookie.shop/login/kakao"
+            "https://dev-movie-bookie.shop/login/kakao",
+            "https://www.dev-movie-bookie.shop/login/kakao"
     );
 
 
