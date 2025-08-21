@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.notification.dto.request.FcmTokenRequestDTO;
 import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
 import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
+import project.luckybooky.domain.notification.dto.request.SendVenueConfirmedMailRequestDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationResponseDTO;
 import project.luckybooky.domain.notification.dto.response.SendNotificationResponseDTO;
 import project.luckybooky.domain.notification.service.NotificationService;
@@ -89,6 +90,28 @@ public class NotificationController {
 
         FcmTokenResponseDTO response = notificationService.registerFcmToken(dto);
         return CommonResponse.of(ResultCode.OK, response);
+    }
+
+    @Operation(
+            summary = "대관 확정 메일 수동 전송",
+            description = "이벤트 ID와 커스텀 결제 정보를 받아 주최자에게 대관 확정 메일을 전송합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "메일 전송 완료"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 요청"),
+            @ApiResponse(responseCode = "500", description = "메일 전송 중 오류")
+    })
+    @PostMapping("/send/venue-confirmed")
+    public CommonResponse<Void> sendVenueConfirmedMail(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "대관 확정 메일 전송 요청 DTO",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = SendVenueConfirmedMailRequestDTO.class))
+            )
+            @RequestBody SendVenueConfirmedMailRequestDTO dto
+    ) {
+        notificationService.sendVenueConfirmedMailCustom(dto);
+        return CommonResponse.of(ResultCode.OK);
     }
 
     @Operation(

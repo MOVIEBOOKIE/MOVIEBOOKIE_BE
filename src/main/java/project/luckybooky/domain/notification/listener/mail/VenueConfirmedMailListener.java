@@ -28,6 +28,9 @@ public class VenueConfirmedMailListener {
     @Value("${app.home-url}")
     private String homeUrl;
 
+    @Value("${mail.auto-send-venue-confirmed:false}")
+    private boolean autoSendVenueConfirmed;
+
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onHostReservationConfirmed(HostNotificationEvent evt) {
 
@@ -54,7 +57,11 @@ public class VenueConfirmedMailListener {
         ConfirmedData data = NotificationConverter.toConfirmedData(hostPart, homeUrl);
         String to = hostPart.getUser().getCertificationEmail();
 
-        mailTemplateService.sendVenueConfirmedMail(to, data);
-        log.info("✅ [메일] 대관확정 발송 완료: to={}, eventId={}", to, ev.getId());
+        if (autoSendVenueConfirmed) {
+            mailTemplateService.sendVenueConfirmedMail(to, data);
+            log.info("✅ [메일] 대관확정 발송 완료: to={}, eventId={}", to, ev.getId());
+        } else {
+            log.info("ℹ️ 설정에 따라 자동 대관확정 메일 전송을 생략합니다. eventId={} to={}", ev.getId(), to);
+        }
     }
 }

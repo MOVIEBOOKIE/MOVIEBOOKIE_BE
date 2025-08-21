@@ -8,11 +8,13 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
 import project.luckybooky.domain.notification.dto.request.FcmTokenRequestDTO;
+import project.luckybooky.domain.notification.dto.request.SendVenueConfirmedMailRequestDTO;
 import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
 import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationResponseDTO;
@@ -20,6 +22,8 @@ import project.luckybooky.domain.notification.dto.response.SendNotificationRespo
 import project.luckybooky.domain.notification.entity.NotificationInfo;
 import project.luckybooky.domain.notification.repository.NotificationRepository;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
+import project.luckybooky.domain.participation.entity.Participation;
+import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
@@ -36,6 +40,10 @@ public class NotificationService {
     @Getter
     private final ParticipationRepository participationRepository;
     private final NotificationRepository notificationRepository;
+    private final MailTemplateService mailTemplateService;
+
+    @Value("${app.home-url}")
+    private String homeUrl;
 
     public FcmTokenResponseDTO registerFcmToken(FcmTokenRequestDTO dto) {
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
@@ -108,6 +116,33 @@ public class NotificationService {
         }
 
         return new SendNotificationResponseDTO("success", "알림 전송 및 저장 완료");
+    }
+
+    @Transactional(readOnly = true)
+    public void sendVenueConfirmedMailCustom(SendVenueConfirmedMailRequestDTO dto) {
+        Participation hostPart = participationRepository
+                .findFirstByEventIdAndParticipateRole(dto.getEventId(), ParticipateRole.HOST)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+
+        // Get host's email - prefer certification email, fallback to regular email
+        String hostEmail = hostPart.getUser().getCertificationEmail();
+        if (hostEmail == null || hostEmail.isEmpty()) {
+            hostEmail = hostPart.getUser().getEmail();
+        }
+
+        if (hostEmail == null || hostEmail.isEmpty()) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        var data = NotificationConverter.toConfirmedData(hostPart, homeUrl);
+
+        mailTemplateService.sendVenueConfirmedMailCustom(
+                hostEmail,
+                data,
+                dto.getCompanyName(),
+                dto.getContactInfo(),
+                dto.getAccountAndNotes()
+        );
     }
 
     /**
