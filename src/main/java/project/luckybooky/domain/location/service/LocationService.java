@@ -44,7 +44,6 @@ public class LocationService {
 
         // 옵션에 만족하는 영화관 리스트 조회
         List<Location> locationsByEventOptions = locationRepository.findLocationsByEventOptions(
-                request.getMin(),
                 request.getMax(),
                 request.getMediaType(),
                 request.getStartTime(),
