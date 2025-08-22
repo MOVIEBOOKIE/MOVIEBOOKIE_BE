@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.notification.dto.request.FcmTokenRequestDTO;
 import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
+import project.luckybooky.domain.notification.dto.request.SendVenueConfirmedMailRequestDTO;
 import project.luckybooky.domain.notification.dto.response.FcmTokenResponseDTO;
 import project.luckybooky.domain.notification.dto.response.NotificationResponseDTO;
 import project.luckybooky.domain.notification.dto.response.SendNotificationResponseDTO;
 import project.luckybooky.domain.notification.service.NotificationService;
+import project.luckybooky.domain.notification.service.VenueConfirmedMailService;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
 import project.luckybooky.global.service.UserContextService;
@@ -32,6 +34,7 @@ public class NotificationController {
 
     private final NotificationService notificationService;
     private final UserContextService userContextService;
+    private final VenueConfirmedMailService venueConfirmedMailService;
 
     @Operation(
             summary = "푸시 알림 전송",
@@ -91,6 +94,28 @@ public class NotificationController {
         return CommonResponse.of(ResultCode.OK, response);
     }
 
+//    @Operation(
+//            summary = "대관 확정 메일 수동 전송",
+//            description = "이벤트 ID와 커스텀 결제 정보를 받아 주최자에게 대관 확정 메일을 전송합니다."
+//    )
+//    @ApiResponses({
+//            @ApiResponse(responseCode = "200", description = "메일 전송 완료"),
+//            @ApiResponse(responseCode = "400", description = "유효하지 않은 요청"),
+//            @ApiResponse(responseCode = "500", description = "메일 전송 중 오류")
+//    })
+//    @PostMapping("/send/venue-confirmed")
+//    public CommonResponse<Void> sendVenueConfirmedMail(
+//            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+//                    description = "대관 확정 메일 전송 요청 DTO",
+//                    required = true,
+//                    content = @Content(schema = @Schema(implementation = SendVenueConfirmedMailRequestDTO.class))
+//            )
+//            @RequestBody SendVenueConfirmedMailRequestDTO dto
+//    ) {
+//        notificationService.sendVenueConfirmedMailCustom(dto);
+//        return CommonResponse.of(ResultCode.OK);
+//    }
+
     @Operation(
             summary = "전체 알림 조회",
             description = "모든 알림을 조회하고, 조회된 미읽음 알림은 모두 읽음 처리합니다."
@@ -128,4 +153,12 @@ public class NotificationController {
         return CommonResponse.of(ResultCode.OK, has);
     }
 
+    @PostMapping("/events/{eventId}/venue-confirmed")
+    public CommonResponse<Void> sendVenueConfirmedToHost(
+            @PathVariable Long eventId,
+            @RequestBody(required = false) SendVenueConfirmedMailRequestDTO req
+    ) {
+        venueConfirmedMailService.sendVenueConfirmedMailToHost(eventId, req);
+        return CommonResponse.of(ResultCode.OK);
+    }
 }

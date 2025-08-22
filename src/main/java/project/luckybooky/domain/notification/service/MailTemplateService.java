@@ -56,6 +56,51 @@ public class MailTemplateService {
         ctx.setVariable("participantsLink", buildParticipantsLink(data.getEventId()));
         ctx.setVariable("homeUrl", homeUrl);
         ctx.setVariable("staticBaseUrl", staticBaseUrl);
+        ctx.setVariable("paymentInfo", Map.of(
+                "companyName", "",
+                "contactInfo", "",
+                "accountAndNotes", ""
+        ));
+
+        sendTemplateMail(
+                to,
+                "[MovieBookie] 대관 확정 안내: " + data.getEventTitle(),
+                "venue_confirmed",
+                ctx,
+                new InlineResource("logoCid", "classpath:static/images/logo.png"),
+                new InlineResource("groupChatCid", "classpath:static/images/groupChat.png"),
+                new InlineResource("chatCid", "classpath:static/images/chat.png")
+        );
+    }
+
+    public void sendVenueConfirmedMailCustom(
+            String to,
+            ConfirmedData data,
+            String companyName,
+            String contactInfo,
+            String accountAndNotes
+    ) {
+        if (data.getEventId() == null) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
+
+        Context ctx = new Context();
+        ctx.setVariable("mediaTitle", data.getMediaTitle());
+        ctx.setVariable("eventTitle", data.getEventTitle());
+        ctx.setVariable("hostName", data.getHostName());
+        ctx.setVariable("date", formatDate(data));
+        ctx.setVariable("time", formatTime(data));
+        ctx.setVariable("venue", data.getLocationName());
+        ctx.setVariable("capacity", formatCapacity(data.getMaxParticipants()));
+        ctx.setVariable("participantsLink", buildParticipantsLink(data.getEventId()));
+        ctx.setVariable("homeUrl", homeUrl);
+        ctx.setVariable("staticBaseUrl", staticBaseUrl);
+
+        ctx.setVariable("paymentInfo", Map.of(
+                "companyName", companyName != null ? companyName : "",
+                "contactInfo", contactInfo != null ? contactInfo : "",
+                "accountAndNotes", accountAndNotes != null ? accountAndNotes : ""
+        ));
 
         sendTemplateMail(
                 to,

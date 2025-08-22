@@ -2,206 +2,258 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <title>대관 확정 안내</title>
+    <title>대관 확정 및 결제 관련 절차 안내</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <style>
+        /* 일부 클라이언트에만 적용될 수 있으니 핵심은 반드시 인라인으로도 지정합니다. */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #57585C;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+
+        .header {
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: inline-block;
+            vertical-align: top;
+            margin-bottom: 16px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0 0 24px 0;
+        }
+
+        .intro-text {
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-content {
+            margin-left: 10px;
+        }
+
+        .detail-item {
+            margin-bottom: 4px;
+        }
+
+        .chat-images {
+            margin: 16px 0;
+        }
+
+        .chat-images table {
+            margin: 0 -6px 8px;
+        }
+
+        .chat-images img {
+            display: block;
+            max-width: 258px;
+            width: 258px;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #eef1f5;
+        }
+
+        .disclaimer {
+            background-color: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 24px 0;
+            font-size: 14px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid #eef1f5;
+            font-size: 14px;
+        }
+
+        a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+        }
+    </style>
 </head>
-<body style="margin:0;padding:0;background:#f5f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#1f2329;">
-<div style="display:none;max-height:0;overflow:hidden;font-size:1px;color:#f5f6f8;">
-    대관이 최종 확정되었습니다. 참여자 정보 확인과 오픈채팅 안내를 확인해보세요.
+
+<body th:inline="text"
+      style="margin:0; padding:20px; background-color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#57585C;">
+
+<div class="header" style="text-align:left; margin-bottom:24px;">
+    <img src="cid:logoCid" alt="moviebookie" class="logo"
+         style="width:36px; height:36px; border-radius:8px; display:inline-block; vertical-align:top; margin-bottom:16px;"/>
+    <h1 class="title" style="font-size:20px; font-weight:600; color:#1a1a1a; margin:0 0 24px 0;">대관 확정 및 결제 관련 절차
+        안내</h1>
 </div>
 
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f8;">
-    <tr>
-        <td align="center" style="padding:50px 10px;">
-            <table role="presentation" width="560" cellpadding="0" cellspacing="0"
-                   style="background:#ffffff;border-radius:8px;overflow:hidden;">
-                <!-- Header -->
-                <tr>
-                    <td style="padding:40px 32px 4px;">
-                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                            <tr>
-                                <td style="padding-bottom:6px;">
-                                    <div style="width:36px;height:36px;border-radius:8px;overflow:hidden;display:inline-block;background:linear-gradient(135deg,#ff6b9d,#ff8fab);">
-                                        <img th:src="@{'cid:logoCid'}" alt="M"
-                                             style="width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;"/>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <h1 style="margin:0;font-size:24px;font-weight:700;line-height:1.1;color:#1f2329;">
-                                        대관 확정 안내
-                                    </h1>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
+<div class="intro-text" style="margin-bottom:24px; line-height:1.6;">
+    <p style="margin:0 0 12px 0;">안녕하세요, 무비부키입니다.</p>
+    <p style="margin:0 0 12px 0;">"[[${eventTitle}]]"의 이벤트 주최자 [[${hostName}]]님의 대관이 최종 확정되었음을 안내드립니다.</p>
+    <p style="margin:0 0 12px 0;">무비부키는 이벤트 주최자 분들이 보다 편리하게 영화관 대관을 진행하실 수 있도록, 대관 확정까지의 절차를 지원하고 있습니다. 단, 예약금(계약금) 납부를
+        포함한 이후 결제 절차 및 정산 관리는 주최자님의 책임 하에 직접 진행해주셔야 합니다.</p>
+    <p style="margin:0 0 12px 0;">주최자님의 원활한 진행을 위해 필요한 정보를 아래 순서대로 안내드릴 예정입니다.</p>
+    <p style="margin:0;">
+        1. 대관 상세 정보<br/>
+        2. 영화관 대관 결제 관련 정보<br/>
+        3. 참여자 정보<br/>
+        4. 참여자간 소통방법 안내
+    </p>
+</div>
 
-                <!-- Greeting -->
-                <tr>
-                    <td style="padding:0 32px 32px;">
-                        <p style="margin:0 0 12px;font-size:14px;line-height:1.45;">안녕하세요, 무비부키입니다.</p>
-                        <p style="margin:0 0 12px;font-size:14px;line-height:1.45;">
-                            '<span th:text="${eventTitle}">이벤트명</span>'의 이벤트 주최자
-                            <span th:text="${hostName}">홍길동</span>님,
-                        </p>
-                        <p style="margin:0;font-size:14px;line-height:1.45;">
-                            대관이 최종 확정되었음을 알려드립니다. 영화사로부터 받은 대관 정보 상세 내용을 확인해보세요.
-                        </p>
-                    </td>
-                </tr>
+<div class="disclaimer"
+     style="background-color:#f8f9fa; padding:16px; border-radius:8px; margin:24px 0; font-size:14px;">
+    ※ 무비부키는 대관 확정 이후 발생하는 예약금 납부, 영화사와의 결제, 참여자 간 비용 정산에는 직접 개입하지 않으며, 해당 과정은 주최자님의 관리 범위에 속합니다.
+</div>
 
-                <!-- Divider -->
-                <tr>
-                    <td style="padding:0 32px;">
-                        <div style="height:1px;background:#e6e8ec;margin:24px 0;"></div>
-                    </td>
-                </tr>
+<!-- 1. 대관 상세 정보 -->
+<div class="section" style="margin-bottom:32px;">
+    <!-- 테이블 기반 번호 배지 + 제목: 모든 메일 클라이언트에서 중앙정렬 보장 -->
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 8px 0;">
+        <tr>
+            <td width="24" height="24" align="center" valign="middle"
+                style="background:#1a1a1a; color:#ffffff; border-radius:50%; font-size:14px; font-weight:600;">
+                1
+            </td>
+            <td width="12" style="font-size:0; line-height:0;">&nbsp;</td>
+            <td style="font-size:16px; font-weight:600; color:#1a1a1a;">대관 상세 정보</td>
+        </tr>
+    </table>
 
-                <!-- Venue Details -->
-                <tr>
-                    <td style="padding:0 32px 32px;">
-                        <div style="font-size:18px;font-weight:600;margin:0 0 12px;color:#1f2329;">대관 상세 정보</div>
-                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                               style="background:#f8f9fc;border:1px solid #e6e8ec;border-radius:12px;">
-                            <tr>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">영화 제목</td>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
-                                    th:text="${mediaTitle}">무비부키
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">일시</td>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
-                                    th:text="${date}">0000년 00월 00일 (0)
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">시간</td>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
-                                    th:text="${time}">00:00 - 00:00
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">장소</td>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
-                                    th:text="${venue}">무비부키
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">상영 인원</td>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
-                                    th:text="${capacity}">00명 (주최자 포함)
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:500;color:#6f7582;">영화사 담당자
-                                    연락처
-                                </td>
-                                <td style="padding:12px 24px;font-size:13px;font-weight:600;color:#1f2329;text-align:right;"
-                                    th:text="${contact}">02-0000-0000
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
+    <div class="section-content" style="margin-left:10px;">
+        <div class="detail-item" style="margin-bottom:4px;">영화 제목: <span th:text="${mediaTitle}">영화 제목</span></div>
+        <div class="detail-item" style="margin-bottom:4px;">일시: <span th:text="${date}">일시</span></div>
+        <div class="detail-item" style="margin-bottom:4px;">시간: <span th:text="${time}">시간</span></div>
+        <div class="detail-item" style="margin-bottom:4px;">장소: <span th:text="${venue}">장소</span></div>
+        <div class="detail-item" style="margin-bottom:4px;">상영 인원: <span th:text="${capacity}">상영 인원</span></div>
+    </div>
+</div>
 
-                <!-- Participant Info Button -->
-                <tr>
-                    <td style="padding:0 32px 12px;">
-                        <div style="font-size:13px;color:#555;margin:0 0 6px;line-height:1.4;">
-                            아래 '참여자 정보 확인' 버튼을 눌러 참여자 정보를 확인하실 수 있습니다.<br/>
-                            해당 링크는 상영일까지 유효합니다.
-                        </div>
-                        <div style="margin-top:12px;">
-                            <a th:href="${participantsLink}"
-                               style="display:inline-block;background:#4f5561;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:14px 0;line-height:1;text-align:center;border-radius:8px;width:160px;letter-spacing:0.5px;border:none;cursor:pointer;">
-                                참여자 정보 확인
-                            </a>
-                        </div>
-                    </td>
-                </tr>
+<!-- 2. 영화관 대관 결제 관련 정보 -->
+<div class="section" style="margin-bottom:32px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 8px 0;">
+        <tr>
+            <td width="24" height="24" align="center" valign="middle"
+                style="background:#1a1a1a; color:#ffffff; border-radius:50%; font-size:14px; font-weight:600;">
+                2
+            </td>
+            <td width="12" style="font-size:0; line-height:0;">&nbsp;</td>
+            <td style="font-size:16px; font-weight:600; color:#1a1a1a;">영화관 대관 결제 관련 정보</td>
+        </tr>
+    </table>
 
-                <!-- Open Chat Section -->
-                <tr>
-                    <td style="padding:32px;">
-                        <div style="font-size:18px;font-weight:600;margin:0 0 8px;color:#5f2871;">오픈채팅방을 만들어보세요!</div>
-                        <div style="font-size:14px;color:#2e3239;margin:0 0 12px;line-height:1.4;">
-                            오픈채팅방으로 참가자들을 초대하여 이벤트 전 자연스럽게 분위기를 만들고, 참여자들과 미리 소통해보세요.
-                        </div>
-                        <ul style="padding-left:16px;margin:0 0 16px;font-size:14px;line-height:1.4;color:#2e3239;">
-                            <li style="margin-bottom:6px;">참여자 정보에 포함된 전화번호를 활용해 오픈채팅방에 초대해주세요</li>
-                            <li>채팅방에서는 공지 위주로 소통하며, 불필요한 대화는 자제 부탁드립니다.</li>
-                        </ul>
-                        <div style="font-size:16px;font-weight:600;margin:16px 0 8px;color:#5f2871;">오픈채팅방 만드는 법</div>
-                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                               style="border-collapse:collapse;">
-                            <tr>
-                                <td align="center" style="padding:0;">
-                                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
-                                        <tr>
-                                            <td valign="top" style="padding-right:3px;">
-                                                <div style="overflow:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:8px;background:transparent;">
-                                                    <img th:src="@{'cid:groupChatCid'}" alt="그룹채팅방"
-                                                         style="display:block;max-width:100%;max-height:180px;object-fit:contain;"/>
-                                                </div>
-                                            </td>
-                                            <td valign="top" style="padding-left:3px;">
-                                                <div style="overflow:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:8px;background:transparent;">
-                                                    <img th:src="@{'cid:chatCid'}" alt="채팅방 관리"
-                                                         style="display:block;max-width:100%;max-height:180px;object-fit:contain;"/>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
+    <div class="section-content" style="margin-left:10px;">
+        <div class="detail-item" style="margin-bottom:4px;">영화사명: <span th:text="${paymentInfo.companyName}">영화사명</span>
+        </div>
+        <div class="detail-item" style="margin-bottom:4px;">담당자명/연락처: <span th:text="${paymentInfo.contactInfo}">담당자명/연락처</span>
+        </div>
+        <div class="detail-item" style="margin-bottom:4px;">계좌번호 및 기타 안내사항: <span
+                th:text="${paymentInfo.accountAndNotes}">계좌번호 및 기타 안내사항</span></div>
+    </div>
+</div>
 
-                <!-- Disclaimer -->
-                <tr>
-                    <td style="padding:24px 32px;">
-                        <div style="font-size:12px;color:#555;line-height:1.3;">
-                            <p style="margin:0 0 6px;">본 메일은 모임 운영을 위한 참여자 안내 목적으로 발송되었습니다.</p>
-                            <p style="margin:0 0 6px;">참여자 개인정보는 오직 오픈채팅방 내 소통을 위한 용도로만 사용되며, 외부 유출 또는 다른 용도로 활용 시 주최자에게
-                                법적 책임이 발생할 수 있습니다.</p>
-                            <p style="margin:0;">안전하고 쾌적한 모임을 위해 개인정보 보호에 협조 부탁드립니다. 감사합니다.</p>
-                        </div>
-                    </td>
-                </tr>
+<!-- 3. 참여자 정보 -->
+<div class="section" style="margin-bottom:32px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 8px 0;">
+        <tr>
+            <td width="24" height="24" align="center" valign="middle"
+                style="background:#1a1a1a; color:#ffffff; border-radius:50%; font-size:14px; font-weight:600;">
+                3
+            </td>
+            <td width="12" style="font-size:0; line-height:0;">&nbsp;</td>
+            <td style="font-size:16px; font-weight:600; color:#1a1a1a;">참여자 정보</td>
+        </tr>
+    </table>
 
-                <!-- CTA: 무비부키 바로가기 -->
-                <tr>
-                    <td style="padding:0 32px 40px;">
-                        <div style="text-align:left;">
-                            <a th:href="${homeUrl}"
-                               style="display:inline-block;background:#e60023;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:14px 0;line-height:1;text-align:center;border-radius:8px;width:160px;letter-spacing:0.5px;border:none;cursor:pointer;">
-                                무비부키 바로가기
-                            </a>
-                        </div>
-                    </td>
-                </tr>
+    <div class="section-content" style="margin-left:10px;">
+        <p style="margin:0 0 8px 0;">아래 '참여자 명단 및 연락처 확인' 버튼을 눌러 참여자 정보를 확인하실 수 있습니다.</p>
+        <p style="margin:0 0 12px 0;">해당 링크는 상영일까지만 열람이 가능합니다.</p>
 
-                <!-- Footer -->
-                <tr>
-                    <td style="padding:16px 32px 40px;">
-                        <div style="font-size:12px;color:#8a8a8a;line-height:1.3;">
-                            <div style="margin-bottom:6px;font-weight:600;color:#ff6b9d;">@moviebookie_</div>
-                            <div style="margin-bottom:4px;">본 메일은 발신 전용 메일입니다.</div>
-                            <div style="margin:0 0 4px;">문의: <a href="mailto:moviebookie@gmail.com"
-                                                                style="color:#8a8a8a;text-decoration:none;">moviebookie@gmail.com</a>
-                            </div>
-                            <div>Copyright © moviebookie. All Rights Reserved.</div>
-                        </div>
-                    </td>
-                </tr>
+        <!-- 버튼: 인라인 스타일 + !important (파란 글자/밑줄 방지), 단일 앵커만 사용 -->
+        <a th:href="${participantsLink}"
+           style="background:#FF1F44; color:#ffffff !important; text-decoration:none !important;
+                display:inline-block; border-radius:12px; padding:12px 24px; font-weight:500; margin:16px 0;">
+            참여자 명단 및 연락처 확인
+        </a>
+    </div>
+</div>
 
-            </table>
-        </td>
-    </tr>
-</table>
+<!-- 4. 참여자 간 소통방법 안내 -->
+<div class="section" style="margin-bottom:32px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 8px 0;">
+        <tr>
+            <td width="24" height="24" align="center" valign="middle"
+                style="background:#1a1a1a; color:#ffffff; border-radius:50%; font-size:14px; font-weight:600;">
+                4
+            </td>
+            <td width="12" style="font-size:0; line-height:0;">&nbsp;</td>
+            <td style="font-size:16px; font-weight:600; color:#1a1a1a;">참여자 간 소통방법 안내</td>
+        </tr>
+    </table>
+
+    <p style="margin:0 0 12px 0;">오픈채팅방으로 참여자들을 초대하여 이벤트 전 자연스럽게 분위기를 만들고, 참여자들과 미리 소통해보세요.</p>
+</div>
+
+<div class="section-content" style="margin-left:10px;">
+    <p style="margin:0 0 6px 0;">- 참여자 정보에 포함된 전화번호를 활용해 오픈채팅방에 초대해주세요</p>
+    <p style="margin:0 0 6px 0;">- 오픈채팅방을 통해 계좌번호 공유, 결제 확인, 안내사항 전달 등을 주최자님께서 직접 관리해주시기 바랍니다.</p>
+    <p style="margin:0 0 12px 0;">- 채팅방에서는 공지 위주로 소통하며, 불필요한 대화는 자제 부탁드립니다.</p>
+
+    <p style="margin:0 0 8px 0;">오픈채팅방 만드는 법</p>
+    <div class="chat-images" style="margin:16px 0;">
+        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 -6px 8px -6px;">
+            <tr>
+                <td style="padding:0 6px;">
+                    <img src="cid:groupChatCid" alt="오픈채팅방 만들기"
+                         style="display:block; max-width:258px; width:258px; height:auto; border-radius:8px; border:1px solid #eef1f5;"/>
+                </td>
+                <td style="padding:0 6px;">
+                    <img src="cid:chatCid" alt="오픈채팅방 설정"
+                         style="display:block; max-width:258px; width:258px; height:auto; border-radius:8px; border:1px solid #eef1f5;"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <p style="margin:0 0 6px 0;">1) 카카오톡 앱 내의 오픈채팅 탭으로 이동하여 말풍선 모양의 추가 버튼을 누릅니다.</p>
+    <p style="margin:0 0 6px 0;">2) 그룹 채팅 유형을 선택합니다.</p>
+    <p style="margin:0;">3) 이후 채팅방 이름, 프로필 설정 등을 마치면 오픈 채팅방 생성할 수 있습니다.</p>
+</div>
+
+<div class="footer" style="margin-top:40px; padding-top:24px; border-top:1px solid #eef1f5; font-size:14px;">
+    <p style="margin:0 0 6px 0;">본 메일은 모임 운영을 위한 참여자 안내 목적으로 발송되었습니다.</p>
+    <p style="margin:0 0 6px 0;">참여자 개인정보는 오직 오픈채팅방 내 소통을 위한 용도로만 사용되며 외부 유출 또는 다른 용도로 활용 시 주최자에게 법적 책임이 발생할 수 있습니다.</p>
+    <p style="margin:0 0 12px 0;">안전하고 쾌적한 모임을 위해 개인정보 보호에 협조 부탁드립니다.</p>
+    <p style="margin:0 0 16px 0;">감사합니다.</p>
+
+    <!-- 홈 버튼: 단일 앵커(인라인 스타일) -->
+    <a th:href="${homeUrl}"
+       style="background:#FF1F44; color:#ffffff !important; text-decoration:none !important;
+              display:inline-block; border-radius:12px; padding:12px 24px; font-weight:500;">
+        무비부키 바로가기
+    </a>
+
+    <p style="margin-top:24px; font-size:12px; color:#999;">
+        @moviebookie.<br/>
+        본 메일은 발신 전용 메일입니다.<br/>
+        이용과 관련해서 궁금한 점이 있으시면 moviebookie@gmail.com 으로 보내주세요.<br/>
+        Copyright ⓒ moviebookie. All Rights Reserved.
+    </p>
+</div>
 </body>
 </html>
