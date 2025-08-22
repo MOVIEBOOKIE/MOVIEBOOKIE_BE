@@ -31,7 +31,6 @@ import project.luckybooky.domain.location.service.LocationService;
 import project.luckybooky.domain.notification.event.app.HostNotificationEvent;
 import project.luckybooky.domain.notification.event.app.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.event.mail.EventVenueCancelledEvent;
-import project.luckybooky.domain.notification.event.mail.EventVenueConfirmedEvent;
 import project.luckybooky.domain.notification.type.HostNotificationType;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.participation.converter.ParticipationConverter;
@@ -546,7 +545,7 @@ public class EventService {
             ));
         }
 
-        publisher.publishEvent(new EventVenueConfirmedEvent(eventId, hostId));
+        // publisher.publishEvent(new EventVenueConfirmedEvent(eventId, hostId));
 
         return EventConverter.toEventVenueConfirmedResultDTO(ticketId);
     }

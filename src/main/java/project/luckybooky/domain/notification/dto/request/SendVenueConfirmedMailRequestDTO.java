@@ -1,7 +1,6 @@
 package project.luckybooky.domain.notification.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,10 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class SendVenueConfirmedMailRequestDTO {
-
-    @Schema(description = "이벤트 ID", example = "123")
-    @NotNull
-    private Long eventId;
 
     @Schema(description = "영화사명", example = "롯데컬처웍스")
     private String companyName;
