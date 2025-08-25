@@ -1,13 +1,13 @@
 # MOVIEBOOKIE_BE
 🍿 영화관을 더 쉽고 더 자유롭게, 무비부키
 
-## 📜 ERD
+## ERD
 <img width="800" alt="무비부키 ERD" src="https://github.com/user-attachments/assets/e228266f-7930-4360-bc59-88e01835dc13" />
 
-## ⚙️ System Architecture
+## System Architecture
 <img width="800" alt="스크린샷 2025-06-20 오전 9 39 45" src="https://github.com/user-attachments/assets/b86f0c6a-a1be-4fc0-b70e-d0f21275ba93" />
 
-## 📝 Project Structure
+## Project Structure
 ```markdown
 src
 ├── main
@@ -47,7 +47,7 @@ src
     ├── application-dev.yml 
     └── application-prod.yml
 ```
-## 🛠️ Tech Stack
+## Tech Stack
 - `Jdk 21`
 - `Spring Boot 3.2.5`
 - `MySQL 9.3.0`, `Redis 5.0.7`
@@ -56,7 +56,7 @@ src
 
 
 
-## 🧑🏻‍💻 Commit Convention
+## Commit Convention
 | 커밋 타입 | 설명 | 예시 |
 | ------- | ---- | ---- |
 | ✨ **Feat** | 새로운 기능 추가 | `[FEAT] #이슈번호: 기능 추가` |
