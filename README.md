@@ -1,11 +1,11 @@
 # MOVIEBOOKIE_BE
 🍿 영화관을 더 쉽고 더 자유롭게, 무비부키
 
-## ERD
-<img width="800" alt="무비부키 ERD" src="https://github.com/user-attachments/assets/e228266f-7930-4360-bc59-88e01835dc13" />
-
 ## System Architecture
 <img width="800" alt="스크린샷 2025-06-20 오전 9 39 45" src="https://github.com/user-attachments/assets/b86f0c6a-a1be-4fc0-b70e-d0f21275ba93" />
+
+## ERD
+<img width="800" alt="무비부키 ERD" src="https://github.com/user-attachments/assets/e228266f-7930-4360-bc59-88e01835dc13" />
 
 ## Project Structure
 ```markdown
