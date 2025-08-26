@@ -9,7 +9,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import project.luckybooky.domain.admin.converter.WebhookConverter;
 import project.luckybooky.domain.admin.dto.VenueRequestWebhookDTO;
 import project.luckybooky.domain.admin.event.VenueRequestWebhookEvent;
-import project.luckybooky.domain.admin.service.WebhookService;
+import project.luckybooky.domain.admin.service.VenueRequestWebhookService;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.participation.entity.Participation;
@@ -24,7 +24,7 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 public class VenueRequestWebhookListener {
     private final EventRepository eventRepository;
     private final ParticipationRepository participationRepository;
-    private final WebhookService webhookService;
+    private final VenueRequestWebhookService venueRequestWebhookService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onVenueRequest(VenueRequestWebhookEvent evt) {
@@ -43,6 +43,6 @@ public class VenueRequestWebhookListener {
         VenueRequestWebhookDTO dto = WebhookConverter.toDto(event, host, participants);
 
         log.info("▶️ Sending Discord webhook for venue request eventId={}", eventId);
-        webhookService.sendVenueRequest(dto);
+        venueRequestWebhookService.sendVenueRequest(dto);
     }
 }
