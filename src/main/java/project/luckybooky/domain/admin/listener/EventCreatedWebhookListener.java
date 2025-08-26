@@ -8,7 +8,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import project.luckybooky.domain.admin.converter.WebhookConverter;
 import project.luckybooky.domain.admin.dto.EventCreatedWebhookDTO;
 import project.luckybooky.domain.admin.event.EventCreatedWebhookEvent;
-import project.luckybooky.domain.admin.service.WebhookService;
+import project.luckybooky.domain.admin.service.EventCreatedWebhookService;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.participation.entity.Participation;
@@ -23,7 +23,7 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 public class EventCreatedWebhookListener {
     private final EventRepository eventRepository;
     private final ParticipationRepository participationRepository;
-    private final WebhookService webhookService;
+    private final EventCreatedWebhookService eventCreatedWebhookService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onEventCreated(EventCreatedWebhookEvent evt) {
@@ -39,6 +39,6 @@ public class EventCreatedWebhookListener {
         EventCreatedWebhookDTO dto = WebhookConverter.toEventCreatedDto(event, host);
 
         log.info("▶️ Sending Discord webhook for event creation eventId={}", eventId);
-        webhookService.sendEventCreated(dto);
+        eventCreatedWebhookService.sendEventCreated(dto);
     }
 }
