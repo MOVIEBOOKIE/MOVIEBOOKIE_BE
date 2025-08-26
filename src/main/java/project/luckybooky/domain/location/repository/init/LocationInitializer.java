@@ -36,43 +36,43 @@ public class LocationInitializer implements ApplicationRunner {
             log.info("[Location] 데이터 존재");
         } else {
             List<Location> locationList = Arrays.asList(
-                    Location.builder()
-                            .locationName("시네마테크 KOFA 1관")
-                            .address("서울특별시 마포구 상암동 1602 DMC 단지")
-                            .pricePerHour(40000)
-                            .locationKeywordList(keywords(
-                                    LocationKeyword.LARGE_SCALE,
-                                    LocationKeyword.FOR_GROUP,
-                                    LocationKeyword.LIVE_FEEL,
-                                    LocationKeyword.MAJESTIC
-                            ))
-                            .seatCount(321)
-                            .hasDisabledSeat(Boolean.TRUE)
-                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/KOFA.jpg")
-                            .availableMediaType(AvailableMediaType.ALL)
-                            .availableTimes(0)
-                            .isStartTimeRestricted(Boolean.FALSE)
-                            .latitude(37.577608)
-                            .longitude(126.889993)
-                            .build(),
-                    Location.builder()
-                            .locationName("시네마테크 KOFA 2관")
-                            .address("서울특별시 마포구 상암동 1602 DMC 단지")
-                            .pricePerHour(20000)
-                            .locationKeywordList(keywords(
-                                    LocationKeyword.MEDIUM_SCALE,
-                                    LocationKeyword.NORMAL,
-                                    LocationKeyword.IMMERSION
-                            ))
-                            .seatCount(150)
-                            .hasDisabledSeat(Boolean.TRUE)
-                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/KOFA.jpg")
-                            .availableMediaType(AvailableMediaType.ALL)
-                            .availableTimes(0)
-                            .isStartTimeRestricted(Boolean.FALSE)
-                            .latitude(37.577608)
-                            .longitude(126.889993)
-                            .build(),
+//                    Location.builder()
+//                            .locationName("시네마테크 KOFA 1관")
+//                            .address("서울특별시 마포구 상암동 1602 DMC 단지")
+//                            .pricePerHour(40000)
+//                            .locationKeywordList(keywords(
+//                                    LocationKeyword.LARGE_SCALE,
+//                                    LocationKeyword.FOR_GROUP,
+//                                    LocationKeyword.LIVE_FEEL,
+//                                    LocationKeyword.MAJESTIC
+//                            ))
+//                            .seatCount(321)
+//                            .hasDisabledSeat(Boolean.TRUE)
+//                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/KOFA.jpg")
+//                            .availableMediaType(AvailableMediaType.ALL)
+//                            .availableTimes(0)
+//                            .isStartTimeRestricted(Boolean.FALSE)
+//                            .latitude(37.577608)
+//                            .longitude(126.889993)
+//                            .build(),
+//                    Location.builder()
+//                            .locationName("시네마테크 KOFA 2관")
+//                            .address("서울특별시 마포구 상암동 1602 DMC 단지")
+//                            .pricePerHour(20000)
+//                            .locationKeywordList(keywords(
+//                                    LocationKeyword.MEDIUM_SCALE,
+//                                    LocationKeyword.NORMAL,
+//                                    LocationKeyword.IMMERSION
+//                            ))
+//                            .seatCount(150)
+//                            .hasDisabledSeat(Boolean.TRUE)
+//                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/KOFA.jpg")
+//                            .availableMediaType(AvailableMediaType.ALL)
+//                            .availableTimes(0)
+//                            .isStartTimeRestricted(Boolean.FALSE)
+//                            .latitude(37.577608)
+//                            .longitude(126.889993)
+//                            .build(),
                     Location.builder()
                             .locationName("코엑스 프라이빗 1호")
                             .address("서울 강남구 삼성동 159")
