@@ -39,7 +39,7 @@ public class ParticipantNotificationListener {
     @Async("notificationExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Retryable(
-            value = {FirebaseMessagingException.class, ExecutionException.class},
+            retryFor = {FirebaseMessagingException.class, ExecutionException.class},
             maxAttempts = 3
     )
     public void onParticipantNotification(ParticipantNotificationEvent evt) throws Exception {

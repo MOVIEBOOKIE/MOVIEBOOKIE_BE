@@ -51,7 +51,7 @@ public class HostNotificationListener {
     @Async("notificationExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Retryable(
-            value = {FirebaseMessagingException.class, ExecutionException.class},
+            retryFor = {FirebaseMessagingException.class, ExecutionException.class},
             maxAttempts = 3
     )
     public void onHostNotification(HostNotificationEvent evt) throws Exception {
