@@ -29,11 +29,11 @@ public class EventCreatedWebhookListener {
     public void onEventCreated(EventCreatedWebhookEvent evt) {
         Long eventId = evt.getEventId();
 
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdWithLocationAndCategory(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
         Participation host = participationRepository
-                .findFirstByEventIdAndParticipateRole(eventId, ParticipateRole.HOST)
+                .findFirstByEventIdAndParticipateRoleWithUser(eventId, ParticipateRole.HOST)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
         EventCreatedWebhookDTO dto = WebhookConverter.toEventCreatedDto(event, host);

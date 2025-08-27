@@ -1,10 +1,12 @@
 package project.luckybooky.domain.admin.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@Builder
 public class EventCreatedWebhookDTO {
     private final String eventTitle;           // 이벤트 제목
     private final String mediaTitle;           // 영화/드라마 제목
