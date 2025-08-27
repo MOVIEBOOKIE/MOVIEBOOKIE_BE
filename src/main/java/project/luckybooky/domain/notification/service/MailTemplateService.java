@@ -181,10 +181,7 @@ public class MailTemplateService {
     }
 
     private String buildParticipantsLink(Long eventId) {
-        String base = (homeUrl != null && homeUrl.endsWith("/"))
-                ? homeUrl.substring(0, homeUrl.length() - 1)
-                : homeUrl;
-        String path = "/events/" + eventId + "/participants/link";
-        return base + path;
+        String path = "/events/" + eventId + "/participants";
+        return mailLinkTokenService.newLink(eventId, homeUrl, path);
     }
 }
