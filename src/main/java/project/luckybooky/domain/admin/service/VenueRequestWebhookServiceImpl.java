@@ -6,9 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,20 +18,21 @@ import org.springframework.web.client.RestTemplate;
 import project.luckybooky.domain.admin.dto.ParticipantInfo;
 import project.luckybooky.domain.admin.dto.VenueRequestWebhookDTO;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class WebhookService {
-    private static final Logger log = LoggerFactory.getLogger(WebhookService.class);
+@Profile("prod")
+public class VenueRequestWebhookServiceImpl implements VenueRequestWebhookService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${discord.webhook.url}")
+    @Value("${discord.webhook.venue-request-url}")
     private String webhookUrl;
 
-    /**
-     * Discord webhook 에 embeds 형태로 POST
-     */
+    @Override
     public void sendVenueRequest(VenueRequestWebhookDTO dto) {
+        log.info("운영용 환경에서 대관 신청 웹훅을 전송합니다. 장소={}, 날짜={}", dto.getLocationName(), dto.getDate());
+
         try {
             Map<String, Object> embed = new LinkedHashMap<>();
             embed.put("title", "📣 새로운 대관 신청");
@@ -66,9 +67,9 @@ public class WebhookService {
             );
 
             ResponseEntity<String> resp = restTemplate.postForEntity(webhookUrl, req, String.class);
-            log.info("Discord webhook 전송: status={}, body={}", resp.getStatusCode(), resp.getBody());
+            log.info("Discord webhook 전송 (대관 신청): status={}, body={}", resp.getStatusCode(), resp.getBody());
         } catch (Exception ex) {
-            log.error("Discord webhook 전송 실패", ex);
+            log.error("Discord webhook 전송 실패 (대관 신청)", ex);
         }
     }
 

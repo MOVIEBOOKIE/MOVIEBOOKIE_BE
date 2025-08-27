@@ -89,5 +89,15 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
     boolean existsByUserIdAndEventDate(@Param("id") Long userId, @Param("date") LocalDate date);
 
     boolean existsByUser_IdAndEvent_IdAndParticipateRole(Long userId, Long eventId, ParticipateRole role);
-    
+
+    /**
+     * 웹훅 발송용 - User 정보를 함께 조회
+     */
+    @Query("SELECT p FROM Participation p " +
+            "JOIN FETCH p.user " +
+            "WHERE p.event.id = :eventId AND p.participateRole = :role")
+    Optional<Participation> findFirstByEventIdAndParticipateRoleWithUser(
+            @Param("eventId") Long eventId,
+            @Param("role") ParticipateRole role
+    );
 }

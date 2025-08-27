@@ -1,15 +1,14 @@
 package project.luckybooky.domain.admin.listener;
 
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import project.luckybooky.domain.admin.converter.WebhookConverter;
-import project.luckybooky.domain.admin.dto.VenueRequestWebhookDTO;
-import project.luckybooky.domain.admin.event.VenueRequestWebhookEvent;
-import project.luckybooky.domain.admin.service.VenueRequestWebhookService;
+import project.luckybooky.domain.admin.dto.EventCreatedWebhookDTO;
+import project.luckybooky.domain.admin.event.EventCreatedWebhookEvent;
+import project.luckybooky.domain.admin.service.EventCreatedWebhookService;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.participation.entity.Participation;
@@ -21,28 +20,25 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class VenueRequestWebhookListener {
+public class EventCreatedWebhookListener {
     private final EventRepository eventRepository;
     private final ParticipationRepository participationRepository;
-    private final VenueRequestWebhookService venueRequestWebhookService;
+    private final EventCreatedWebhookService eventCreatedWebhookService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onVenueRequest(VenueRequestWebhookEvent evt) {
+    public void onEventCreated(EventCreatedWebhookEvent evt) {
         Long eventId = evt.getEventId();
 
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdWithLocationAndCategory(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
         Participation host = participationRepository
-                .findFirstByEventIdAndParticipateRole(eventId, ParticipateRole.HOST)
+                .findFirstByEventIdAndParticipateRoleWithUser(eventId, ParticipateRole.HOST)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
-        
-        List<Participation> participants = participationRepository
-                .findAllByEventIdAndParticipateRole(eventId, ParticipateRole.PARTICIPANT);
 
-        VenueRequestWebhookDTO dto = WebhookConverter.toDto(event, host, participants);
+        EventCreatedWebhookDTO dto = WebhookConverter.toEventCreatedDto(event, host);
 
-        log.info("▶️ Sending Discord webhook for venue request eventId={}", eventId);
-        venueRequestWebhookService.sendVenueRequest(dto);
+        log.info("▶️ Sending Discord webhook for event creation eventId={}", eventId);
+        eventCreatedWebhookService.sendEventCreated(dto);
     }
 }

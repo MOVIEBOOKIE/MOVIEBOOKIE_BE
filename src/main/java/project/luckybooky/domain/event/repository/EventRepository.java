@@ -52,7 +52,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             @Param("endTime") String endTime
     );
 
-    /** 시간대 겹치는 영화관 개수 **/
+    /**
+     * 시간대 겹치는 영화관 개수
+     **/
     @Query("SELECT COUNT(e) FROM Event e " +
             "where e.location.id = :locationId " +
             "AND e.eventDate = :date " +
@@ -64,4 +66,12 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             @Param("endTime") String endTime
     );
 
+    /**
+     * 웹훅 발송을 위한 이벤트 조회 (Location, Category 즉시 로딩)
+     */
+    @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.location " +
+            "JOIN FETCH e.category " +
+            "WHERE e.id = :id")
+    Optional<Event> findByIdWithLocationAndCategory(@Param("id") Long id);
 }
