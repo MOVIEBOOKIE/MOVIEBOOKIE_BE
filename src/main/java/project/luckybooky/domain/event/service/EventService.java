@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import project.luckybooky.domain.admin.event.EventCreatedWebhookEvent;
 import project.luckybooky.domain.admin.event.VenueRequestWebhookEvent;
 import project.luckybooky.domain.category.entity.Category;
 import project.luckybooky.domain.category.service.CategoryService;
@@ -119,6 +120,9 @@ public class EventService {
                     HostNotificationType.EVENT_CREATED,
                     event.getMediaTitle()
             ));
+
+            // 이벤트 생성 디스코드 웹훅 발송
+            publisher.publishEvent(new EventCreatedWebhookEvent(this, event.getId()));
 
             return event.getId();
         } finally {
