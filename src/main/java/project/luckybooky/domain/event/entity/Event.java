@@ -27,6 +27,7 @@ import project.luckybooky.domain.event.entity.type.HostEventButtonState;
 import project.luckybooky.domain.event.entity.type.ParticipantEventButtonState;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.participation.entity.Participation;
+import project.luckybooky.domain.user.service.AuthService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.entity.BaseEntity;
@@ -152,7 +153,12 @@ public class Event extends BaseEntity {
             participantEventButtonState = ParticipantEventButtonState.RECRUIT_CANCELED;
             anonymousButtonState = AnonymousButtonState.RECRUIT_CANCELED;
         } else {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            // 회원탈퇴 상황일 때는 더 적절한 에러 메시지 제공
+            if (AuthService.isUserWithdrawalInProgress()) {
+                throw new BusinessException(ErrorCode.USER_WITHDRAWAL_WITH_ACTIVE_EVENTS);
+            } else {
+                throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            }
         }
     }
 
@@ -204,7 +210,12 @@ public class Event extends BaseEntity {
             hostEventButtonState = HostEventButtonState.VENUE_RESERVATION_CANCELED;
             participantEventButtonState = ParticipantEventButtonState.VENUE_RESERVATION_CANCELED;
         } else {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            // 회원탈퇴 상황일 때는 더 적절한 에러 메시지 제공
+            if (AuthService.isUserWithdrawalInProgress()) {
+                throw new BusinessException(ErrorCode.USER_WITHDRAWAL_WITH_ACTIVE_EVENTS);
+            } else {
+                throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            }
         }
     }
 
