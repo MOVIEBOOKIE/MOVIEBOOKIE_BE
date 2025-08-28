@@ -16,6 +16,7 @@ import project.luckybooky.domain.notification.service.MailTemplateService;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
+import project.luckybooky.domain.user.service.AuthService;
 
 @Component
 @Slf4j
@@ -30,6 +31,12 @@ public class VenueRejectedMailListener {
 
     @EventListener
     public void sendVenueRejectedMail(HostNotificationEvent evt) {
+        // 회원탈퇴 시에는 대관 승인 실패 메일을 발송하지 않음
+        if (AuthService.isUserWithdrawalInProgress()) {
+            log.info("🛡️ 회원탈퇴로 인한 이벤트 취소 - 대관 승인 실패 메일 발송 생략: eventId={}, hostUserId={}", 
+                    evt.getEventId(), evt.getHostUserId());
+            return;
+        }
 
         Participation hostPart = participationRepository
                 .findByUser_IdAndEvent_IdAndParticipateRole(
