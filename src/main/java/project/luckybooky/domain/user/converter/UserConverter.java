@@ -38,7 +38,8 @@ public class UserConverter {
                 user.getHostExperienceCount(),
                 user.getParticipationExperienceCount(),
                 user.getUserType(),
-                user.getGroupType()
+                user.getGroupType(),
+                user.getSiteType().name()
         );
     }
 

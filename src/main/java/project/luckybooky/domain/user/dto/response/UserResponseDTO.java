@@ -43,5 +43,6 @@ public class UserResponseDTO {
         private int participationExperienceCount;
         private UserType userType;
         private GroupType groupType;
+        private String siteType; // (CORE, ADMIN)
     }
 }

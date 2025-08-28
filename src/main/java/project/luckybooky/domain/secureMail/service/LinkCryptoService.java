@@ -1,4 +1,4 @@
-package project.luckybooky.domain.participation.service;
+package project.luckybooky.domain.secureMail.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

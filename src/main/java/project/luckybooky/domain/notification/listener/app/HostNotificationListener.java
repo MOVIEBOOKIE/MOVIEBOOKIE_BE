@@ -28,6 +28,7 @@ import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
+import project.luckybooky.domain.user.service.AuthService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
@@ -96,6 +97,13 @@ public class HostNotificationListener {
         String key = evt.getType() + ":" + evt.getEventId() + ":" + evt.getHostUserId();
         log.info("▶ HostNotification start [{}]", key);
 
+        // 회원탈퇴 시에는 메일을 발송하지 않음
+        if (AuthService.isUserWithdrawalInProgress()) {
+            log.info("🛡️ 회원탈퇴로 인한 이벤트 취소 - 호스트 메일 발송 생략: eventId={}, hostUserId={}", 
+                    evt.getEventId(), evt.getHostUserId());
+            return;
+        }
+
         Participation hostPart = participationRepository
                 .findByUser_IdAndEvent_IdAndParticipateRole(
                         evt.getHostUserId(),
@@ -112,6 +120,4 @@ public class HostNotificationListener {
         );
         log.info("✅ Mail sent [{}]", key);
     }
-
-
 }

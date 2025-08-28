@@ -7,9 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.luckybooky.domain.feedback.repository.FeedbackRepository;
-import project.luckybooky.domain.notification.repository.NotificationRepository;
-import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.participation.service.ParticipationService;
 import project.luckybooky.domain.user.converter.AuthConverter;
 import project.luckybooky.domain.user.converter.UserConverter;
@@ -36,6 +33,26 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final TokenService tokenService;
     private final ParticipationService participationService;
+
+    private static final ThreadLocal<Boolean> isUserWithdrawal = new ThreadLocal<>();
+
+    /**
+     * 현재 스레드에서 회원탈퇴 중인지 확인
+     */
+    public static boolean isUserWithdrawalInProgress() {
+        return Boolean.TRUE.equals(isUserWithdrawal.get());
+    }
+
+    /**
+     * 회원탈퇴 상태 설정
+     */
+    private void setUserWithdrawalInProgress(boolean inProgress) {
+        if (inProgress) {
+            isUserWithdrawal.set(true);
+        } else {
+            isUserWithdrawal.remove();
+        }
+    }
 
 
     @Transactional
@@ -151,7 +168,7 @@ public class AuthService {
         if (!jwtUtil.validateToken(refreshToken)) {
             throw new BusinessException(ErrorCode.JWT_INVALID_TOKEN);
         }
-        
+
         if (!"refresh".equals(jwtUtil.extractCategory(refreshToken))) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN_TYPE);
         }
@@ -202,7 +219,7 @@ public class AuthService {
 
     @Transactional
     public BaseResponse<String> deleteUser(HttpServletRequest request,
-                                         HttpServletResponse response) {
+                                           HttpServletResponse response) {
 
         // 1) 현재 유저 조회
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
@@ -210,25 +227,33 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         Long userId = user.getId();
 
-        // 2) 연관된 이벤트 취소 처리
-        participationService.cancelParticipation(userId);
+        try {
+            // 회원탈퇴 상태 설정
+            setUserWithdrawalInProgress(true);
 
-        // 3) User 삭제 (cascade 설정으로 Feedback, Notification, Participation 모두 함께 삭제)
-        userRepository.delete(user);
+            // 2) 연관된 이벤트 취소 처리
+            participationService.cancelParticipation(userId);
 
-        // 4) Redis에 남은 리프레시 토큰 삭제
-        tokenService.deleteAllRefreshTokens(userId);
+            // 3) User 삭제 (cascade 설정으로 Feedback, Notification, Participation 모두 함께 삭제)
+            userRepository.delete(user);
 
-        boolean isLocal = false;
-        String referer = request.getHeader("Referer");
-        if (referer != null && referer.contains("localhost:3000")) {
-            isLocal = true;
+            // 4) Redis에 남은 리프레시 토큰 삭제
+            tokenService.deleteAllRefreshTokens(userId);
+
+            boolean isLocal = false;
+            String referer = request.getHeader("Referer");
+            if (referer != null && referer.contains("localhost:3000")) {
+                isLocal = true;
+            }
+
+            // 5) 클라이언트 쿠키 만료
+            CookieUtil.deleteCookie(response, "accessToken", isLocal);
+            CookieUtil.deleteCookie(response, "refreshToken", isLocal);
+
+            return BaseResponse.onSuccess("정상 처리되었습니다.");
+        } finally {
+            // 회원탈퇴 상태 정리
+            setUserWithdrawalInProgress(false);
         }
-
-        // 5) 클라이언트 쿠키 만료
-        CookieUtil.deleteCookie(response, "accessToken", isLocal);
-        CookieUtil.deleteCookie(response, "refreshToken", isLocal);
-
-        return BaseResponse.onSuccess("정상 처리되었습니다.");
     }
 }

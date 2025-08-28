@@ -1,13 +1,17 @@
 package project.luckybooky.domain.secureMail.service;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import project.luckybooky.domain.participation.service.LinkCryptoService;
+import project.luckybooky.domain.event.repository.EventRepository;
+import project.luckybooky.domain.secureMail.service.LinkCryptoService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
@@ -17,12 +21,12 @@ public class MailLinkTokenService {
 
     private final LinkCryptoService crypto;
     private final StringRedisTemplate redis;
+    private final EventRepository eventRepository;
 
     private final String audience = "mail-link";
-    private final long ttlSeconds = 86400L;
-    private final boolean singleUse = true;
+    private final boolean singleUse = false; // 1회 사용 제한 해제
     private final boolean bindPath = true;
-    private final boolean enforceLatestOnly = true;
+    private final boolean enforceLatestOnly = false; // 최신 토큰만 허용 해제
 
     private String latestKey(long eventId) {
         return "mail-link:latest:" + eventId;
@@ -35,7 +39,13 @@ public class MailLinkTokenService {
     public String issueForEvent(Long eventId, String path) {
         String jti = UUID.randomUUID().toString();
         long now = LinkCryptoService.nowEpoch();
-        long exp = now + ttlSeconds;
+        
+        // 이벤트 날짜를 기준으로 만료 시간 설정 (이벤트 날짜 23:59:59까지)
+        LocalDate eventDate = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND))
+                .getEventDate();
+        LocalDateTime eventEndOfDay = eventDate.atTime(23, 59, 59);
+        long exp = eventEndOfDay.atZone(ZoneId.systemDefault()).toEpochSecond();
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("jti", jti);
@@ -50,6 +60,7 @@ public class MailLinkTokenService {
         String token = crypto.encryptPayload(payload);
 
         if (enforceLatestOnly) {
+            long ttlSeconds = exp - now;
             redis.opsForValue().set(latestKey(eventId), jti, Duration.ofSeconds(ttlSeconds));
         }
         return token;
@@ -96,7 +107,7 @@ public class MailLinkTokenService {
 
         String jti = jtiObj.toString();
 
-        // ★ 최신 토큰만 허용
+        // ★ 최신 토큰만 허용 (현재 비활성화됨)
         if (enforceLatestOnly) {
             String latest = redis.opsForValue().get(latestKey(pathEventId));
             if (latest == null || !latest.equals(jti)) {
@@ -104,7 +115,7 @@ public class MailLinkTokenService {
             }
         }
 
-        // (선택) 1회용 소모 처리
+        // 1회용 소모 처리 (현재 비활성화됨)
         if (singleUse) {
             String k = usedKey(jti);
             long remain = Math.max(1L, expSec - now);

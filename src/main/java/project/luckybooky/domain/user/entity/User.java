@@ -77,6 +77,11 @@ public class User extends BaseEntity {
     @Column(name = "group_type")
     private GroupType groupType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "site_type")
+    @Builder.Default
+    private SiteType siteType = SiteType.CORE;
+
     @Column(name = "fcm_token")
     private String fcmToken;
 
