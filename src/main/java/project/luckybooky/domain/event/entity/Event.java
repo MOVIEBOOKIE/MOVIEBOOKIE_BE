@@ -115,6 +115,9 @@ public class Event extends BaseEntity {
     @Column(name = "current_participants", nullable = false)
     private Integer currentParticipants = 0;
 
+    @Column(name = "is_public", nullable = false)
+    private Boolean isPublic;
+
     @Version
     private Long version;
 
