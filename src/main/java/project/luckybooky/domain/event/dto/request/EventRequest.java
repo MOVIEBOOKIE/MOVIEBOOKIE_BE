@@ -1,6 +1,8 @@
 package project.luckybooky.domain.event.dto.request;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Min;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -23,5 +25,6 @@ public class EventRequest {
         String mediaTitle;
         String eventTitle;
         String description;
+        Boolean isPublic = true;
     }
 }

@@ -38,6 +38,7 @@ public class EventConverter {
                 .posterImageUrl(eventImageUrl)
                 .minParticipants(request.getMinParticipants())
                 .maxParticipants(request.getMaxParticipants())
+                .isPublic(request.getIsPublic())
                 .build();
     }
 
