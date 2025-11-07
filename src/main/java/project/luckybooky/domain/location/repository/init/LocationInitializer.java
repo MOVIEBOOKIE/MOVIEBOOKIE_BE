@@ -205,7 +205,7 @@ public class LocationInitializer implements ApplicationRunner {
                             .longitude(126.992908)
                             .build(),
                     Location.builder()
-                            .locationName("시글루 건대 룸1")
+                            .locationName("시글루 건대 ROOM1")
                             .address("서울 광진구 화양동 49-13")
                             .pricePerHour(25000)
                             .locationKeywordList(keywords(
@@ -227,7 +227,7 @@ public class LocationInitializer implements ApplicationRunner {
                             .longitude(127.066434)
                             .build(),
                     Location.builder()
-                            .locationName("시글루 건대 룸2")
+                            .locationName("시글루 건대 ROOM2")
                             .address("서울 광진구 화양동 49-13")
                             .pricePerHour(25000)
                             .locationKeywordList(keywords(
@@ -323,6 +323,42 @@ public class LocationInitializer implements ApplicationRunner {
                             .isStartTimeRestricted(Boolean.FALSE)
                             .latitude(37.561470)
                             .longitude(127.037277)
+                            .build(),
+                    Location.builder()
+                            .locationName("시글루 잠실 ROOM1")
+                            .address("서울 송파구 석촌호수로 284 지하1층 103호")
+                            .pricePerHour(25000)
+                            .locationKeywordList(keywords(
+                                    LocationKeyword.IMMERSION,
+                                    LocationKeyword.PRIVATE,
+                                    LocationKeyword.COZINESS
+                            ))
+                            .seatCount(10)
+                            .hasDisabledSeat(Boolean.FALSE)
+                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/%EC%8B%9C%EA%B8%80%EB%A3%A8%20%EC%9E%A0%EC%8B%A4%EC%A0%90%20%28ROOM1%29.png")
+                            .availableMediaType(AvailableMediaType.ALL)
+                            .availableTimes(3)
+                            .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.51079)
+                            .longitude(127.106884)
+                            .build(),
+                    Location.builder()
+                            .locationName("시글루 잠실 ROOM2")
+                            .address("서울 송파구 석촌호수로 284 지하1층 103호")
+                            .pricePerHour(25000)
+                            .locationKeywordList(keywords(
+                                    LocationKeyword.IMMERSION,
+                                    LocationKeyword.PRIVATE,
+                                    LocationKeyword.COZINESS
+                            ))
+                            .seatCount(10)
+                            .hasDisabledSeat(Boolean.FALSE)
+                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/%EC%8B%9C%EA%B8%80%EB%A3%A8%20%EC%9E%A0%EC%8B%A4%EC%A0%90%20%28ROOM2%29.png")
+                            .availableMediaType(AvailableMediaType.ALL)
+                            .availableTimes(3)
+                            .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.51079)
+                            .longitude(127.106884)
                             .build()
             );
 
