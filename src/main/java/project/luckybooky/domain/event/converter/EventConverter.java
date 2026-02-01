@@ -181,7 +181,7 @@ public class EventConverter {
         return EventResponse.HomeEventListResultDTO.builder()
                 .eventId(event.getId())
                 .hostName(hostName)
-                .eventTitle(event.getMediaTitle())
+                .eventTitle(event.getEventTitle())
                 .eventDescription(event.getDescription())
                 .mediaTitle(event.getMediaTitle())
                 .locationName(event.getLocation().getLocationName())
