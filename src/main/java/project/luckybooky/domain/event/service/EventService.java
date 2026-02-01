@@ -629,7 +629,8 @@ public class EventService {
 
         List<Event> eventList = eventRepository.findEventListByUserType(categoryId, PageRequest.of(0, 7));
         return eventList.stream().map(event -> {
-            return EventConverter.toHomeEventListResultDTO(event);
+            User host = participationRepository.findHostParticipationByEventId(event.getId()); // 각 이벤트 주최자 조회
+            return EventConverter.toHomeEventListResultDTO(event, host.getUsername());
         }).collect(Collectors.toList());
     }
 

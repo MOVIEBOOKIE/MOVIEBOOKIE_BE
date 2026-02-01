@@ -68,8 +68,8 @@ public class EventConverter {
         String day = getDay(eventDate);
 
         // 날짜 포맷
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        String date = eventDate.format(formatter) + " (" + day + ")";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy. MM. dd");
+        String date = eventDate.format(formatter);
 
         return date;
     }
@@ -174,17 +174,18 @@ public class EventConverter {
                 .build();
     }
 
-    public static EventResponse.HomeEventListResultDTO toHomeEventListResultDTO(Event event) {
+    public static EventResponse.HomeEventListResultDTO toHomeEventListResultDTO(Event event, String hostName) {
         // 날짜 포맷
         String eventDate = getDateFormat(event.getEventDate());
 
         return EventResponse.HomeEventListResultDTO.builder()
                 .eventId(event.getId())
-                .type(event.getCategory().getCategoryName())
-                .title(event.getMediaTitle())
-                .eventStatus(event.getEventStatus().getDescription())
-                .eventDate(eventDate)
+                .hostName(hostName)
+                .eventTitle(event.getEventTitle())
+                .eventDescription(event.getDescription())
+                .mediaTitle(event.getMediaTitle())
                 .locationName(event.getLocation().getLocationName())
+                .eventDate(eventDate)
                 .posterImageUrl(event.getPosterImageUrl())
                 .build();
     }
