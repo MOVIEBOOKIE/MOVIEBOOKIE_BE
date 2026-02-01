@@ -68,7 +68,7 @@ public class EventConverter {
         String day = getDay(eventDate);
 
         // 날짜 포맷
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy. MM. dd");
         String date = eventDate.format(formatter);
 
         return date;
