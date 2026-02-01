@@ -99,11 +99,12 @@ public class EventResponse {
     @Getter
     public static class HomeEventListResultDTO{
         Long eventId;
-        String type;
-        String title;
-        String eventStatus;
-        String eventDate;
+        String hostName;
+        String eventTitle;
+        String eventDescription;
+        String mediaTitle;
         String locationName;
+        String eventDate;
         String posterImageUrl;
     }
 }
