@@ -100,6 +100,7 @@ public class EventResponse {
     public static class HomeEventListResultDTO{
         Long eventId;
         String hostName;
+        String hostProfile;
         String eventTitle;
         String eventDescription;
         String mediaTitle;

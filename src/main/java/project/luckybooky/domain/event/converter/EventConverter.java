@@ -174,13 +174,14 @@ public class EventConverter {
                 .build();
     }
 
-    public static EventResponse.HomeEventListResultDTO toHomeEventListResultDTO(Event event, String hostName) {
+    public static EventResponse.HomeEventListResultDTO toHomeEventListResultDTO(Event event, String hostName, String hostProfile) {
         // 날짜 포맷
         String eventDate = getDateFormat(event.getEventDate());
 
         return EventResponse.HomeEventListResultDTO.builder()
                 .eventId(event.getId())
                 .hostName(hostName)
+                .hostProfile(hostProfile)
                 .eventTitle(event.getEventTitle())
                 .eventDescription(event.getDescription())
                 .mediaTitle(event.getMediaTitle())
