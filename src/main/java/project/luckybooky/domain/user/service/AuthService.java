@@ -13,6 +13,7 @@ import project.luckybooky.domain.user.converter.UserConverter;
 import project.luckybooky.domain.user.dto.response.UserResponseDTO;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
+import project.luckybooky.domain.ticket.repository.TicketRepository;
 import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
 import project.luckybooky.global.apiPayload.common.BaseResponse;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
@@ -33,6 +34,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final TokenService tokenService;
     private final ParticipationService participationService;
+    private final TicketRepository ticketRepository;
 
     private static final ThreadLocal<Boolean> isUserWithdrawal = new ThreadLocal<>();
 
@@ -233,6 +235,9 @@ public class AuthService {
 
             // 2) 연관된 이벤트 취소 처리
             participationService.cancelParticipation(userId);
+
+            // 2-1) 티켓 조인 테이블에서 사용자 연관 데이터 삭제
+            ticketRepository.deleteUserTicketsByUserId(userId);
 
             // 3) User 삭제 (cascade 설정으로 Feedback, Notification, Participation 모두 함께 삭제)
             userRepository.delete(user);
