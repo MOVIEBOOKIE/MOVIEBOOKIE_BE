@@ -3,6 +3,7 @@ package project.luckybooky.domain.ticket.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import project.luckybooky.domain.ticket.entity.Ticket;
@@ -13,6 +14,10 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     @Query(value = "SELECT COUNT(*) FROM user_ticket WHERE user_id = :userId", nativeQuery = true)
     Integer countTicketByUserId(@Param("userId") Long userId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM user_ticket WHERE user_id = :userId", nativeQuery = true)
+    void deleteUserTicketsByUserId(@Param("userId") Long userId);
 
     Ticket findByEventId(Long eventId);
 }
