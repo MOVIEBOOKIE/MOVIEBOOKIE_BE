@@ -111,42 +111,42 @@ public class LocationInitializer implements ApplicationRunner {
                             .latitude(37.511483)
                             .longitude(127.060337)
                             .build(),
-                    Location.builder()
-                            .locationName("필름포럼 1관")
-                            .address("서울특별시 서대문구 대신동 85")
-                            .pricePerHour(300000)
-                            .locationKeywordList(keywords(
-                                    LocationKeyword.MEDIUM_SCALE,
-                                    LocationKeyword.NORMAL,
-                                    LocationKeyword.IMMERSION
-                            ))
-                            .seatCount(90)
-                            .hasDisabledSeat(Boolean.FALSE)
-                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/%ED%95%84%EB%A6%84%ED%8F%AC%EB%9F%BC%201%EA%B4%80.png")
-                            .availableMediaType(AvailableMediaType.ALL)
-                            .availableTimes(0)
-                            .isStartTimeRestricted(Boolean.FALSE)
-                            .latitude(37.567306)
-                            .longitude(126.943295)
-                            .build(),
-                    Location.builder()
-                            .locationName("필름포럼 2관")
-                            .address("서울특별시 서대문구 대신동 85")
-                            .pricePerHour(300000)
-                            .locationKeywordList(keywords(
-                                    LocationKeyword.MEDIUM_SCALE,
-                                    LocationKeyword.NORMAL,
-                                    LocationKeyword.IMMERSION
-                            ))
-                            .seatCount(52)
-                            .hasDisabledSeat(Boolean.FALSE)
-                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/%ED%95%84%EB%A6%84%ED%8F%AC%EB%9F%BC_2%EA%B4%80.png")
-                            .availableMediaType(AvailableMediaType.ALL)
-                            .availableTimes(0)
-                            .isStartTimeRestricted(Boolean.FALSE)
-                            .latitude(37.567306)
-                            .longitude(126.943295)
-                            .build(),
+//                    Location.builder()
+//                            .locationName("필름포럼 1관")
+//                            .address("서울특별시 서대문구 대신동 85")
+//                            .pricePerHour(300000)
+//                            .locationKeywordList(keywords(
+//                                    LocationKeyword.MEDIUM_SCALE,
+//                                    LocationKeyword.NORMAL,
+//                                    LocationKeyword.IMMERSION
+//                            ))
+//                            .seatCount(90)
+//                            .hasDisabledSeat(Boolean.FALSE)
+//                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/%ED%95%84%EB%A6%84%ED%8F%AC%EB%9F%BC%201%EA%B4%80.png")
+//                            .availableMediaType(AvailableMediaType.ALL)
+//                            .availableTimes(0)
+//                            .isStartTimeRestricted(Boolean.FALSE)
+//                            .latitude(37.567306)
+//                            .longitude(126.943295)
+//                            .build(),
+//                    Location.builder()
+//                            .locationName("필름포럼 2관")
+//                            .address("서울특별시 서대문구 대신동 85")
+//                            .pricePerHour(300000)
+//                            .locationKeywordList(keywords(
+//                                    LocationKeyword.MEDIUM_SCALE,
+//                                    LocationKeyword.NORMAL,
+//                                    LocationKeyword.IMMERSION
+//                            ))
+//                            .seatCount(52)
+//                            .hasDisabledSeat(Boolean.FALSE)
+//                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/%ED%95%84%EB%A6%84%ED%8F%AC%EB%9F%BC_2%EA%B4%80.png")
+//                            .availableMediaType(AvailableMediaType.ALL)
+//                            .availableTimes(0)
+//                            .isStartTimeRestricted(Boolean.FALSE)
+//                            .latitude(37.567306)
+//                            .longitude(126.943295)
+//                            .build(),
                     Location.builder()
                             .locationName("용산 칠인더시네마")
                             .address("서울특별시 용산구 이태원동 305-5")
