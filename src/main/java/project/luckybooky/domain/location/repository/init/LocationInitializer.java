@@ -359,6 +359,23 @@ public class LocationInitializer implements ApplicationRunner {
                             .isStartTimeRestricted(Boolean.FALSE)
                             .latitude(37.51079)
                             .longitude(127.106884)
+                            .build(),
+                    Location.builder()
+                            .locationName("서울살롱 신촌 1호점")
+                            .address(" 서울 마포구 신촌로 20길 18")
+                            .pricePerHour(60000)
+                            .locationKeywordList(keywords(
+                                    LocationKeyword.NORMAL,
+                                    LocationKeyword.IMMERSION
+                            ))
+                            .seatCount(60)
+                            .hasDisabledSeat(Boolean.FALSE)
+                            .locationImageUrl("https://kr.object.ncloudstorage.com/movie-bookie-storage/%EC%84%9C%EC%9A%B8%EC%82%B4%EB%A1%B1%20%EC%8B%A0%EC%B4%8C%201%ED%98%B8%EC%A0%90.png")
+                            .availableMediaType(AvailableMediaType.ALL)
+                            .availableTimes(0)
+                            .isStartTimeRestricted(Boolean.FALSE)
+                            .latitude(37.554492)
+                            .longitude(126.938479)
                             .build()
             );
 
