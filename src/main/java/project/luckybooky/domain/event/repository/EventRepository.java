@@ -56,7 +56,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
      * 시간대 겹치는 영화관 개수
      **/
     @Query("SELECT COUNT(e) FROM Event e " +
-            "where e.location.id = :locationId " +
+            "WHERE e.eventStatus = 'RECRUITING'" +
+            "AND e.location.id = :locationId " +
             "AND e.eventDate = :date " +
             "AND (e.eventStartTime < :endTime) AND (:startTime < e.eventEndTime)")
     Integer isExistOverlappingLocationsByTime(
