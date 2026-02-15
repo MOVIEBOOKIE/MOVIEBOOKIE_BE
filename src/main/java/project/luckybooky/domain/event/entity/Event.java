@@ -61,7 +61,7 @@ public class Event extends BaseEntity {
     @Column(name = "event_title", nullable = false)
     private String eventTitle;
 
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "event_date", nullable = false)
