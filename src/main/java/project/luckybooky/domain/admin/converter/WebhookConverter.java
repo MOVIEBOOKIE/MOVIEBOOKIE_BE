@@ -3,6 +3,7 @@ package project.luckybooky.domain.admin.converter;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import project.luckybooky.domain.admin.dto.EventCreatedWebhookDTO;
+import project.luckybooky.domain.admin.dto.EventUserInfoWebhookDTO;
 import project.luckybooky.domain.admin.dto.ParticipantInfo;
 import project.luckybooky.domain.admin.dto.VenueRequestWebhookDTO;
 import project.luckybooky.domain.event.entity.Event;
@@ -87,6 +88,39 @@ public class WebhookConverter {
                 .categoryName(event.getCategory().getCategoryName())
                 .recruitmentPeriod(recruitmentPeriod)
                 .estimatedPrice(event.getEstimatedPrice())
+                .build();
+    }
+
+    public static EventUserInfoWebhookDTO toEventUserInfoDto(
+            Event event,
+            Participation hostParticipation,
+            List<Participation> participantList
+    ) {
+        String date = event.getEventDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+
+        String hostName = "";
+        if (hostParticipation != null) {
+            hostName = hostParticipation.getUser().getUsername();
+        }
+
+        List<EventUserInfoWebhookDTO.EventUserInfoDetail> participantInfos = participantList.stream()
+                .map(p -> {
+                    var u = p.getUser();
+                    return EventUserInfoWebhookDTO.EventUserInfoDetail.builder()
+                            .username(u.getUsername())
+                            .phoneNumber(u.getPhoneNumber())
+                            .certificationEmail(u.getCertificationEmail())
+                            .groupType(u.getGroupType() != null ? u.getGroupType().name() : "N/A")
+                            .build();
+                })
+                .toList();
+
+        return EventUserInfoWebhookDTO.builder()
+                .eventTitle(event.getEventTitle())
+                .date(date)
+                .hostUsername(hostName)
+                .participantCount(participantInfos.size())
+                .participants(participantInfos)
                 .build();
     }
 }
