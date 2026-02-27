@@ -54,17 +54,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     final String uri = request.getRequestURI();
 
     if (isExcluded(uri)) {
-      log.info("[JWT 필터] EXCLUDED URI → pass: {}", uri);
       filterChain.doFilter(request, response);
       return;
     }
 
     String token = resolveToken(request);
-    log.info("[JWT 필터] URI: {}, token 존재: {}", uri, token != null);
 
     if (token != null && jwtUtil.validateToken(token)) {
       String email = jwtUtil.extractEmail(token);
-      log.info("[JWT 필터] 토큰 검증 성공 - email: {}", email);
       SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(email));
     } else {
       SecurityContextHolder.clearContext();

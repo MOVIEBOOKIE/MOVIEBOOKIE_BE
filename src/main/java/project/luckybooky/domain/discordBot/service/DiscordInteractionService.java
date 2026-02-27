@@ -21,6 +21,8 @@ import project.luckybooky.domain.admin.service.AdminEventUserInfoService;
 import project.luckybooky.domain.discordBot.support.DiscordRawBodyFilter;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.service.EventService;
+import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
+import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
 @Slf4j
 @Service
@@ -101,7 +103,6 @@ public class DiscordInteractionService {
 
       return verifier.verifySignature(sig);
     } catch (Exception e) {
-      log.warn("Discord signature verify error", e);
       return false;
     }
   }
@@ -142,6 +143,16 @@ public class DiscordInteractionService {
       adminEventUserInfoService.sendEventUserInfoWebhook(eventId);
 
       return ephemeralMessage("이벤트(ID: " + eventId + ") 참가자 정보가 관리자 디스코드 채널로 전송되었습니다.");
+
+    } catch (BusinessException ex) {
+      // ✅ 참여자 없음 에러만 별도 처리
+      if (ex.getErrorCode() == ErrorCode.NO_EVENT_PARTICIPANTS) {
+        return ephemeralMessage("해당 이벤트에는 아직 참여자가 없습니다");
+      }
+
+      log.error("event-users 명령 처리 중 비즈니스 예외 발생", ex);
+      return ephemeralMessage("요청 처리 중 오류가 발생했습니다. 서버 로그를 확인해주세요.");
+
     } catch (Exception ex) {
       log.error("event-users 명령 처리 중 예외 발생", ex);
       return ephemeralMessage("요청 처리 중 오류가 발생했습니다. 서버 로그를 확인해주세요.");
