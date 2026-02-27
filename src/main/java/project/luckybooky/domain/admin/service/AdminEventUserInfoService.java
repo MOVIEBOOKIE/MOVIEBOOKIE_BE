@@ -17,23 +17,28 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 @RequiredArgsConstructor
 public class AdminEventUserInfoService {
 
-    private final EventRepository eventRepository;
-    private final ParticipationRepository participationRepository;
-    private final EventUserInfoWebhookService eventUserInfoWebhookService;
+  private final EventRepository eventRepository;
+  private final ParticipationRepository participationRepository;
+  private final EventUserInfoWebhookService eventUserInfoWebhookService;
 
-    public void sendEventUserInfoWebhook(Long eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+  public void sendEventUserInfoWebhook(Long eventId) {
+    Event event = eventRepository.findById(eventId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
-        Participation host = participationRepository
-                .findFirstByEventIdAndParticipateRoleWithUser(eventId, ParticipateRole.HOST)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+    Participation host = participationRepository
+        .findFirstByEventIdAndParticipateRoleWithUser(eventId, ParticipateRole.HOST)
+        .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
-        List<Participation> participants = participationRepository
-                .findAllByEventIdAndParticipateRole(eventId, ParticipateRole.PARTICIPANT);
+    List<Participation> participants = participationRepository
+        .findAllByEventIdAndParticipateRole(eventId, ParticipateRole.PARTICIPANT);
 
-        EventUserInfoWebhookDTO dto = WebhookConverter.toEventUserInfoDto(event, host, participants);
-        eventUserInfoWebhookService.sendEventUserInfo(dto);
+    // ✅ 추가: 참여자 없으면 별도 에러코드로 예외
+    if (participants.isEmpty()) {
+      throw new BusinessException(ErrorCode.NO_EVENT_PARTICIPANTS);
     }
+
+    EventUserInfoWebhookDTO dto = WebhookConverter.toEventUserInfoDto(event, host, participants);
+    eventUserInfoWebhookService.sendEventUserInfo(dto);
+  }
 }
 

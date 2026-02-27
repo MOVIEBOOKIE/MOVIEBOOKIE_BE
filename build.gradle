@@ -83,6 +83,8 @@ dependencies {
     // Quartz
     implementation 'org.springframework.boot:spring-boot-starter-quartz'
 
+    implementation "org.bouncycastle:bcprov-jdk18on:1.78.1"
+    
 }
 
 tasks.named('test') {

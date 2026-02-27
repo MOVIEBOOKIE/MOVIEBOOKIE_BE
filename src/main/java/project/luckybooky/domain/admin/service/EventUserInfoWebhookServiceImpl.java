@@ -71,7 +71,7 @@ public class EventUserInfoWebhookServiceImpl implements EventUserInfoWebhookServ
       log.info("Discord webhook 전송 (이벤트 참가자 유저 정보): status={}, body={}", resp.getStatusCode(),
           resp.getBody());
     } catch (Exception ex) {
-      log.error("Discord webhook 전송 실패 (이벤트 참가자 유저 정보)", ex);
+      log.error("Discord webhook 전송 실패 (이벤트 참가자 유저 정보)");
     }
   }
 
