@@ -3,15 +3,22 @@ package project.luckybooky.domain.discordBot.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
+import org.bouncycastle.crypto.signers.Ed25519Signer;
+import org.bouncycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import project.luckybooky.domain.admin.service.AdminEventUserInfoService;
+import project.luckybooky.domain.discordBot.support.DiscordRawBodyFilter;
 import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.service.EventService;
 
@@ -21,109 +28,135 @@ import project.luckybooky.domain.event.service.EventService;
 @RequiredArgsConstructor
 public class DiscordInteractionService {
 
-    private final ObjectMapper objectMapper;
-    private final EventService eventService;
-    private final AdminEventUserInfoService adminEventUserInfoService;
+  private final ObjectMapper objectMapper;
+  private final EventService eventService;
+  private final AdminEventUserInfoService adminEventUserInfoService;
 
-    public ResponseEntity<?> handleInteraction(String body, HttpServletRequest request) {
-        try {
-            if (!verifySignature(request, body)) {
-                log.warn("Discord signature verification failed");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+  @Value("${discord.public-key}")
+  private String discordPublicKeyHex;
 
-            JsonNode root = objectMapper.readTree(body);
-            int type = root.path("type").asInt();
+  public ResponseEntity<?> handleInteraction(HttpServletRequest request) {
+    try {
+      String rawBody = (String) request.getAttribute(DiscordRawBodyFilter.ATTR_DISCORD_RAW_BODY);
+      if (rawBody == null) {
+        rawBody = "";
+      }
 
-            // 1) PING 요청에 대한 PONG 응답
-            if (type == 1) {
-                Map<String, Object> pong = new HashMap<>();
-                pong.put("type", 1);
-                return ResponseEntity.ok(pong);
-            }
+      String ua = request.getHeader("User-Agent");
+      String sig = request.getHeader("X-Signature-Ed25519");
+      String ts = request.getHeader("X-Signature-Timestamp");
 
-            // 2) Application Command 처리
-            if (type == 2) {
-                return handleApplicationCommand(root);
-            }
+      JsonNode root = objectMapper.readTree(rawBody);
+      int type = root.path("type").asInt();
 
-            // 그 외 타입은 일단 NO_CONTENT
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            log.error("Discord interaction 처리 중 예외 발생", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+      log.info("Discord Interaction received: type={}, ua={}, sigPresent={}, tsPresent={}",
+          type, ua, sig != null, ts != null);
+
+      // ✅ 운영 보안: PING 포함 전체 요청 서명 검증
+      if (!verifySignature(request, rawBody)) {
+        log.warn("Discord signature verification failed");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      }
+
+      // 1) PING -> PONG
+      if (type == 1) {
+        return ResponseEntity
+            .ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .body("{\"type\":1}");
+      }
+
+      // 2) Application Command
+      if (type == 2) {
+        return handleApplicationCommand(root);
+      }
+
+      return ResponseEntity.noContent().build();
+
+    } catch (Exception e) {
+      log.error("Discord interaction 처리 중 예외 발생", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
+  private boolean verifySignature(HttpServletRequest request, String rawBody) {
+    String signatureHex = request.getHeader("X-Signature-Ed25519");
+    String timestamp = request.getHeader("X-Signature-Timestamp");
+
+    if (signatureHex == null || timestamp == null) {
+      log.warn("Discord signature headers missing");
+      return false;
     }
 
-    private ResponseEntity<?> handleApplicationCommand(JsonNode root) {
-        JsonNode data = root.path("data");
-        String name = data.path("name").asText("");
+    try {
+      byte[] sig = Hex.decode(signatureHex);
+      byte[] msg = (timestamp + rawBody).getBytes(StandardCharsets.UTF_8);
 
-        if (!"event-users".equals(name)) {
-            return ephemeralMessage("지원하지 않는 명령입니다.");
-        }
+      byte[] publicKey = Hex.decode(discordPublicKeyHex);
+      Ed25519PublicKeyParameters pub = new Ed25519PublicKeyParameters(publicKey, 0);
 
-        // 옵션에서 title 추출
-        String title = null;
-        JsonNode options = data.path("options");
-        if (options.isArray()) {
-            for (JsonNode opt : options) {
-                if ("title".equals(opt.path("name").asText(""))) {
-                    title = opt.path("value").asText("");
-                    break;
-                }
-            }
-        }
+      Ed25519Signer verifier = new Ed25519Signer();
+      verifier.init(false, pub);
+      verifier.update(msg, 0, msg.length);
 
-        if (title == null || title.isBlank()) {
-            return ephemeralMessage("이벤트 제목(title) 옵션이 필요합니다.");
-        }
+      return verifier.verifySignature(sig);
+    } catch (Exception e) {
+      log.warn("Discord signature verify error", e);
+      return false;
+    }
+  }
 
-        try {
-            // EventService 를 통해 검색 (페이지 0, size 1)
-            EventResponse.ReadEventListWithPageResultDTO result =
-                    eventService.readEventListBySearch(title, 0, 1);
+  private ResponseEntity<?> handleApplicationCommand(JsonNode root) {
+    JsonNode data = root.path("data");
+    String name = data.path("name").asText("");
 
-            if (result.getEventList() == null || result.getEventList().isEmpty()) {
-                return ephemeralMessage("해당 제목으로 검색된 이벤트가 없습니다.");
-            }
-
-            Long eventId = result.getEventList().getFirst().getEventId();
-
-            // 참가자 정보 Webhook 전송
-            adminEventUserInfoService.sendEventUserInfoWebhook(eventId);
-
-            return ephemeralMessage(
-                    "이벤트(ID: " + eventId + ") 참가자 정보가 관리자 디스코드 채널로 전송되었습니다."
-            );
-        } catch (Exception ex) {
-            log.error("event-users 명령 처리 중 예외 발생", ex);
-            return ephemeralMessage("요청 처리 중 오류가 발생했습니다. 서버 로그를 확인해주세요.");
-        }
+    if (!"event-users".equals(name)) {
+      return ephemeralMessage("지원하지 않는 명령입니다.");
     }
 
-    private ResponseEntity<Map<String, Object>> ephemeralMessage(String content) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("content", content);
-        data.put("flags", 64); // EPHEMERAL
-
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("type", 4); // CHANNEL_MESSAGE_WITH_SOURCE
-        resp.put("data", data);
-
-        return ResponseEntity.ok(resp);
-    }
-
-    private boolean verifySignature(HttpServletRequest request, String body) {
-        String signature = request.getHeader("X-Signature-Ed25519");
-        String timestamp = request.getHeader("X-Signature-Timestamp");
-        if (signature == null || timestamp == null) {
-            log.warn("Discord signature headers missing");
-            return false;
+    String title = null;
+    JsonNode options = data.path("options");
+    if (options.isArray()) {
+      for (JsonNode opt : options) {
+        if ("title".equals(opt.path("name").asText(""))) {
+          title = opt.path("value").asText("");
+          break;
         }
-        // TODO: Ed25519 서명 검증 로직을 추가하여 보안을 강화할 수 있습니다.
-        // 현재는 Discord 에서 온 요청임을 전제로 동작합니다.
-        return true;
+      }
     }
+
+    if (title == null || title.isBlank()) {
+      return ephemeralMessage("이벤트 제목(title) 옵션이 필요합니다.");
+    }
+
+    try {
+      EventResponse.ReadEventListWithPageResultDTO result =
+          eventService.readEventListBySearch(title, 0, 1);
+
+      if (result.getEventList() == null || result.getEventList().isEmpty()) {
+        return ephemeralMessage("해당 제목으로 검색된 이벤트가 없습니다.");
+      }
+
+      Long eventId = result.getEventList().getFirst().getEventId();
+
+      adminEventUserInfoService.sendEventUserInfoWebhook(eventId);
+
+      return ephemeralMessage("이벤트(ID: " + eventId + ") 참가자 정보가 관리자 디스코드 채널로 전송되었습니다.");
+    } catch (Exception ex) {
+      log.error("event-users 명령 처리 중 예외 발생", ex);
+      return ephemeralMessage("요청 처리 중 오류가 발생했습니다. 서버 로그를 확인해주세요.");
+    }
+  }
+
+  private ResponseEntity<Map<String, Object>> ephemeralMessage(String content) {
+    Map<String, Object> data = new HashMap<>();
+    data.put("content", content);
+    data.put("flags", 64); // EPHEMERAL
+
+    Map<String, Object> resp = new HashMap<>();
+    resp.put("type", 4); // CHANNEL_MESSAGE_WITH_SOURCE
+    resp.put("data", data);
+
+    return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resp);
+  }
 }
-
