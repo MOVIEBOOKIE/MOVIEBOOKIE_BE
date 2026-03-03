@@ -100,4 +100,6 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
             @Param("eventId") Long eventId,
             @Param("role") ParticipateRole role
     );
+
+    long countByEventId(Long eventId);
 }
