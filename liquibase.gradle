@@ -1,0 +1,153 @@
+ext {
+    dbDriver = System.getenv('DB_DRIVER') ?: 'com.mysql.cj.jdbc.Driver'
+
+    // dev DB
+    devDbUrl = System.getenv('DEV_DB_URL')
+    devDbUser = System.getenv('DEV_DB_USERNAME')
+    devDbPass = System.getenv('DEV_DB_PASSWORD')
+
+    // prod DB
+    prodDbUrl = System.getenv('PROD_DB_URL')
+    prodDbUser = System.getenv('PROD_DB_USERNAME')
+    prodDbPass = System.getenv('PROD_DB_PASSWORD')
+
+    // local DB
+    localDbUrl = System.getenv('LOCAL_DB_URL') ?: System.getenv('DB_URL')
+    localDbUser = System.getenv('LOCAL_DB_USER') ?: System.getenv('DB_USERNAME')
+    localDbPass = System.getenv('LOCAL_DB_PASS') ?: System.getenv('DB_PASSWORD')
+
+    changelogDir = 'src/main/resources/db/changelog'
+    diffOutputDir = "${buildDir}/liquibase/diff"
+
+    commonDiffTypes = "tables, columns, primaryKeys, uniqueConstraints, indexes, foreignKeys, sequences"
+    commonExcludeObjects = "view:.*"
+}
+
+def timestamp = new Date().format('yyyyMMdd_HHmmss')
+file(diffOutputDir).mkdirs()
+
+liquibase {
+    activities {
+
+        main {
+            changeLogFile "${changelogDir}/db.changelog-master.yaml"
+            url devDbUrl
+            username devDbUser
+            password devDbPass
+            driver dbDriver
+        }
+
+        prodDiff {
+            def changelogFilePath = project.findProperty('liquibaseChangelogFile')
+                    ?: "${diffOutputDir}/${timestamp}-prod-diff.yaml"
+            changeLogFile changelogFilePath
+
+            // baseline (DEV)
+            referenceUrl devDbUrl
+            referenceUsername devDbUser
+            referencePassword devDbPass
+
+            // target (PROD)
+            url prodDbUrl
+            username prodDbUser
+            password prodDbPass
+            driver dbDriver
+
+            diffTypes commonDiffTypes
+            excludeObjects commonExcludeObjects
+        }
+
+        devDiff {
+            def changelogFilePath = project.findProperty('liquibaseChangelogFile')
+                    ?: "${diffOutputDir}/${timestamp}-dev-diff.yaml"
+            changeLogFile changelogFilePath
+
+            // baseline (LOCAL)
+            referenceUrl localDbUrl
+            referenceUsername localDbUser
+            referencePassword localDbPass
+
+            // target (DEV)
+            url devDbUrl
+            username devDbUser
+            password devDbPass
+            driver dbDriver
+
+            diffTypes commonDiffTypes
+            excludeObjects commonExcludeObjects
+        }
+
+        localDiff {
+            def changelogFilePath = project.findProperty('liquibaseChangelogFile')
+                    ?: "${diffOutputDir}/${timestamp}-local-diff.yaml"
+            changeLogFile changelogFilePath
+
+            // 기준 changelog 파일이 지정된 경우 사용
+            def referenceChangelogFilePath = project.findProperty('referenceChangelogFile')
+            if (referenceChangelogFilePath) {
+                referenceChangelogFile referenceChangelogFilePath
+            }
+
+            // baseline (DEV)
+            referenceUrl devDbUrl
+            referenceUsername devDbUser
+            referencePassword devDbPass
+
+            // target (LOCAL)
+            url localDbUrl
+            username localDbUser
+            password localDbPass
+            driver dbDriver
+
+            diffTypes commonDiffTypes
+            excludeObjects commonExcludeObjects
+        }
+
+        incrementalDiff {
+            def changelogFilePath = project.findProperty('liquibaseChangelogFile')
+                    ?: "${diffOutputDir}/${timestamp}-incremental-diff.yaml"
+            changeLogFile changelogFilePath
+
+            def baselineChangelogPath = project.findProperty('baselineChangelog')
+            if (baselineChangelogPath) {
+                referenceChangelogFile baselineChangelogPath
+            }
+
+            referenceUrl devDbUrl
+            referenceUsername devDbUser
+            referencePassword devDbPass
+
+            url localDbUrl
+            username localDbUser
+            password localDbPass
+            driver dbDriver
+        }
+
+        prodUpdate {
+            changeLogFile "${changelogDir}/db.changelog-master.yaml"
+            url prodDbUrl
+            username prodDbUser
+            password prodDbPass
+            driver dbDriver
+        }
+
+        devUpdate {
+            changeLogFile "${changelogDir}/db.changelog-master.yaml"
+            url devDbUrl
+            username devDbUser
+            password devDbPass
+            driver dbDriver
+        }
+
+        localUpdate {
+            changeLogFile "${changelogDir}/db.changelog-master.yaml"
+            url localDbUrl
+            username localDbUser
+            password localDbPass
+            driver dbDriver
+        }
+    }
+    
+    runList project.findProperty('runList') ?: 'main'
+}
+
