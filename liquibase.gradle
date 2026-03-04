@@ -28,9 +28,8 @@ file(diffOutputDir).mkdirs()
 
 liquibase {
     activities {
-
         main {
-            changeLogFile "${changelogDir}/db.changelog-master.yaml"
+            changelogFile "${changelogDir}/db.changelog-master.yaml"
             url devDbUrl
             username devDbUser
             password devDbPass
@@ -40,7 +39,7 @@ liquibase {
         prodDiff {
             def changelogFilePath = project.findProperty('liquibaseChangelogFile')
                     ?: "${diffOutputDir}/${timestamp}-prod-diff.yaml"
-            changeLogFile changelogFilePath
+            changelogFile changelogFilePath
 
             // baseline (DEV)
             referenceUrl devDbUrl
@@ -60,7 +59,7 @@ liquibase {
         devDiff {
             def changelogFilePath = project.findProperty('liquibaseChangelogFile')
                     ?: "${diffOutputDir}/${timestamp}-dev-diff.yaml"
-            changeLogFile changelogFilePath
+            changelogFile changelogFilePath
 
             // baseline (LOCAL)
             referenceUrl localDbUrl
@@ -80,7 +79,7 @@ liquibase {
         localDiff {
             def changelogFilePath = project.findProperty('liquibaseChangelogFile')
                     ?: "${diffOutputDir}/${timestamp}-local-diff.yaml"
-            changeLogFile changelogFilePath
+            changelogFile changelogFilePath
 
             // 기준 changelog 파일이 지정된 경우 사용
             def referenceChangelogFilePath = project.findProperty('referenceChangelogFile')
@@ -106,7 +105,7 @@ liquibase {
         incrementalDiff {
             def changelogFilePath = project.findProperty('liquibaseChangelogFile')
                     ?: "${diffOutputDir}/${timestamp}-incremental-diff.yaml"
-            changeLogFile changelogFilePath
+            changelogFile changelogFilePath
 
             def baselineChangelogPath = project.findProperty('baselineChangelog')
             if (baselineChangelogPath) {
@@ -124,7 +123,7 @@ liquibase {
         }
 
         prodUpdate {
-            changeLogFile "${changelogDir}/db.changelog-master.yaml"
+            changelogFile "${changelogDir}/db.changelog-master.yaml"
             url prodDbUrl
             username prodDbUser
             password prodDbPass
@@ -132,7 +131,7 @@ liquibase {
         }
 
         devUpdate {
-            changeLogFile "${changelogDir}/db.changelog-master.yaml"
+            changelogFile "${changelogDir}/db.changelog-master.yaml"
             url devDbUrl
             username devDbUser
             password devDbPass
@@ -140,14 +139,14 @@ liquibase {
         }
 
         localUpdate {
-            changeLogFile "${changelogDir}/db.changelog-master.yaml"
+            changelogFile "${changelogDir}/db.changelog-master.yaml"
             url localDbUrl
             username localDbUser
             password localDbPass
             driver dbDriver
         }
     }
-    
+
     runList project.findProperty('runList') ?: 'main'
 }
 
