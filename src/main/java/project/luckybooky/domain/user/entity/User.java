@@ -82,6 +82,11 @@ public class User extends BaseEntity {
     @Builder.Default
     private SiteType siteType = SiteType.CORE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    @Builder.Default
+    private UserRole role = UserRole.USER;
+
     @Column(name = "fcm_token")
     private String fcmToken;
 

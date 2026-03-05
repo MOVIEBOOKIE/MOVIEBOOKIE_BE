@@ -14,7 +14,8 @@ public class UserConverter {
                 user.getProfileImage(),
                 user.getUserType(),
                 user.getCertificationEmail(),
-                user.getPhoneNumber()
+                user.getPhoneNumber(),
+                user.getRole()
         );
     }
 
@@ -39,7 +40,8 @@ public class UserConverter {
                 user.getParticipationExperienceCount(),
                 user.getUserType(),
                 user.getGroupType(),
-                user.getSiteType().name()
+                user.getSiteType().name(),
+                user.getRole()
         );
     }
 
