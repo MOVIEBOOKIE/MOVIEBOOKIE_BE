@@ -3,7 +3,6 @@ package project.luckybooky.domain.user.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import project.luckybooky.domain.user.entity.GroupType;
-import project.luckybooky.domain.user.entity.UserRole;
 import project.luckybooky.domain.user.entity.UserType;
 
 public class UserResponseDTO {
@@ -18,7 +17,6 @@ public class UserResponseDTO {
         private UserType userType;
         private String certificationEmail;
         private String phoneNumber;
-        private UserRole role;
     }
 
     /* 회원가입 단계에서 사용자 추가 정보 입력 완료 후 결과 */
@@ -46,6 +44,5 @@ public class UserResponseDTO {
         private UserType userType;
         private GroupType groupType;
         private String siteType; // (CORE, ADMIN)
-        private UserRole role;
     }
 }

@@ -19,6 +19,7 @@ public enum ResultCode implements BaseStatus {
     TOKEN_REISSUE_OK(HttpStatus.OK, "TOKEN_200", "토큰 재발급 성공"),
     USER_LOGOUT_OK(HttpStatus.OK, "USER_200", "유저 로그아웃 성공"),
     USER_LOGIN_OK(HttpStatus.OK, "USER_200", "유저 로그인 성공"),
+    ADMIN_LOGIN_OK(HttpStatus.OK, "ADMIN_200", "어드민 로그인 성공"),
     ;
 
     private final HttpStatus httpStatus;
