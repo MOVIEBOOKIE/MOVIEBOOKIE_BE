@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import project.luckybooky.domain.event.entity.Event;
+import project.luckybooky.domain.event.entity.type.EventStatus;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("SELECT e FROM Event e WHERE e.isPublic = true AND e.eventStatus='RECRUITING' ORDER BY e.createdAt DESC")
@@ -89,4 +90,75 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "JOIN FETCH e.category " +
             "WHERE e.id = :id")
     Optional<Event> findByIdWithLocationAndCategory(@Param("id") Long id);
+
+    @Query(
+            value = "SELECT DISTINCT e FROM Event e " +
+                    "JOIN e.location l " +
+                    "JOIN e.participationList hp " +
+                    "JOIN hp.user hu " +
+                    "WHERE hp.participateRole = 'HOST' " +
+                    "AND (:locationId IS NULL OR l.id = :locationId) " +
+                    "AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom) " +
+                    "AND (:dateTo IS NULL OR e.eventDate <= :dateTo) " +
+                    "AND (:hostName IS NULL OR hu.username LIKE CONCAT('%', :hostName, '%')) " +
+                    "AND (:minRecruitmentRate IS NULL OR ((1.0 * e.currentParticipants) / e.maxParticipants) * 100 >= :minRecruitmentRate) " +
+                    "AND (:maxRecruitmentRate IS NULL OR ((1.0 * e.currentParticipants) / e.maxParticipants) * 100 <= :maxRecruitmentRate)",
+            countQuery = "SELECT COUNT(DISTINCT e.id) FROM Event e " +
+                    "JOIN e.location l " +
+                    "JOIN e.participationList hp " +
+                    "JOIN hp.user hu " +
+                    "WHERE hp.participateRole = 'HOST' " +
+                    "AND (:locationId IS NULL OR l.id = :locationId) " +
+                    "AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom) " +
+                    "AND (:dateTo IS NULL OR e.eventDate <= :dateTo) " +
+                    "AND (:hostName IS NULL OR hu.username LIKE CONCAT('%', :hostName, '%')) " +
+                    "AND (:minRecruitmentRate IS NULL OR ((1.0 * e.currentParticipants) / e.maxParticipants) * 100 >= :minRecruitmentRate) " +
+                    "AND (:maxRecruitmentRate IS NULL OR ((1.0 * e.currentParticipants) / e.maxParticipants) * 100 <= :maxRecruitmentRate)"
+    )
+    Page<Event> searchAdminEventsWithoutStatus(
+            @Param("dateFrom") LocalDate dateFrom,
+            @Param("dateTo") LocalDate dateTo,
+            @Param("locationId") Long locationId,
+            @Param("hostName") String hostName,
+            @Param("minRecruitmentRate") Integer minRecruitmentRate,
+            @Param("maxRecruitmentRate") Integer maxRecruitmentRate,
+            Pageable pageable
+    );
+
+    @Query(
+            value = "SELECT DISTINCT e FROM Event e " +
+                    "JOIN e.location l " +
+                    "JOIN e.participationList hp " +
+                    "JOIN hp.user hu " +
+                    "WHERE hp.participateRole = 'HOST' " +
+                    "AND e.eventStatus IN :statuses " +
+                    "AND (:locationId IS NULL OR l.id = :locationId) " +
+                    "AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom) " +
+                    "AND (:dateTo IS NULL OR e.eventDate <= :dateTo) " +
+                    "AND (:hostName IS NULL OR hu.username LIKE CONCAT('%', :hostName, '%')) " +
+                    "AND (:minRecruitmentRate IS NULL OR ((1.0 * e.currentParticipants) / e.maxParticipants) * 100 >= :minRecruitmentRate) " +
+                    "AND (:maxRecruitmentRate IS NULL OR ((1.0 * e.currentParticipants) / e.maxParticipants) * 100 <= :maxRecruitmentRate)",
+            countQuery = "SELECT COUNT(DISTINCT e.id) FROM Event e " +
+                    "JOIN e.location l " +
+                    "JOIN e.participationList hp " +
+                    "JOIN hp.user hu " +
+                    "WHERE hp.participateRole = 'HOST' " +
+                    "AND e.eventStatus IN :statuses " +
+                    "AND (:locationId IS NULL OR l.id = :locationId) " +
+                    "AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom) " +
+                    "AND (:dateTo IS NULL OR e.eventDate <= :dateTo) " +
+                    "AND (:hostName IS NULL OR hu.username LIKE CONCAT('%', :hostName, '%')) " +
+                    "AND (:minRecruitmentRate IS NULL OR ((1.0 * e.currentParticipants) / e.maxParticipants) * 100 >= :minRecruitmentRate) " +
+                    "AND (:maxRecruitmentRate IS NULL OR ((1.0 * e.currentParticipants) / e.maxParticipants) * 100 <= :maxRecruitmentRate)"
+    )
+    Page<Event> searchAdminEventsWithStatus(
+            @Param("statuses") List<EventStatus> statuses,
+            @Param("dateFrom") LocalDate dateFrom,
+            @Param("dateTo") LocalDate dateTo,
+            @Param("locationId") Long locationId,
+            @Param("hostName") String hostName,
+            @Param("minRecruitmentRate") Integer minRecruitmentRate,
+            @Param("maxRecruitmentRate") Integer maxRecruitmentRate,
+            Pageable pageable
+    );
 }

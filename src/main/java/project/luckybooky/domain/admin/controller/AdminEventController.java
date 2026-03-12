@@ -3,16 +3,21 @@ package project.luckybooky.domain.admin.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.admin.dto.AdminBulkNotificationRequest;
 import project.luckybooky.domain.admin.dto.AdminBulkNotificationResponse;
+import project.luckybooky.domain.admin.dto.AdminEventListResponse;
 import project.luckybooky.domain.admin.dto.AdminEventParticipantsResponse;
 import project.luckybooky.domain.admin.dto.AdminEventUpdateRequest;
 import project.luckybooky.domain.admin.dto.AdminEventUpdateResponse;
@@ -21,6 +26,7 @@ import project.luckybooky.domain.admin.service.AdminEventUserInfoService;
 import project.luckybooky.domain.admin.service.AdminEventManagementService;
 import project.luckybooky.domain.adminUser.service.AdminContextService;
 import project.luckybooky.domain.event.dto.response.EventResponse;
+import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.global.apiPayload.response.CommonResponse;
 import project.luckybooky.global.apiPayload.response.ResultCode;
 
@@ -34,6 +40,34 @@ public class AdminEventController {
     private final AdminEventManagementService adminEventManagementService;
     private final AdminBulkNotificationService adminBulkNotificationService;
     private final AdminContextService adminContextService;
+
+    @Operation(summary = "관리자 이벤트 목록 조회", description = "상태, 날짜, 장소, 호스트, 인원 충족률로 이벤트를 필터링 조회합니다.")
+    @GetMapping
+    public CommonResponse<AdminEventListResponse> searchEvents(
+            @RequestParam(required = false) List<EventStatus> statuses,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @RequestParam(required = false) Long locationId,
+            @RequestParam(required = false) String hostName,
+            @RequestParam(required = false) Integer minRecruitmentRate,
+            @RequestParam(required = false) Integer maxRecruitmentRate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        adminContextService.getCurrentAdminUser();
+        AdminEventListResponse response = adminEventManagementService.searchEvents(
+                statuses,
+                dateFrom,
+                dateTo,
+                locationId,
+                hostName,
+                minRecruitmentRate,
+                maxRecruitmentRate,
+                page,
+                size
+        );
+        return CommonResponse.of(ResultCode.OK, response);
+    }
 
     @Operation(summary = "이벤트 참가자 유저 정보 디스코드 전송", description = "특정 이벤트의 참가자 유저 정보를 디스코드 Webhook으로 전송합니다.")
     @PostMapping("/{eventId}/participants/webhook")

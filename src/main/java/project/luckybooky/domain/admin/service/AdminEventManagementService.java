@@ -3,11 +3,21 @@ package project.luckybooky.domain.admin.service;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import project.luckybooky.domain.admin.dto.AdminEventListItemResponse;
+import project.luckybooky.domain.admin.dto.AdminEventListResponse;
 import project.luckybooky.domain.admin.dto.AdminEventParticipantsResponse;
 import project.luckybooky.domain.admin.dto.AdminEventUpdateRequest;
 import project.luckybooky.domain.admin.dto.AdminEventUpdateResponse;
@@ -18,6 +28,9 @@ import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.event.service.EventService;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.service.LocationService;
+import project.luckybooky.domain.participation.entity.Participation;
+import project.luckybooky.domain.participation.entity.type.ParticipateRole;
+import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.participation.dto.ParticipantInfoDto;
 import project.luckybooky.domain.participation.service.ParticipantInfoService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
@@ -33,6 +46,7 @@ public class AdminEventManagementService {
     private final EventRepository eventRepository;
     private final ParticipantInfoService participantInfoService;
     private final LocationService locationService;
+    private final ParticipationRepository participationRepository;
 
     @Transactional
     public EventResponse.EventVenueConfirmedResultDTO confirmVenue(Long eventId) {
@@ -102,6 +116,95 @@ public class AdminEventManagementService {
                 .posterImageUrl(event.getPosterImageUrl())
                 .estimatedPrice(event.getEstimatedPrice())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public AdminEventListResponse searchEvents(
+            List<EventStatus> statuses,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Long locationId,
+            String hostName,
+            Integer minRecruitmentRate,
+            Integer maxRecruitmentRate,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "eventDate", "id"));
+        String normalizedHostName = StringUtils.hasText(hostName) ? hostName.trim() : null;
+
+        if (minRecruitmentRate != null && maxRecruitmentRate != null && minRecruitmentRate > maxRecruitmentRate) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
+
+        Page<Event> events = (statuses == null || statuses.isEmpty())
+                ? eventRepository.searchAdminEventsWithoutStatus(
+                dateFrom,
+                dateTo,
+                locationId,
+                normalizedHostName,
+                minRecruitmentRate,
+                maxRecruitmentRate,
+                pageable
+        )
+                : eventRepository.searchAdminEventsWithStatus(
+                statuses,
+                dateFrom,
+                dateTo,
+                locationId,
+                normalizedHostName,
+                minRecruitmentRate,
+                maxRecruitmentRate,
+                pageable
+        );
+
+        Map<Long, String> hostNamesByEventId = getHostNamesByEventId(events.getContent());
+        List<AdminEventListItemResponse> items = events.getContent().stream()
+                .map(event -> {
+                    int recruitmentRate = Math.round((event.getCurrentParticipants() * 100.0f) / event.getMaxParticipants());
+                    return AdminEventListItemResponse.builder()
+                            .eventId(event.getId())
+                            .eventTitle(event.getEventTitle())
+                            .eventDate(event.getEventDate())
+                            .eventStatus(event.getEventStatus().name())
+                            .locationId(event.getLocation().getId())
+                            .locationName(event.getLocation().getLocationName())
+                            .hostName(hostNamesByEventId.getOrDefault(event.getId(), "(호스트 없음)"))
+                            .currentParticipants(event.getCurrentParticipants())
+                            .maxParticipants(event.getMaxParticipants())
+                            .recruitmentRate(recruitmentRate)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return AdminEventListResponse.builder()
+                .page(events.getNumber())
+                .size(events.getSize())
+                .totalPages(events.getTotalPages())
+                .totalElements(events.getTotalElements())
+                .events(items)
+                .build();
+    }
+
+    private Map<Long, String> getHostNamesByEventId(List<Event> events) {
+        if (events.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Long> eventIds = events.stream().map(Event::getId).toList();
+        List<Participation> hosts = participationRepository.findAllByEventIdsAndParticipateRoleWithUser(
+                eventIds,
+                ParticipateRole.HOST
+        );
+
+        Map<Long, String> hostNamesByEventId = new HashMap<>();
+        for (Participation participation : hosts) {
+            hostNamesByEventId.put(
+                    participation.getEvent().getId(),
+                    participation.getUser().getUsername()
+            );
+        }
+        return hostNamesByEventId;
     }
 
     private void validateEditableStatus(Event event) {
