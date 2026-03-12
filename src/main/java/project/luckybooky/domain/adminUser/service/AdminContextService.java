@@ -17,6 +17,6 @@ public class AdminContextService {
     public AdminUser getCurrentAdminUser() {
         String adminName = AuthenticatedUserUtils.getAuthenticatedUserEmail();
         return adminUserRepository.findByName(adminName)
-                .orElseThrow(() -> new BusinessException(ErrorCode.FORBIDDEN));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ADMIN_FORBIDDEN));
     }
 }

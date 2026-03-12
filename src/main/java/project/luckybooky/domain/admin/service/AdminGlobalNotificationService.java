@@ -34,7 +34,7 @@ public class AdminGlobalNotificationService {
         long totalTargetCount = userRepository.count();
         JobExecution jobExecution = runGlobalNotificationJob(request, effectiveBatchSize);
         if (jobExecution.getStatus() != BatchStatus.COMPLETED) {
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new BusinessException(ErrorCode.ADMIN_BATCH_EXECUTION_FAILED);
         }
 
         return AdminGlobalNotificationResponse.builder()
@@ -59,7 +59,7 @@ public class AdminGlobalNotificationService {
         try {
             return jobLauncher.run(adminGlobalNotificationJob, parameters);
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new BusinessException(ErrorCode.ADMIN_BATCH_EXECUTION_FAILED);
         }
     }
 

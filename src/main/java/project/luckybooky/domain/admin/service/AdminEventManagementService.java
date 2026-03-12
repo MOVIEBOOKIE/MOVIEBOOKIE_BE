@@ -76,7 +76,7 @@ public class AdminEventManagementService {
         int eventProgressTime = request.getEventProgressTime() != null ? request.getEventProgressTime() : getCurrentProgressTime(event);
 
         if (eventProgressTime <= 0) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.ADMIN_INVALID_REQUEST);
         }
 
         String eventEndTime = toEventEndTime(eventStartTime, eventProgressTime);
@@ -134,7 +134,7 @@ public class AdminEventManagementService {
         String normalizedHostName = StringUtils.hasText(hostName) ? hostName.trim() : null;
 
         if (minRecruitmentRate != null && maxRecruitmentRate != null && minRecruitmentRate > maxRecruitmentRate) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.ADMIN_INVALID_REQUEST);
         }
 
         Page<Event> events = (statuses == null || statuses.isEmpty())
@@ -209,7 +209,7 @@ public class AdminEventManagementService {
 
     private void validateEditableStatus(Event event) {
         if (event.getEventStatus() == EventStatus.COMPLETED || event.getEventStatus() == EventStatus.CANCELLED) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.ADMIN_INVALID_REQUEST);
         }
     }
 
@@ -223,16 +223,16 @@ public class AdminEventManagementService {
                 && request.getMinParticipants() == null
                 && request.getMaxParticipants() == null
                 && request.getPosterImageUrl() == null) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.ADMIN_INVALID_REQUEST);
         }
     }
 
     private void validateParticipantCount(Event event, Integer minParticipants, Integer maxParticipants) {
         if (minParticipants > maxParticipants) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.ADMIN_INVALID_REQUEST);
         }
         if (event.getCurrentParticipants() > maxParticipants) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.ADMIN_INVALID_REQUEST);
         }
     }
 
