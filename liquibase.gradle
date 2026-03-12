@@ -83,6 +83,14 @@ file(diffOutputDir).mkdirs()
 
 def runListValue = (project.findProperty('runList') ?: 'main').toString()
 def requestedActivities = runListValue.split(',').collect { it.trim() }.findAll { it }
+def requestedTasks = gradle.startParameter.taskNames.collect { it.toLowerCase() }
+def liquibaseTaskKeywords = [
+        'liquibase', 'diffchangelog', 'update', 'updatesql', 'status', 'rollback',
+        'dbdoc', 'dropall', 'changelogsync', 'marknextchangesetran', 'clearchecksums'
+]
+def isLiquibaseExecution = requestedTasks.any { task ->
+    liquibaseTaskKeywords.any { keyword -> task.contains(keyword) }
+}
 
 def requiredKeysByActivity = [
         main           : ['DEV_DB_URL', 'DEV_DB_USERNAME', 'DEV_DB_PASSWORD'],
@@ -111,27 +119,31 @@ def resolvedConfigByKey = [
         'LOCAL_DB_PASS'   : localDbPass
 ]
 
-def missing = [] as Set
-requestedActivities.each { activity ->
-    def requiredKeys = requiredKeysByActivity[activity]
-    if (requiredKeys != null) {
-        requiredKeys.each { key ->
-            def value = resolvedConfigByKey[key]
-            if (value == null || value.toString().trim().isEmpty()) {
-                missing << key
+if (isLiquibaseExecution) {
+    def missing = [] as Set
+    requestedActivities.each { activity ->
+        def requiredKeys = requiredKeysByActivity[activity]
+        if (requiredKeys != null) {
+            requiredKeys.each { key ->
+                def value = resolvedConfigByKey[key]
+                if (value == null || value.toString().trim().isEmpty()) {
+                    missing << key
+                }
             }
         }
     }
-}
 
-if (!missing.isEmpty()) {
-    throw new GradleException(
-            "Liquibase required properties are missing for runList='${runListValue}': ${missing.sort().join(', ')}.\n" +
-                    "Set them in one of these files:\n" +
-                    " - src/main/resources/secret/liquibase.properties (team shared)\n" +
-                    " - liquibase-local.properties (local only)\n" +
-                    "or pass with -P<KEY>=<VALUE>."
-    )
+    if (!missing.isEmpty()) {
+        throw new GradleException(
+                "Liquibase required properties are missing for runList='${runListValue}': ${missing.sort().join(', ')}.\n" +
+                        "Set them in one of these files:\n" +
+                        " - src/main/resources/secret/liquibase.properties (team shared)\n" +
+                        " - liquibase-shared.properties (project root fallback)\n" +
+                        " - liquibase.properties (project root fallback)\n" +
+                        " - liquibase-local.properties (local only)\n" +
+                        "or pass with -P<KEY>=<VALUE>."
+        )
+    }
 }
 
 liquibase {
