@@ -11,9 +11,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import project.luckybooky.domain.admin.dto.AdminBulkNotificationRequest;
+import project.luckybooky.domain.admin.dto.AdminBulkNotificationResponse;
 import project.luckybooky.domain.admin.dto.AdminEventParticipantsResponse;
 import project.luckybooky.domain.admin.dto.AdminEventUpdateRequest;
 import project.luckybooky.domain.admin.dto.AdminEventUpdateResponse;
+import project.luckybooky.domain.admin.service.AdminBulkNotificationService;
 import project.luckybooky.domain.admin.service.AdminEventUserInfoService;
 import project.luckybooky.domain.admin.service.AdminEventManagementService;
 import project.luckybooky.domain.adminUser.service.AdminContextService;
@@ -29,6 +32,7 @@ public class AdminEventController {
 
     private final AdminEventUserInfoService adminEventUserInfoService;
     private final AdminEventManagementService adminEventManagementService;
+    private final AdminBulkNotificationService adminBulkNotificationService;
     private final AdminContextService adminContextService;
 
     @Operation(summary = "이벤트 참가자 유저 정보 디스코드 전송", description = "특정 이벤트의 참가자 유저 정보를 디스코드 Webhook으로 전송합니다.")
@@ -63,6 +67,17 @@ public class AdminEventController {
     ) {
         adminContextService.getCurrentAdminUser();
         AdminEventUpdateResponse response = adminEventManagementService.updateEvent(eventId, request);
+        return CommonResponse.of(ResultCode.OK, response);
+    }
+
+    @Operation(summary = "관리자 이벤트 공지/푸시 일괄 발송", description = "특정 이벤트의 호스트/참여자/전체 대상으로 공지 및 푸시를 일괄 발송합니다.")
+    @PostMapping("/{eventId}/notifications/bulk")
+    public CommonResponse<AdminBulkNotificationResponse> sendBulkNotification(
+            @PathVariable Long eventId,
+            @Valid @RequestBody AdminBulkNotificationRequest request
+    ) {
+        adminContextService.getCurrentAdminUser();
+        AdminBulkNotificationResponse response = adminBulkNotificationService.sendBulkNotification(eventId, request);
         return CommonResponse.of(ResultCode.OK, response);
     }
 }
