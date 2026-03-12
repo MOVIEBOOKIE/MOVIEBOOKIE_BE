@@ -81,6 +81,24 @@ ext {
 
 def timestamp = new Date().format('yyyyMMdd_HHmmss')
 file(diffOutputDir).mkdirs()
+def gitBranchFromEnv = System.getenv('GITHUB_HEAD_REF') ?: System.getenv('GITHUB_REF_NAME')
+def gitBranchFromCmd = ''
+try {
+    gitBranchFromCmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
+            .execute(null, project.rootDir)
+            .text
+            .trim()
+} catch (Exception ignored) {
+}
+def rawBranchName = project.findProperty('branchName')?.toString() ?: gitBranchFromEnv ?: gitBranchFromCmd ?: 'unknown-branch'
+def sanitizedBranchName = rawBranchName
+        .replaceAll('[^a-zA-Z0-9._-]+', '-')
+        .replaceAll('-{2,}', '-')
+        .replaceAll('^-|-$', '')
+if (!sanitizedBranchName) {
+    sanitizedBranchName = 'unknown-branch'
+}
+def diffFilePrefix = "${timestamp}-${sanitizedBranchName}"
 
 def runListValue = (project.findProperty('runList') ?: 'main').toString()
 def requestedActivities = runListValue.split(',').collect { it.trim() }.findAll { it }
@@ -159,7 +177,7 @@ liquibase {
 
         prodDiff {
             def changelogFilePath = project.findProperty('liquibaseChangelogFile')
-                    ?: "${diffOutputDir}/${timestamp}-prod-diff.yaml"
+                    ?: "${diffOutputDir}/${diffFilePrefix}-prod-diff.yaml"
             changelogFile changelogFilePath
 
             // baseline (DEV)
@@ -179,7 +197,7 @@ liquibase {
 
         devDiff {
             def changelogFilePath = project.findProperty('liquibaseChangelogFile')
-                    ?: "${diffOutputDir}/${timestamp}-dev-diff.yaml"
+                    ?: "${diffOutputDir}/${diffFilePrefix}-dev-diff.yaml"
             changelogFile changelogFilePath
 
             // baseline (LOCAL)
@@ -199,7 +217,7 @@ liquibase {
 
         localDiff {
             def changelogFilePath = project.findProperty('liquibaseChangelogFile')
-                    ?: "${diffOutputDir}/${timestamp}-local-diff.yaml"
+                    ?: "${diffOutputDir}/${diffFilePrefix}-local-diff.yaml"
             changelogFile changelogFilePath
 
             // 기준 changelog 파일이 지정된 경우 사용
@@ -225,7 +243,7 @@ liquibase {
 
         incrementalDiff {
             def changelogFilePath = project.findProperty('liquibaseChangelogFile')
-                    ?: "${diffOutputDir}/${timestamp}-incremental-diff.yaml"
+                    ?: "${diffOutputDir}/${diffFilePrefix}-incremental-diff.yaml"
             changelogFile changelogFilePath
 
             def baselineChangelogPath = project.findProperty('baselineChangelog')

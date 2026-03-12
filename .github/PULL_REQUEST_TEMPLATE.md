@@ -17,6 +17,7 @@
 - [ ] 파일명이 규칙(`YYYYMMDD-HHMM-<feature-or-ticket>.yaml`)을 따르나요?
 - [ ] CI Liquibase schema gate가 통과했나요?
 - [ ] `update`(실 DB 반영)는 수동 절차로 진행할 예정인가요?
+- [ ] Liquibase 명령 실행 시 `-PrunList`를 명시했나요?
 
 # Check
 - [ ] Reviewers 등록을 하였나요?
