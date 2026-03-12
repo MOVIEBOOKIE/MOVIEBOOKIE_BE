@@ -49,6 +49,23 @@ jobs:
         run: ./gradlew clean bootJar -x test -Pprofile=dev
         shell: bash
 
+      - name: Liquibase schema gate (fail on mismatch)
+        shell: bash
+        run: |
+          ./gradlew --no-daemon status -PrunList=devUpdate \
+            -PDEV_DB_URL="${{ secrets.DEV_DB_URL }}" \
+            -PDEV_DB_USERNAME="${{ secrets.DEV_DB_USERNAME }}" \
+            -PDEV_DB_PASSWORD="${{ secrets.DEV_DB_PASSWORD }}" | tee liquibase-status.log
+
+          PENDING_LINE=$(grep -Eo '[0-9]+ changesets have not been applied' liquibase-status.log | head -n 1 || true)
+          if [[ -n "$PENDING_LINE" ]]; then
+            PENDING_COUNT=$(echo "$PENDING_LINE" | awk '{print $1}')
+            if [[ "$PENDING_COUNT" -gt 0 ]]; then
+              echo "::error::Liquibase schema mismatch detected. Pending changesets: $PENDING_COUNT"
+              exit 1
+            fi
+          fi
+
       - name: Login to NCP Container Registry
         uses: docker/login-action@v3
         with:
