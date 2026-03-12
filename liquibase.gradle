@@ -72,7 +72,8 @@ ext {
     localDbPass = getLbValue('LOCAL_DB_PASS') ?: getLbValue('LOCAL_DB_PASSWORD') ?: getLbValue('DB_PASSWORD')
 
     changelogDir = 'src/main/resources/db/changelog'
-    diffOutputDir = "${changelogDir}/generated"
+    // auto-generated diff files are kept for backup/review only
+    diffOutputDir = 'src/main/resources/db/changelog-backup'
 
     commonDiffTypes = "tables, columns, primaryKeys, uniqueConstraints, indexes, foreignKeys, sequences"
     commonExcludeObjects = "view:.*"
