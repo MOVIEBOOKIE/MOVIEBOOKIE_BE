@@ -1,52 +1,75 @@
-def loadEnvFile(String relativePath) {
-    def envFile = file(relativePath)
-    if (!envFile.exists()) {
+def loadPropertiesFile(String relativePath) {
+    def propsFile = file(relativePath)
+    if (!propsFile.exists()) {
         return [:]
     }
 
-    def vars = [:]
-    envFile.eachLine { line ->
-        def trimmed = line.trim()
-        if (trimmed && !trimmed.startsWith('#')) {
-            def delimiterIndex = trimmed.indexOf('=')
-            if (delimiterIndex > 0) {
-                def key = trimmed.substring(0, delimiterIndex).trim()
-                def value = trimmed.substring(delimiterIndex + 1).trim()
-                vars[key] = value
-            }
-        }
+    def props = new Properties()
+    propsFile.withInputStream { stream ->
+        props.load(stream)
     }
-    return vars
+
+    def asMap = [:]
+    props.each { k, v ->
+        asMap[k.toString()] = v?.toString()
+    }
+    return asMap
 }
 
-def localEnvPath = System.getenv('LIQUIBASE_LOCAL_ENV')
-if (!localEnvPath) {
-    def rootLevel = file('liquibase-local.env')
-    if (rootLevel.exists()) {
-        localEnvPath = 'liquibase-local.env'
-    } else {
-        localEnvPath = 'src/main/resources/secret/liquibase-local.env'
+def resolvePropertiesPath(String envKey, List<String> candidates) {
+    def fromEnv = System.getenv(envKey)
+    if (fromEnv) {
+        return fromEnv
     }
+
+    def matched = candidates.find { candidate ->
+        file(candidate).exists()
+    }
+    return matched
 }
-def localEnv = loadEnvFile(localEnvPath)
+
+def sharedPropsPath = resolvePropertiesPath(
+        'LIQUIBASE_SHARED_PROPERTIES',
+        ['src/main/resources/secret/liquibase.properties', 'liquibase-shared.properties', 'liquibase.properties']
+)
+def localPropsPath = resolvePropertiesPath(
+        'LIQUIBASE_LOCAL_PROPERTIES',
+        ['liquibase-local.properties', 'src/main/resources/secret/liquibase-local.properties']
+)
+
+def sharedProps = sharedPropsPath ? loadPropertiesFile(sharedPropsPath) : [:]
+def localProps = localPropsPath ? loadPropertiesFile(localPropsPath) : [:]
+
+def getLbValue = { String key ->
+    if (project.hasProperty(key)) {
+        return project.property(key)?.toString()
+    }
+    if (localProps.containsKey(key)) {
+        return localProps[key]
+    }
+    if (sharedProps.containsKey(key)) {
+        return sharedProps[key]
+    }
+    return System.getenv(key)
+}
 
 ext {
-    dbDriver = System.getenv('DB_DRIVER') ?: 'com.mysql.cj.jdbc.Driver'
+    dbDriver = getLbValue('DB_DRIVER') ?: 'com.mysql.cj.jdbc.Driver'
 
     // dev DB
-    devDbUrl = System.getenv('DEV_DB_URL')
-    devDbUser = System.getenv('DEV_DB_USERNAME')
-    devDbPass = System.getenv('DEV_DB_PASSWORD')
+    devDbUrl = getLbValue('DEV_DB_URL')
+    devDbUser = getLbValue('DEV_DB_USERNAME')
+    devDbPass = getLbValue('DEV_DB_PASSWORD')
 
     // prod DB
-    prodDbUrl = System.getenv('PROD_DB_URL')
-    prodDbUser = System.getenv('PROD_DB_USERNAME')
-    prodDbPass = System.getenv('PROD_DB_PASSWORD')
+    prodDbUrl = getLbValue('PROD_DB_URL')
+    prodDbUser = getLbValue('PROD_DB_USERNAME')
+    prodDbPass = getLbValue('PROD_DB_PASSWORD')
 
     // local DB
-    localDbUrl = System.getenv('LOCAL_DB_URL') ?: localEnv['LOCAL_DB_URL'] ?: System.getenv('DB_URL')
-    localDbUser = System.getenv('LOCAL_DB_USER') ?: localEnv['LOCAL_DB_USER'] ?: System.getenv('DB_USERNAME')
-    localDbPass = System.getenv('LOCAL_DB_PASS') ?: localEnv['LOCAL_DB_PASS'] ?: System.getenv('DB_PASSWORD')
+    localDbUrl = getLbValue('LOCAL_DB_URL') ?: getLbValue('DB_URL')
+    localDbUser = getLbValue('LOCAL_DB_USER') ?: getLbValue('LOCAL_DB_USERNAME') ?: getLbValue('DB_USERNAME')
+    localDbPass = getLbValue('LOCAL_DB_PASS') ?: getLbValue('LOCAL_DB_PASSWORD') ?: getLbValue('DB_PASSWORD')
 
     changelogDir = 'src/main/resources/db/changelog'
     diffOutputDir = "${changelogDir}/generated"
@@ -57,6 +80,59 @@ ext {
 
 def timestamp = new Date().format('yyyyMMdd_HHmmss')
 file(diffOutputDir).mkdirs()
+
+def runListValue = (project.findProperty('runList') ?: 'main').toString()
+def requestedActivities = runListValue.split(',').collect { it.trim() }.findAll { it }
+
+def requiredKeysByActivity = [
+        main           : ['DEV_DB_URL', 'DEV_DB_USERNAME', 'DEV_DB_PASSWORD'],
+        devUpdate      : ['DEV_DB_URL', 'DEV_DB_USERNAME', 'DEV_DB_PASSWORD'],
+        prodUpdate     : ['PROD_DB_URL', 'PROD_DB_USERNAME', 'PROD_DB_PASSWORD'],
+        localUpdate    : ['LOCAL_DB_URL', 'LOCAL_DB_USER', 'LOCAL_DB_PASS'],
+        prodDiff       : ['DEV_DB_URL', 'DEV_DB_USERNAME', 'DEV_DB_PASSWORD',
+                          'PROD_DB_URL', 'PROD_DB_USERNAME', 'PROD_DB_PASSWORD'],
+        devDiff        : ['LOCAL_DB_URL', 'LOCAL_DB_USER', 'LOCAL_DB_PASS',
+                          'DEV_DB_URL', 'DEV_DB_USERNAME', 'DEV_DB_PASSWORD'],
+        localDiff      : ['DEV_DB_URL', 'DEV_DB_USERNAME', 'DEV_DB_PASSWORD',
+                          'LOCAL_DB_URL', 'LOCAL_DB_USER', 'LOCAL_DB_PASS'],
+        incrementalDiff: ['DEV_DB_URL', 'DEV_DB_USERNAME', 'DEV_DB_PASSWORD',
+                          'LOCAL_DB_URL', 'LOCAL_DB_USER', 'LOCAL_DB_PASS']
+]
+
+def resolvedConfigByKey = [
+        'DEV_DB_URL'      : devDbUrl,
+        'DEV_DB_USERNAME' : devDbUser,
+        'DEV_DB_PASSWORD' : devDbPass,
+        'PROD_DB_URL'     : prodDbUrl,
+        'PROD_DB_USERNAME': prodDbUser,
+        'PROD_DB_PASSWORD': prodDbPass,
+        'LOCAL_DB_URL'    : localDbUrl,
+        'LOCAL_DB_USER'   : localDbUser,
+        'LOCAL_DB_PASS'   : localDbPass
+]
+
+def missing = [] as Set
+requestedActivities.each { activity ->
+    def requiredKeys = requiredKeysByActivity[activity]
+    if (requiredKeys != null) {
+        requiredKeys.each { key ->
+            def value = resolvedConfigByKey[key]
+            if (value == null || value.toString().trim().isEmpty()) {
+                missing << key
+            }
+        }
+    }
+}
+
+if (!missing.isEmpty()) {
+    throw new GradleException(
+            "Liquibase required properties are missing for runList='${runListValue}': ${missing.sort().join(', ')}.\n" +
+                    "Set them in one of these files:\n" +
+                    " - src/main/resources/secret/liquibase.properties (team shared)\n" +
+                    " - liquibase-local.properties (local only)\n" +
+                    "or pass with -P<KEY>=<VALUE>."
+    )
+}
 
 liquibase {
     activities {
