@@ -37,8 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       "/css/",
       "/js/",
       "/static/",
-      "/discord/interactions",
-      "/api/admin/events"
+      "/discord/interactions"
   );
 
   public JwtAuthenticationFilter(JwtUtil jwtUtil) {

@@ -251,4 +251,28 @@ public class Event extends BaseEntity {
     public void resetCurrentParticipants() {
         this.currentParticipants = 0;
     }
+
+    public void updateByAdmin(
+            String eventTitle,
+            String description,
+            LocalDate eventDate,
+            String eventStartTime,
+            String eventEndTime,
+            Location location,
+            Integer minParticipants,
+            Integer maxParticipants,
+            String posterImageUrl,
+            Integer estimatedPrice
+    ) {
+        this.eventTitle = eventTitle;
+        this.description = description;
+        this.eventDate = eventDate;
+        this.eventStartTime = eventStartTime;
+        this.eventEndTime = eventEndTime;
+        this.location = location;
+        this.minParticipants = minParticipants;
+        this.maxParticipants = maxParticipants;
+        this.posterImageUrl = posterImageUrl;
+        this.estimatedPrice = estimatedPrice;
+    }
 }

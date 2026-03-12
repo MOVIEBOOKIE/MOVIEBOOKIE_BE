@@ -67,6 +67,20 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             @Param("endTime") String endTime
     );
 
+    @Query("SELECT COUNT(e) FROM Event e " +
+            "WHERE e.eventStatus = 'RECRUITING' " +
+            "AND e.id <> :eventId " +
+            "AND e.location.id = :locationId " +
+            "AND e.eventDate = :date " +
+            "AND (e.eventStartTime < :endTime) AND (:startTime < e.eventEndTime)")
+    Integer isExistOverlappingLocationsByTimeExcludeEvent(
+            @Param("eventId") Long eventId,
+            @Param("locationId") Long locationId,
+            @Param("date") LocalDate date,
+            @Param("startTime") String startTime,
+            @Param("endTime") String endTime
+    );
+
     /**
      * 웹훅 발송을 위한 이벤트 조회 (Location, Category 즉시 로딩)
      */
