@@ -38,3 +38,5 @@ out/
 
 scripts/k6/tokens.json
 /scripts/k6/event/tokens.csv
+
+liquibase.properties

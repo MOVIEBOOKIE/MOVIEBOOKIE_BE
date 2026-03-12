@@ -5,6 +5,10 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +69,8 @@ public class EventService {
     private final UserRepository userRepository;
     private final LockRepository lockRepository;
 
-    private final ConcurrentHashMap<Long, Object> eventLocks = new ConcurrentHashMap<>();
+    private static final long REGISTER_LOCK_TIMEOUT_MILLIS = 3000L;
+    private final ConcurrentHashMap<Long, LockHolder> eventLocks = new ConcurrentHashMap<>();
 
     /**
      * 이벤트 생성
@@ -267,38 +272,43 @@ public class EventService {
      **/
     @Transactional
     public void registerEvent(Long userId, Long eventId) {
-        // 사용자 조회를 락 외부에서 미리 수행
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 이벤트 전용 락 오브젝트 획득
-        Object lock = eventLocks.computeIfAbsent(eventId, id -> new Object());
-        synchronized (lock) {
-            // 1) DB에서 PESSIMISTIC_WRITE 락으로 가져오기
-            Event event = eventRepository.findByIdWithLock(eventId)
+        LockHolder eventLock = acquireEventLock(eventId);
+        boolean acquired = false;
+        try {
+            try {
+                acquired = eventLock.lock().tryLock(REGISTER_LOCK_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new BusinessException(ErrorCode.INVALID_OPERATION);
+            }
+
+            if (!acquired) {
+                throw new BusinessException(ErrorCode.EVENT_FULL);
+            }
+
+            Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
-            boolean already = participationRepository
-                    .existsByUserIdAndEventId(userId, eventId);
+            boolean already = participationRepository.existsByUserIdAndEventId(userId, eventId);
             if (already) {
                 throw new BusinessException(ErrorCode.ALREADY_REGISTERED_EVENT);
             }
-            // 2) 최대 인원 초과 검사
+
             if (event.getCurrentParticipants() + 1 > event.getMaxParticipants()) {
                 throw new BusinessException(ErrorCode.EVENT_FULL);
             }
 
-            // 3) 해당 날짜에 이미 참여한 이벤트 없는지 검증
             if (isNotParticipatedOnDate(userId, event.getEventDate())) {
                 throw new BusinessException(ErrorCode.EVENT_ALREADY_EXIST);
             }
 
-            // 4) 참여자 수 증가
             event.updateCurrentParticipants(true);
 
-            // 5) 참여자 저장
-            Participation p = ParticipationConverter.toParticipation(user, event, ParticipateRole.PARTICIPANT);
-            participationRepository.save(p);
+            Participation participation = ParticipationConverter.toParticipation(user, event, ParticipateRole.PARTICIPANT);
+            participationRepository.save(participation);
 
             publisher.publishEvent(new ParticipantNotificationEvent(
                     eventId,
@@ -307,13 +317,15 @@ public class EventService {
                     event.getMediaTitle()
             ));
 
-            // 6) 모집 인원 달성 시 미신청자 이벤트 신청 버튼 상태 변경 ('신청하기' -> '신청 마감')
             if (event.getCurrentParticipants() == event.getMaxParticipants()) {
                 event.changeAnonymousButtonState();
             }
+        } finally {
+            if (acquired) {
+                eventLock.lock().unlock();
+            }
+            releaseEventLock(eventId, eventLock);
         }
-        // synchronized 블록이 끝난 후 락 오브젝트 제거
-        eventLocks.remove(eventId);
     }
 
     /**
@@ -674,6 +686,39 @@ public class EventService {
      **/
     private boolean isNotParticipatedOnDate(Long userId, LocalDate date) {
         return participationRepository.existsByUserIdAndEventDate(userId, date);
+    }
+
+    private LockHolder acquireEventLock(Long eventId) {
+        return eventLocks.compute(eventId, (id, holder) -> {
+            if (holder == null) {
+                holder = new LockHolder();
+            }
+            holder.increment();
+            return holder;
+        });
+    }
+
+    private void releaseEventLock(Long eventId, LockHolder lock) {
+        if (lock.decrementAndGet() == 0) {
+            eventLocks.remove(eventId, lock);
+        }
+    }
+
+    private static final class LockHolder {
+        private final ReentrantLock lock = new ReentrantLock();
+        private final AtomicInteger refCount = new AtomicInteger(0);
+
+        void increment() {
+            refCount.incrementAndGet();
+        }
+
+        int decrementAndGet() {
+            return refCount.decrementAndGet();
+        }
+
+        ReentrantLock lock() {
+            return lock;
+        }
     }
 
 }
