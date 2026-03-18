@@ -45,6 +45,9 @@ public enum ErrorCode implements BaseStatus {
   PHONE_ALREADY_USED(HttpStatus.CONFLICT, "USER_409", "이미 사용 중인 전화번호입니다."),
   ADMIN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "ADMIN_401", "어드민 계정을 찾을 수 없습니다."),
   ADMIN_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "ADMIN_401", "어드민 이메일 또는 비밀번호가 올바르지 않습니다."),
+  ADMIN_FORBIDDEN(HttpStatus.FORBIDDEN, "ADMIN_403", "관리자 권한이 필요합니다."),
+  ADMIN_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "ADMIN_400", "관리자 요청이 올바르지 않습니다."),
+  ADMIN_BATCH_EXECUTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADMIN_500", "관리자 배치 작업 실행에 실패했습니다."),
 
   // S3 관련
   FILE_NOT_UPLOADED(HttpStatus.BAD_REQUEST, "S3_401", "이미지를 업로드 할 수 없습니다."),

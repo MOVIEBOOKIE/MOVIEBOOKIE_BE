@@ -63,8 +63,6 @@ public class SecurityConfig {
 
             // admin용 디스코드 봇
             .requestMatchers(HttpMethod.POST, "/discord/interactions").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/admin/events/*/participants/webhook")
-            .permitAll()
 
             .requestMatchers(HttpMethod.GET, "/api/events/anonymous/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/email/send").permitAll()

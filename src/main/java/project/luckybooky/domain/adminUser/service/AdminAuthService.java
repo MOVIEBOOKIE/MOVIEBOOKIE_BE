@@ -1,5 +1,6 @@
 package project.luckybooky.domain.adminUser.service;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,38 +13,45 @@ import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.jwt.JwtUtil;
 import project.luckybooky.global.jwt.TokenService;
+import project.luckybooky.global.oauth.util.CookieUtil;
 
 @Service
 @RequiredArgsConstructor
 public class AdminAuthService {
 
-    private final AdminUserRepository adminUserRepository;
-    private final JwtUtil jwtUtil;
-    private final TokenService tokenService;
+  private final AdminUserRepository adminUserRepository;
+  private final JwtUtil jwtUtil;
+  private final TokenService tokenService;
 
-    @Transactional
-    public AdminLoginResponse login(AdminLoginRequest request) {
-        AdminUser adminUser = adminUserRepository.findByName(request.getName())
-                .orElseThrow(() -> new BusinessException(ErrorCode.ADMIN_NOT_FOUND));
+  @Transactional
+  public AdminLoginResponse login(AdminLoginRequest request, HttpServletResponse response) {
+    AdminUser adminUser = adminUserRepository.findByName(request.getName())
+        .orElseThrow(() -> new BusinessException(ErrorCode.ADMIN_NOT_FOUND));
 
-        if (!adminUser.getPassword().equals(request.getPassword())) {
-            throw new BusinessException(ErrorCode.ADMIN_INVALID_CREDENTIALS);
-        }
-
-        String accessToken = jwtUtil.createAccessToken(adminUser.getName());
-        String refreshToken = jwtUtil.createRefreshToken(adminUser.getName());
-
-        long refreshTokenTtl = jwtUtil.getRemainingSeconds(refreshToken);
-        tokenService.storeAdminRefreshToken(adminUser.getId(), refreshToken, refreshTokenTtl);
-
-        adminUser.updateTokens(accessToken, refreshToken);
-        adminUser.markLastLogin(LocalDateTime.now());
-        adminUserRepository.save(adminUser);
-
-        return AdminLoginResponse.builder()
-                .adminId(adminUser.getId())
-                .name(adminUser.getName())
-                .role(adminUser.getRole())
-                .build();
+    if (!adminUser.getPassword().equals(request.getPassword())) {
+      throw new BusinessException(ErrorCode.ADMIN_INVALID_CREDENTIALS);
     }
+
+    String accessToken = jwtUtil.createAccessToken(adminUser.getName());
+    String refreshToken = jwtUtil.createRefreshToken(adminUser.getName());
+
+    long refreshTokenTtl = jwtUtil.getRemainingSeconds(refreshToken);
+    tokenService.storeAdminRefreshToken(adminUser.getId(), refreshToken, refreshTokenTtl);
+
+    adminUser.updateTokens(accessToken, refreshToken);
+    adminUser.markLastLogin(LocalDateTime.now());
+    adminUserRepository.save(adminUser);
+
+    CookieUtil.addCookie(response, "accessToken", accessToken,
+        (int) jwtUtil.getAccessTokenValidity(), false);
+    CookieUtil.addCookie(response, "refreshToken", refreshToken,
+        (int) jwtUtil.getRefreshTokenValidity(), false);
+    response.setHeader("Authorization", accessToken);
+
+    return AdminLoginResponse.builder()
+        .adminId(adminUser.getId())
+        .name(adminUser.getName())
+        .role(adminUser.getRole())
+        .build();
+  }
 }
