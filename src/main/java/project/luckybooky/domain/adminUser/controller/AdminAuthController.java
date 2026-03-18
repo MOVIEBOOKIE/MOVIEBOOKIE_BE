@@ -2,6 +2,7 @@ package project.luckybooky.domain.adminUser.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,8 +25,12 @@ public class AdminAuthController {
 
     @Operation(summary = "어드민 로그인", description = "수동으로 등록된 어드민 계정 이메일/비밀번호로 로그인합니다.")
     @PostMapping("/login")
-    public CommonResponse<AdminLoginResponse> login(@Valid @RequestBody AdminLoginRequest request) {
-        return CommonResponse.of(ResultCode.ADMIN_LOGIN_OK, adminAuthService.login(request));
+    public CommonResponse<AdminLoginResponse> login(
+            @Valid @RequestBody AdminLoginRequest request,
+            HttpServletResponse httpResponse
+    ) {
+        AdminLoginResponse loginResponse = adminAuthService.login(request, httpResponse);
+        return CommonResponse.of(ResultCode.ADMIN_LOGIN_OK, loginResponse);
     }
 }
 
