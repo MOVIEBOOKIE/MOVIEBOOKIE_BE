@@ -80,12 +80,13 @@ jobs:
           script: |
             set -e
 
-            IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/moviebookie-prod:${{ github.sha }}
+            ECR_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/moviebookie-prod:latest
 
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-            sudo docker pull $IMAGE
+            sudo docker pull $ECR_IMAGE
 
             sudo docker rm -f moviebookie-prod || true
+            sudo docker image rm $ECR_IMAGE || true
 
             sudo docker run -d \
               --name moviebookie-prod \
@@ -93,10 +94,4 @@ jobs:
               -p 8081:8080 \
               -e SPRING_PROFILES_ACTIVE=prod \
               -e TZ=Asia/Seoul \
-              -e SPRING_DATASOURCE_URL='${{ secrets.PROD_DB_URL }}' \
-              -e SPRING_DATASOURCE_USERNAME='${{ secrets.PROD_DB_USERNAME }}' \
-              -e SPRING_DATASOURCE_PASSWORD='${{ secrets.PROD_DB_PASSWORD }}' \
-              -e SPRING_DATA_REDIS_HOST='${{ secrets.PROD_REDIS_HOST }}' \
-              -e SPRING_DATA_REDIS_PORT='${{ secrets.PROD_REDIS_PORT }}' \
-              -e SPRING_DATA_REDIS_PASSWORD='${{ secrets.PROD_REDIS_PASSWORD }}' \
-              $IMAGE
+              $ECR_IMAGE
