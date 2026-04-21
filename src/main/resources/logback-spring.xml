@@ -34,7 +34,7 @@
   <springProfile name="prod">
     <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
       <http>
-        <url>http://211.188.51.135:3101/loki/api/v1/push</url>
+        <url>http://10.0.2.170:3101/loki/api/v1/push</url>
       </http>
       <format>
         <label>
