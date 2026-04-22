@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.5'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.liquibase.gradle' version '2.2.0'
 }
 
 group = 'com.example'
@@ -17,6 +18,10 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+
+    liquibaseRuntime {
+        extendsFrom runtimeClasspath
+    }
 }
 
 repositories {
@@ -29,6 +34,7 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
@@ -82,9 +88,22 @@ dependencies {
 
     // Quartz
     implementation 'org.springframework.boot:spring-boot-starter-quartz'
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+    implementation "org.bouncycastle:bcprov-jdk18on:1.78.1"
+
+    // database migration
+    implementation 'org.liquibase:liquibase-core'
+
+    // Liquibase Gradle
+    liquibaseRuntime 'org.liquibase:liquibase-core'
+    liquibaseRuntime 'info.picocli:picocli:4.7.5'
+    liquibaseRuntime 'com.mysql:mysql-connector-j'
 
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+apply from: 'liquibase.gradle'
