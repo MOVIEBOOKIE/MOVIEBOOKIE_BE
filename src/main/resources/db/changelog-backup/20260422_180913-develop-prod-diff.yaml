@@ -1,0 +1,81 @@
+databaseChangeLog:
+- changeSet:
+    id: 1776848960139-4
+    author: gwanghyeon (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: admin_user_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+              unique: true
+            name: email
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: password
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              unique: true
+            name: name
+            type: VARCHAR(100)
+        - column:
+            constraints:
+              nullable: false
+            name: role
+            type: ENUM('SUPER_ADMIN', 'ADMIN')
+        - column:
+            name: access_token
+            type: TEXT
+        - column:
+            name: refresh_token
+            type: TEXT
+        - column:
+            name: last_login_at
+            type: datetime
+        - column:
+            name: created_at
+            type: datetime
+        - column:
+            name: updated_at
+            type: datetime
+        - column:
+            name: deleted_at
+            type: datetime
+        tableName: admin_users
+- changeSet:
+    id: 1776848960139-1
+    author: gwanghyeon (generated)
+    changes:
+    - modifyDataType:
+        columnName: description
+        newDataType: varchar(255)
+        tableName: event
+- changeSet:
+    id: 1776848960139-2
+    author: gwanghyeon (generated)
+    changes:
+    - modifyDataType:
+        columnName: description
+        newDataType: varchar(255)
+        tableName: ticket
+- changeSet:
+    id: 1776848960139-3
+    author: gwanghyeon (generated)
+    changes:
+    - addNotNullConstraint:
+        columnDataType: boolean
+        columnName: is_public
+        tableName: event
+        validate: true
+
