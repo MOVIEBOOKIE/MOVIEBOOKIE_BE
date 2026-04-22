@@ -3,8 +3,14 @@ name: MovieBookie CI/CD For Prod Pipeline
 on:
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - "src/main/resources/db/changelog/**"
+      - "src/main/resources/db/changelog-backup/**"
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - "src/main/resources/db/changelog/**"
+      - "src/main/resources/db/changelog-backup/**"
 
 jobs:
   build:
@@ -15,7 +21,7 @@ jobs:
     steps:
       # 레포지토리 체크아웃
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.SUBMODULE_ACCESS_TOKEN }}
           submodules: true
@@ -25,14 +31,14 @@ jobs:
           git submodule update --remote --recursive
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
       # gradle caching - 빌드 시간 향상
       - name: Gradle Caching
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -48,6 +54,23 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean bootJar -x test -Pprofile=prod
         shell: bash
+
+      - name: Liquibase schema gate (prod status check only)
+        shell: bash
+        run: |
+          ./gradlew --no-daemon status -PrunList=prodUpdate \
+            -PPROD_DB_URL="${{ secrets.PROD_DB_URL }}" \
+            -PPROD_DB_USERNAME="${{ secrets.PROD_DB_USERNAME }}" \
+            -PPROD_DB_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}" | tee liquibase-status.log
+
+          PENDING_LINE=$(grep -Eo '[0-9]+ changesets have not been applied' liquibase-status.log | head -n 1 || true)
+          if [[ -n "$PENDING_LINE" ]]; then
+            PENDING_COUNT=$(echo "$PENDING_LINE" | awk '{print $1}')
+            if [[ "$PENDING_COUNT" -gt 0 ]]; then
+              echo "::error::Liquibase schema mismatch detected. Pending changesets: $PENDING_COUNT"
+              exit 1
+            fi
+          fi
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
