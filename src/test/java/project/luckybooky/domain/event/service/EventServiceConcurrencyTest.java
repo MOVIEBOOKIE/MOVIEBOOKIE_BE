@@ -34,7 +34,7 @@ import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.repository.LockRepository;
-import project.luckybooky.global.service.NCPStorageService;
+import project.luckybooky.global.service.S3StorageService;
 
 @DataJpaTest
 @EnableJpaAuditing
@@ -62,8 +62,8 @@ class EventServiceConcurrencyTest {
     }
 
     @Bean
-    NCPStorageService ncpStorageService() {
-      return Mockito.mock(NCPStorageService.class);
+    S3StorageService s3StorageService() {
+      return Mockito.mock(S3StorageService.class);
     }
 
     @Bean
@@ -91,7 +91,7 @@ class EventServiceConcurrencyTest {
         EventRepository eventRepository,
         UserTypeService userTypeService,
         ParticipationRepository participationRepository,
-        NCPStorageService ncpStorageService,
+        S3StorageService s3StorageService,
         LocationService locationService,
         CategoryService categoryService,
         TicketService ticketService,
@@ -103,7 +103,7 @@ class EventServiceConcurrencyTest {
           eventRepository,
           userTypeService,
           participationRepository,
-          ncpStorageService,
+          s3StorageService,
           locationService,
           categoryService,
           ticketService,

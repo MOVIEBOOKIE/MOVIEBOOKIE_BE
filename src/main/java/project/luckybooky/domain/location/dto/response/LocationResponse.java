@@ -22,4 +22,14 @@ public class LocationResponse {
         Integer seatCount;
         Boolean hasDisabledSeat;
     }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class CreateLocationResultDTO {
+        Long locationId;
+        String locationName;
+        String address;
+    }
 }

@@ -2,15 +2,16 @@ package project.luckybooky.domain.location.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.location.converter.LocationConverter;
 import project.luckybooky.domain.location.dto.request.LocationRequest;
 import project.luckybooky.domain.location.dto.response.LocationResponse;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.repository.LocationRepository;
-import project.luckybooky.domain.participation.service.ParticipationService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.service.S3StorageService;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -23,10 +24,22 @@ import java.util.stream.Collectors;
 public class LocationService {
     private final LocationRepository locationRepository;
     private final EventRepository eventRepository;
+    private final S3StorageService s3StorageService;
 
     public Location findOne(Long locationId) {
         return locationRepository.findById(locationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
+    }
+
+    public LocationResponse.CreateLocationResultDTO createLocation(
+            LocationRequest.CreateLocationRequestDTO request,
+            MultipartFile locationImage
+    ) {
+        validateAllowedStartTimes(request);
+        String locationImageUrl = s3StorageService.uploadFile(locationImage);
+
+        Location savedLocation = locationRepository.save(LocationConverter.toLocation(request, locationImageUrl));
+        return LocationConverter.toCreateLocationResultDTO(savedLocation);
     }
 
     /**
@@ -58,5 +71,18 @@ public class LocationService {
             }).collect(Collectors.toSet());
             return LocationConverter.toReadLocationsResultDTO(location, keywords);
         }).collect(Collectors.toList());
+    }
+
+    private void validateAllowedStartTimes(LocationRequest.CreateLocationRequestDTO request) {
+        if (Boolean.TRUE.equals(request.getIsStartTimeRestricted())
+                && (request.getAllowedStartTimes() == null || request.getAllowedStartTimes().isEmpty())) {
+            throw new BusinessException(ErrorCode.LOCATION_ALLOWED_START_TIMES_REQUIRED);
+        }
+
+        if (Boolean.FALSE.equals(request.getIsStartTimeRestricted())
+                && request.getAllowedStartTimes() != null
+                && !request.getAllowedStartTimes().isEmpty()) {
+            throw new BusinessException(ErrorCode.LOCATION_ALLOWED_START_TIMES_MUST_BE_EMPTY);
+        }
     }
 }
