@@ -1,7 +1,6 @@
 package project.luckybooky.global.service;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +40,7 @@ public class S3StorageService {
             metadata.setContentLength(file.getSize());
             metadata.setContentType(file.getContentType());
 
-            amazonS3.putObject(new PutObjectRequest(bucketName, fileName, inputStream, metadata)
-                    .withCannedAcl(CannedAccessControlList.PublicRead));
+            amazonS3.putObject(new PutObjectRequest(bucketName, fileName, inputStream, metadata));
         } catch (IOException e) {
             throw new S3FailureHandler(ErrorCode.FILE_NOT_UPLOADED);
         }

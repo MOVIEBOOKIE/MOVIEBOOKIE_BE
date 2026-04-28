@@ -2,6 +2,7 @@ package project.luckybooky.domain.location.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.location.converter.LocationConverter;
 import project.luckybooky.domain.location.dto.request.LocationRequest;
@@ -10,6 +11,7 @@ import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.repository.LocationRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.service.S3StorageService;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -22,16 +24,21 @@ import java.util.stream.Collectors;
 public class LocationService {
     private final LocationRepository locationRepository;
     private final EventRepository eventRepository;
+    private final S3StorageService s3StorageService;
 
     public Location findOne(Long locationId) {
         return locationRepository.findById(locationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
     }
 
-    public LocationResponse.CreateLocationResultDTO createLocation(LocationRequest.CreateLocationRequestDTO request) {
+    public LocationResponse.CreateLocationResultDTO createLocation(
+            LocationRequest.CreateLocationRequestDTO request,
+            MultipartFile locationImage
+    ) {
         validateAllowedStartTimes(request);
+        String locationImageUrl = s3StorageService.uploadFile(locationImage);
 
-        Location savedLocation = locationRepository.save(LocationConverter.toLocation(request));
+        Location savedLocation = locationRepository.save(LocationConverter.toLocation(request, locationImageUrl));
         return LocationConverter.toCreateLocationResultDTO(savedLocation);
     }
 

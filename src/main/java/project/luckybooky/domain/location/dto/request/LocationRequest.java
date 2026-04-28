@@ -34,8 +34,6 @@ public class LocationRequest {
         @NotBlank(message = "주소는 필수입니다.")
         private String address;
 
-        private String locationImageUrl;
-
         @NotNull(message = "시간당 가격은 필수입니다.")
         @Min(value = 0, message = "시간당 가격은 0 이상이어야 합니다.")
         private Integer pricePerHour;

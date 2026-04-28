@@ -21,11 +21,11 @@ public class LocationConverter {
                 .build();
     }
 
-    public static Location toLocation(LocationRequest.CreateLocationRequestDTO request) {
+    public static Location toLocation(LocationRequest.CreateLocationRequestDTO request, String locationImageUrl) {
         return Location.builder()
                 .locationName(request.getLocationName())
                 .address(request.getAddress())
-                .locationImageUrl(request.getLocationImageUrl())
+                .locationImageUrl(locationImageUrl)
                 .pricePerHour(request.getPricePerHour())
                 .seatCount(request.getSeatCount())
                 .hasDisabledSeat(request.getHasDisabledSeat())

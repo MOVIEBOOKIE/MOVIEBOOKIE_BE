@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.location.dto.request.LocationRequest;
 import project.luckybooky.domain.location.dto.response.LocationResponse;
@@ -22,6 +24,7 @@ import project.luckybooky.domain.location.entity.type.LocationKeyword;
 import project.luckybooky.domain.location.repository.LocationRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.service.S3StorageService;
 
 @ExtendWith(MockitoExtension.class)
 class LocationServiceTest {
@@ -32,11 +35,14 @@ class LocationServiceTest {
     @Mock
     private EventRepository eventRepository;
 
+    @Mock
+    private S3StorageService s3StorageService;
+
     private LocationService locationService;
 
     @BeforeEach
     void setUp() {
-        locationService = new LocationService(locationRepository, eventRepository);
+        locationService = new LocationService(locationRepository, eventRepository, s3StorageService);
     }
 
     @Test
@@ -45,7 +51,6 @@ class LocationServiceTest {
         LocationRequest.CreateLocationRequestDTO request = new LocationRequest.CreateLocationRequestDTO();
         setField(request, "locationName", "테스트 상영관");
         setField(request, "address", "서울시 테스트구");
-        setField(request, "locationImageUrl", "https://example.com/location.png");
         setField(request, "pricePerHour", 10000);
         setField(request, "seatCount", 12);
         setField(request, "hasDisabledSeat", true);
@@ -56,6 +61,13 @@ class LocationServiceTest {
         setField(request, "latitude", 37.5d);
         setField(request, "longitude", 127.0d);
         setField(request, "allowedStartTimes", null);
+        MultipartFile locationImage = new MockMultipartFile(
+                "locationImage",
+                "location.png",
+                "image/png",
+                "image-bytes".getBytes()
+        );
+        when(s3StorageService.uploadFile(locationImage)).thenReturn("https://s3.example.com/location.png");
 
         when(locationRepository.save(any(Location.class))).thenAnswer(invocation -> {
             Location location = invocation.getArgument(0, Location.class);
@@ -63,7 +75,7 @@ class LocationServiceTest {
             return location;
         });
 
-        LocationResponse.CreateLocationResultDTO result = locationService.createLocation(request);
+        LocationResponse.CreateLocationResultDTO result = locationService.createLocation(request, locationImage);
 
         assertThat(result.getLocationId()).isEqualTo(101L);
         assertThat(result.getLocationName()).isEqualTo("테스트 상영관");
@@ -77,7 +89,13 @@ class LocationServiceTest {
         setField(request, "isStartTimeRestricted", true);
         setField(request, "allowedStartTimes", Set.of());
 
-        assertThatThrownBy(() -> locationService.createLocation(request))
+        MultipartFile locationImage = new MockMultipartFile(
+                "locationImage",
+                "location.png",
+                "image/png",
+                "image-bytes".getBytes()
+        );
+        assertThatThrownBy(() -> locationService.createLocation(request, locationImage))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.LOCATION_ALLOWED_START_TIMES_REQUIRED);
@@ -90,7 +108,13 @@ class LocationServiceTest {
         setField(request, "isStartTimeRestricted", false);
         setField(request, "allowedStartTimes", Set.of("10:00"));
 
-        assertThatThrownBy(() -> locationService.createLocation(request))
+        MultipartFile locationImage = new MockMultipartFile(
+                "locationImage",
+                "location.png",
+                "image/png",
+                "image-bytes".getBytes()
+        );
+        assertThatThrownBy(() -> locationService.createLocation(request, locationImage))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.LOCATION_ALLOWED_START_TIMES_MUST_BE_EMPTY);
@@ -100,7 +124,6 @@ class LocationServiceTest {
         LocationRequest.CreateLocationRequestDTO request = new LocationRequest.CreateLocationRequestDTO();
         setField(request, "locationName", "테스트 상영관");
         setField(request, "address", "서울시 테스트구");
-        setField(request, "locationImageUrl", "https://example.com/location.png");
         setField(request, "pricePerHour", 10000);
         setField(request, "seatCount", 12);
         setField(request, "hasDisabledSeat", true);
