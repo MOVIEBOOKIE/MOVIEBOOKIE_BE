@@ -8,7 +8,6 @@ import project.luckybooky.domain.location.dto.request.LocationRequest;
 import project.luckybooky.domain.location.dto.response.LocationResponse;
 import project.luckybooky.domain.location.entity.Location;
 import project.luckybooky.domain.location.repository.LocationRepository;
-import project.luckybooky.domain.participation.service.ParticipationService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 
@@ -27,6 +26,13 @@ public class LocationService {
     public Location findOne(Long locationId) {
         return locationRepository.findById(locationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
+    }
+
+    public LocationResponse.CreateLocationResultDTO createLocation(LocationRequest.CreateLocationRequestDTO request) {
+        validateAllowedStartTimes(request);
+
+        Location savedLocation = locationRepository.save(LocationConverter.toLocation(request));
+        return LocationConverter.toCreateLocationResultDTO(savedLocation);
     }
 
     /**
@@ -58,5 +64,18 @@ public class LocationService {
             }).collect(Collectors.toSet());
             return LocationConverter.toReadLocationsResultDTO(location, keywords);
         }).collect(Collectors.toList());
+    }
+
+    private void validateAllowedStartTimes(LocationRequest.CreateLocationRequestDTO request) {
+        if (Boolean.TRUE.equals(request.getIsStartTimeRestricted())
+                && (request.getAllowedStartTimes() == null || request.getAllowedStartTimes().isEmpty())) {
+            throw new BusinessException(ErrorCode.LOCATION_ALLOWED_START_TIMES_REQUIRED);
+        }
+
+        if (Boolean.FALSE.equals(request.getIsStartTimeRestricted())
+                && request.getAllowedStartTimes() != null
+                && !request.getAllowedStartTimes().isEmpty()) {
+            throw new BusinessException(ErrorCode.LOCATION_ALLOWED_START_TIMES_MUST_BE_EMPTY);
+        }
     }
 }
