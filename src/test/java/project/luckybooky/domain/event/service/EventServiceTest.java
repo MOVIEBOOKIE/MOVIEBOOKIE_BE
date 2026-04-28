@@ -37,7 +37,7 @@ import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.repository.LockRepository;
-import project.luckybooky.global.service.NCPStorageService;
+import project.luckybooky.global.service.S3StorageService;
 
 @ExtendWith(MockitoExtension.class)
 class EventServiceTest {
@@ -49,7 +49,7 @@ class EventServiceTest {
   @Mock
   private ParticipationRepository participationRepository;
   @Mock
-  private NCPStorageService s3Service;
+  private S3StorageService s3Service;
   @Mock
   private LocationService locationService;
   @Mock

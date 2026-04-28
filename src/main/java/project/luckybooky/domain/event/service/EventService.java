@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +50,7 @@ import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.repository.LockRepository;
-import project.luckybooky.global.service.NCPStorageService;
+import project.luckybooky.global.service.S3StorageService;
 
 @Slf4j
 @Service
@@ -61,7 +60,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final UserTypeService userTypeService;
     private final ParticipationRepository participationRepository;
-    private final NCPStorageService s3Service;
+    private final S3StorageService s3Service;
     private final LocationService locationService;
     private final CategoryService categoryService;
     private final TicketService ticketService;
