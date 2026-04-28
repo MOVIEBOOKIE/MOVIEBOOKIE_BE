@@ -102,7 +102,7 @@ public class Event extends BaseEntity {
     @Column(name = "estimated_status", nullable = false)
     private Integer estimatedPrice;
 
-    @Column(name = "poster_image_url", nullable = false)
+    @Column(name = "poster_image_url", nullable = false, length = 2048)
     private String posterImageUrl;
 
     @Column(name = "min_participants", nullable = false)
