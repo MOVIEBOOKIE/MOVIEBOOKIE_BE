@@ -101,20 +101,22 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            set -e
+            set -euo pipefail
 
-            ECR_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/moviebookie-prod:latest
+            ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+            ECR_IMAGE=$ECR_REGISTRY/moviebookie-prod:${{ github.sha }}
+            REGION=${{ secrets.AWS_REGION }}
+            CONTAINER_NAME=moviebookie-prod
+            CONTAINER_PORT=8081
 
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-            sudo docker pull $ECR_IMAGE
+            aws ecr get-login-password --region "$REGION" | sudo docker login --username AWS --password-stdin "$ECR_REGISTRY"
+            sudo docker pull "$ECR_IMAGE"
 
-            sudo docker rm -f moviebookie-prod || true
-            sudo docker image rm $ECR_IMAGE || true
-
+            sudo docker rm -f "$CONTAINER_NAME" || true
             sudo docker run -d \
-              --name moviebookie-prod \
+              --name "$CONTAINER_NAME" \
               --restart unless-stopped \
-              -p 8081:8080 \
+              -p "${CONTAINER_PORT}:8080" \
               -e SPRING_PROFILES_ACTIVE=prod \
               -e TZ=Asia/Seoul \
-              $ECR_IMAGE
+              "$ECR_IMAGE"

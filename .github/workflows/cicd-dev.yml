@@ -101,20 +101,81 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            set -e
+            set -euo pipefail
 
-            ECR_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/moviebookie-dev:latest
+            ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+            ECR_IMAGE=$ECR_REGISTRY/moviebookie-dev:${{ github.sha }}
+            REGION=${{ secrets.AWS_REGION }}
 
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-            sudo docker pull $ECR_IMAGE
+            INSTANCE1_CONTAINER=moviebookie-dev-1
+            INSTANCE2_CONTAINER=moviebookie-dev-2
+            INSTANCE1_PORT=8080
+            INSTANCE2_PORT=8082
 
-            sudo docker rm -f moviebookie-dev || true
-            sudo docker image rm $ECR_IMAGE || true
+            NGINX_UPSTREAM_FILE_INPUT="${{ secrets.DEV_NGINX_UPSTREAM_FILE }}"
+            HEALTH_PATH_INPUT="${{ secrets.DEV_HEALTH_PATH }}"
 
-            sudo docker run -d \
-              --name moviebookie-dev \
-              --restart unless-stopped \
-              -p 8080:8080 \
-              -e SPRING_PROFILES_ACTIVE=dev \
-              -e TZ=Asia/Seoul \
-              $ECR_IMAGE
+            NGINX_UPSTREAM_FILE=${NGINX_UPSTREAM_FILE_INPUT:-/etc/nginx/conf.d/moviebookie-dev-upstream.conf}
+            HEALTH_PATH=${HEALTH_PATH_INPUT:-/actuator/health}
+            HEALTH_MAX_RETRIES=${HEALTH_MAX_RETRIES:-30}
+            HEALTH_SLEEP_SECONDS=${HEALTH_SLEEP_SECONDS:-3}
+
+            aws ecr get-login-password --region "$REGION" | sudo docker login --username AWS --password-stdin "$ECR_REGISTRY"
+            sudo docker pull "$ECR_IMAGE"
+
+            write_nginx_upstream() {
+              sudo tee "$NGINX_UPSTREAM_FILE" >/dev/null <<EOF
+            upstream moviebookie_dev_active {
+              server 127.0.0.1:${INSTANCE1_PORT} max_fails=3 fail_timeout=10s;
+              server 127.0.0.1:${INSTANCE2_PORT} max_fails=3 fail_timeout=10s;
+              keepalive 32;
+            }
+            EOF
+              sudo nginx -t
+              sudo nginx -s reload
+            }
+
+            wait_for_local_health() {
+              local port="$1"
+              local url="http://127.0.0.1:${port}${HEALTH_PATH}"
+
+              for ((i=1; i<=HEALTH_MAX_RETRIES; i++)); do
+                if curl -fsS "$url" >/dev/null; then
+                  echo "Local health check succeeded: $url"
+                  return 0
+                fi
+                echo "Waiting for local health (${i}/${HEALTH_MAX_RETRIES}): $url"
+                sleep "$HEALTH_SLEEP_SECONDS"
+              done
+
+              return 1
+            }
+
+            deploy_instance() {
+              local container_name="$1"
+              local host_port="$2"
+
+              echo "Deploying container: $container_name on port $host_port"
+              sudo docker rm -f "$container_name" || true
+              sudo docker run -d \
+                --name "$container_name" \
+                --restart unless-stopped \
+                -p "${host_port}:8080" \
+                -e SPRING_PROFILES_ACTIVE=dev \
+                -e TZ=Asia/Seoul \
+                -e SLOT="$container_name" \
+                "$ECR_IMAGE"
+
+              if ! wait_for_local_health "$host_port"; then
+                echo "Health check failed: $container_name"
+                sudo docker logs --tail 200 "$container_name" || true
+                sudo docker rm -f "$container_name" || true
+                return 1
+              fi
+            }
+
+            deploy_instance "$INSTANCE1_CONTAINER" "$INSTANCE1_PORT"
+            deploy_instance "$INSTANCE2_CONTAINER" "$INSTANCE2_PORT"
+
+            write_nginx_upstream
+            echo "Dev multi-instance deployment succeeded with two active containers."
