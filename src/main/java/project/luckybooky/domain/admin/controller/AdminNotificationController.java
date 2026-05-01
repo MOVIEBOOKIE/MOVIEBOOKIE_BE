@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.admin.dto.AdminGlobalNotificationRequest;
 import project.luckybooky.domain.admin.dto.AdminGlobalNotificationResponse;
@@ -32,5 +33,15 @@ public class AdminNotificationController {
         adminContextService.getCurrentAdminUser();
         AdminGlobalNotificationResponse response = adminGlobalNotificationService.sendToAllUsers(request);
         return CommonResponse.of(ResultCode.OK, response);
+    }
+
+    @Operation(summary = "실패한 Outbox 메시지 재처리", description = "실패 상태의 outbox 이벤트를 다시 PENDING으로 되돌립니다.")
+    @PostMapping("/outbox/replay")
+    public CommonResponse<Integer> replayFailedOutbox(
+            @RequestParam(defaultValue = "100") int limit
+    ) {
+        adminContextService.getCurrentAdminUser();
+        int replayCount = adminGlobalNotificationService.replayFailedOutbox(limit);
+        return CommonResponse.of(ResultCode.OK, replayCount);
     }
 }

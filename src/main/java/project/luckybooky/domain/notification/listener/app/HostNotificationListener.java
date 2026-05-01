@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
@@ -38,6 +39,7 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(value = "app.notification.messaging.mode", havingValue = "legacy", matchIfMissing = true)
 public class HostNotificationListener {
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;

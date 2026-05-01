@@ -16,6 +16,7 @@ import project.luckybooky.domain.admin.dto.AdminGlobalNotificationResponse;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.messaging.service.OutboxReplayService;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class AdminGlobalNotificationService {
     private static final int DEFAULT_BATCH_SIZE = 500;
 
     private final UserRepository userRepository;
+    private final OutboxReplayService outboxReplayService;
     private final JobLauncher jobLauncher;
     @Qualifier("adminGlobalNotificationJob")
     private final Job adminGlobalNotificationJob;
@@ -44,7 +46,8 @@ public class AdminGlobalNotificationService {
                 .processedCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_PROCESSED_COUNT))
                 .pushSentCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_PUSH_SENT_COUNT))
                 .pushSkippedCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_PUSH_SKIPPED_COUNT))
-                .savedCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_SAVED_COUNT))
+                .queuedCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_QUEUED_COUNT))
+                .savedCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_QUEUED_COUNT))
                 .totalBatches(getContextInt(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_BATCH_COUNT))
                 .build();
     }
@@ -73,5 +76,10 @@ public class AdminGlobalNotificationService {
         return jobExecution.getExecutionContext().containsKey(key)
                 ? jobExecution.getExecutionContext().getInt(key)
                 : 0;
+    }
+
+    @Transactional
+    public int replayFailedOutbox(int limit) {
+        return outboxReplayService.replayFailed(limit);
     }
 }

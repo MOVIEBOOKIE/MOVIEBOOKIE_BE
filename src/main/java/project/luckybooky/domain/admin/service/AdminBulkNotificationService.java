@@ -1,7 +1,5 @@
 package project.luckybooky.domain.admin.service;
 
-import com.google.firebase.messaging.Message;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,14 +10,11 @@ import project.luckybooky.domain.admin.dto.AdminBulkNotificationRequest;
 import project.luckybooky.domain.admin.dto.AdminBulkNotificationResponse;
 import project.luckybooky.domain.admin.dto.AdminBulkNotificationTargetType;
 import project.luckybooky.domain.event.service.EventService;
-import project.luckybooky.domain.notification.converter.NotificationConverter;
-import project.luckybooky.domain.notification.entity.NotificationInfo;
-import project.luckybooky.domain.notification.repository.NotificationRepository;
-import project.luckybooky.domain.notification.service.NotificationService;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.user.entity.User;
+import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
 
 @Service
 @RequiredArgsConstructor
@@ -27,8 +22,7 @@ public class AdminBulkNotificationService {
 
     private final EventService eventService;
     private final ParticipationRepository participationRepository;
-    private final NotificationRepository notificationRepository;
-    private final NotificationService notificationService;
+    private final NotificationOutboxProducer notificationOutboxProducer;
 
     @Transactional
     public AdminBulkNotificationResponse sendBulkNotification(Long eventId, AdminBulkNotificationRequest request) {
@@ -38,29 +32,22 @@ public class AdminBulkNotificationService {
         List<User> targets = resolveTargets(eventId, request.getTargetType());
         int pushSentCount = 0;
         int pushSkippedCount = 0;
-        List<NotificationInfo> infos = new ArrayList<>();
+        int queuedCount = 0;
 
         for (User user : targets) {
-            Message message = NotificationConverter.toMessage(user, request.getTitle(), request.getBody());
-            if (message == null) {
+            notificationOutboxProducer.enqueueDirectNotification(
+                    user.getId(),
+                    request.getTitle(),
+                    request.getBody(),
+                    eventId
+            );
+            queuedCount++;
+
+            if (user.getFcmToken() == null || user.getFcmToken().isBlank()) {
                 pushSkippedCount++;
             } else {
-                notificationService.send(message);
                 pushSentCount++;
             }
-
-            infos.add(NotificationInfo.builder()
-                    .user(user)
-                    .title(request.getTitle())
-                    .body(request.getBody())
-                    .eventId(eventId)
-                    .sentAt(LocalDateTime.now())
-                    .isRead(false)
-                    .build());
-        }
-
-        if (!infos.isEmpty()) {
-            notificationRepository.saveAll(infos);
         }
 
         return AdminBulkNotificationResponse.builder()
@@ -69,7 +56,8 @@ public class AdminBulkNotificationService {
                 .targetCount(targets.size())
                 .pushSentCount(pushSentCount)
                 .pushSkippedCount(pushSkippedCount)
-                .savedCount(infos.size())
+                .queuedCount(queuedCount)
+                .savedCount(queuedCount)
                 .build();
     }
 

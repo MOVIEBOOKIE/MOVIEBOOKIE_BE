@@ -16,10 +16,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.PlatformTransactionManager;
-import project.luckybooky.domain.notification.repository.NotificationRepository;
-import project.luckybooky.domain.notification.service.NotificationService;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
+import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
 
 @Configuration
 public class AdminGlobalNotificationBatchConfig {
@@ -74,16 +73,14 @@ public class AdminGlobalNotificationBatchConfig {
     @Bean
     @StepScope
     public AdminGlobalNotificationItemWriter adminGlobalNotificationItemWriter(
-            NotificationService notificationService,
-            NotificationRepository notificationRepository,
+            NotificationOutboxProducer notificationOutboxProducer,
             @Value("#{jobParameters['title']}") String title,
             @Value("#{jobParameters['body']}") String body
     ) {
         return new AdminGlobalNotificationItemWriter(
                 title,
                 body,
-                notificationService,
-                notificationRepository
+                notificationOutboxProducer
         );
     }
 }

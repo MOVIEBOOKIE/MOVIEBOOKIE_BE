@@ -1,0 +1,165 @@
+databaseChangeLog:
+- changeSet:
+    id: 1777620295208-1
+    author: gwanghyeon (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+              unique: true
+            name: event_id
+            type: VARCHAR(64)
+        - column:
+            constraints:
+              nullable: false
+            name: aggregate_key
+            type: VARCHAR(191)
+        - column:
+            constraints:
+              nullable: false
+            name: event_type
+            type: VARCHAR(120)
+        - column:
+            constraints:
+              nullable: false
+            name: topic
+            type: VARCHAR(160)
+        - column:
+            name: partition_key
+            type: VARCHAR(191)
+        - column:
+            constraints:
+              nullable: false
+            name: payload
+            type: LONGTEXT
+        - column:
+            constraints:
+              nullable: false
+            defaultValue: PENDING
+            name: status
+            type: VARCHAR(30)
+        - column:
+            constraints:
+              nullable: false
+            defaultValueNumeric: 0
+            name: retry_count
+            type: INT
+        - column:
+            constraints:
+              nullable: false
+            defaultValueNumeric: 10
+            name: max_retry_count
+            type: INT
+        - column:
+            name: next_retry_at
+            type: datetime
+        - column:
+            name: last_error
+            type: VARCHAR(1000)
+        - column:
+            name: published_at
+            type: datetime
+        - column:
+            constraints:
+              nullable: false
+            defaultValueComputed: CURRENT_TIMESTAMP
+            name: created_at
+            type: datetime
+        - column:
+            constraints:
+              nullable: false
+            defaultValueComputed: CURRENT_TIMESTAMP
+            name: updated_at
+            type: datetime
+        tableName: outbox_event
+- changeSet:
+    id: 1777620295208-2
+    author: gwanghyeon (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: event_id
+            type: VARCHAR(64)
+        - column:
+            constraints:
+              nullable: false
+            name: consumer_group
+            type: VARCHAR(120)
+        - column:
+            name: topic
+            type: VARCHAR(160)
+        - column:
+            name: partition_no
+            type: INT
+        - column:
+            name: offset_no
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            defaultValueComputed: CURRENT_TIMESTAMP
+            name: processed_at
+            type: datetime
+        tableName: processed_message
+- changeSet:
+    id: 1777620295208-3
+    author: gwanghyeon (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: event_id, consumer_group
+        constraintName: uq_processed_message_event_consumer
+        tableName: processed_message
+- changeSet:
+    id: 1777620295208-4
+    author: gwanghyeon (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            defaultValueComputed: CURRENT_TIMESTAMP
+            name: created_at
+        indexName: idx_outbox_event_created_at
+        tableName: outbox_event
+- changeSet:
+    id: 1777620295208-5
+    author: gwanghyeon (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: status
+        - column:
+            name: next_retry_at
+        indexName: idx_outbox_event_status_next_retry
+        tableName: outbox_event
+- changeSet:
+    id: 1777620295208-6
+    author: gwanghyeon (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            defaultValueComputed: CURRENT_TIMESTAMP
+            name: processed_at
+        indexName: idx_processed_message_processed_at
+        tableName: processed_message
+
