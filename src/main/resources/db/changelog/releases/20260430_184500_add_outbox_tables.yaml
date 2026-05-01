@@ -1,0 +1,147 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260430-01-create-outbox-event
+      author: codex
+      changes:
+        - createTable:
+            tableName: outbox_event
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: event_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: aggregate_key
+                  type: VARCHAR(191)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: VARCHAR(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: topic
+                  type: VARCHAR(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: partition_key
+                  type: VARCHAR(191)
+              - column:
+                  name: payload
+                  type: LONGTEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(30)
+                  defaultValue: PENDING
+                  constraints:
+                    nullable: false
+              - column:
+                  name: retry_count
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: max_retry_count
+                  type: INT
+                  defaultValueNumeric: 10
+                  constraints:
+                    nullable: false
+              - column:
+                  name: next_retry_at
+                  type: DATETIME
+              - column:
+                  name: last_error
+                  type: VARCHAR(1000)
+              - column:
+                  name: published_at
+                  type: DATETIME
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: outbox_event
+            indexName: idx_outbox_event_status_next_retry
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: next_retry_at
+        - createIndex:
+            tableName: outbox_event
+            indexName: idx_outbox_event_created_at
+            columns:
+              - column:
+                  name: created_at
+
+  - changeSet:
+      id: 20260430-02-create-processed-message
+      author: codex
+      changes:
+        - createTable:
+            tableName: processed_message
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: event_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: consumer_group
+                  type: VARCHAR(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: topic
+                  type: VARCHAR(160)
+              - column:
+                  name: partition_no
+                  type: INT
+              - column:
+                  name: offset_no
+                  type: BIGINT
+              - column:
+                  name: processed_at
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: processed_message
+            columnNames: event_id, consumer_group
+            constraintName: uq_processed_message_event_consumer
+        - createIndex:
+            tableName: processed_message
+            indexName: idx_processed_message_processed_at
+            columns:
+              - column:
+                  name: processed_at

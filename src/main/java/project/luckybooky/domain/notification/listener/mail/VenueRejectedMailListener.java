@@ -3,6 +3,7 @@ package project.luckybooky.domain.notification.listener.mail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import project.luckybooky.domain.event.entity.Event;
@@ -21,6 +22,7 @@ import project.luckybooky.domain.user.service.AuthService;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(value = "app.notification.messaging.mode", havingValue = "legacy", matchIfMissing = true)
 public class VenueRejectedMailListener {
 
     private final ParticipationRepository participationRepository;

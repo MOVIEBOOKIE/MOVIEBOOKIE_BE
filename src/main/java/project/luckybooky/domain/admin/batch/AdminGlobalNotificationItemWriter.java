@@ -1,19 +1,12 @@
 package project.luckybooky.domain.admin.batch;
 
-import com.google.firebase.messaging.Message;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
-import project.luckybooky.domain.notification.converter.NotificationConverter;
-import project.luckybooky.domain.notification.entity.NotificationInfo;
-import project.luckybooky.domain.notification.repository.NotificationRepository;
-import project.luckybooky.domain.notification.service.NotificationService;
 import project.luckybooky.domain.user.entity.User;
+import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
 
 public class AdminGlobalNotificationItemWriter implements ItemWriter<User>, StepExecutionListener {
 
@@ -25,8 +18,7 @@ public class AdminGlobalNotificationItemWriter implements ItemWriter<User>, Step
 
     private final String title;
     private final String body;
-    private final NotificationService notificationService;
-    private final NotificationRepository notificationRepository;
+    private final NotificationOutboxProducer notificationOutboxProducer;
 
     private long pushSentCount;
     private long pushSkippedCount;
@@ -38,13 +30,11 @@ public class AdminGlobalNotificationItemWriter implements ItemWriter<User>, Step
     public AdminGlobalNotificationItemWriter(
             String title,
             String body,
-            NotificationService notificationService,
-            NotificationRepository notificationRepository
+            NotificationOutboxProducer notificationOutboxProducer
     ) {
         this.title = title;
         this.body = body;
-        this.notificationService = notificationService;
-        this.notificationRepository = notificationRepository;
+        this.notificationOutboxProducer = notificationOutboxProducer;
     }
 
     @Override
@@ -55,31 +45,15 @@ public class AdminGlobalNotificationItemWriter implements ItemWriter<User>, Step
     @Override
     public void write(Chunk<? extends User> chunk) {
         batchCount++;
-        List<NotificationInfo> infos = new ArrayList<>(chunk.size());
-
         for (User user : chunk.getItems()) {
-            Message message = NotificationConverter.toMessage(user, title, body);
-            if (message == null) {
+            if (user.getFcmToken() == null || user.getFcmToken().isBlank()) {
                 pushSkippedCount++;
             } else {
-                notificationService.send(message);
+                notificationOutboxProducer.enqueueDirectNotification(user.getId(), title, body, null);
                 pushSentCount++;
+                savedCount++;
             }
-
-            infos.add(NotificationInfo.builder()
-                    .user(user)
-                    .title(title)
-                    .body(body)
-                    .eventId(null)
-                    .sentAt(LocalDateTime.now())
-                    .isRead(false)
-                    .build());
             processedCount++;
-        }
-
-        if (!infos.isEmpty()) {
-            notificationRepository.saveAll(infos);
-            savedCount += infos.size();
         }
     }
 

@@ -16,6 +16,7 @@ import project.luckybooky.domain.admin.dto.AdminGlobalNotificationResponse;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.messaging.service.OutboxReplayService;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class AdminGlobalNotificationService {
     private static final int DEFAULT_BATCH_SIZE = 500;
 
     private final UserRepository userRepository;
+    private final OutboxReplayService outboxReplayService;
     private final JobLauncher jobLauncher;
     @Qualifier("adminGlobalNotificationJob")
     private final Job adminGlobalNotificationJob;
@@ -73,5 +75,10 @@ public class AdminGlobalNotificationService {
         return jobExecution.getExecutionContext().containsKey(key)
                 ? jobExecution.getExecutionContext().getInt(key)
                 : 0;
+    }
+
+    @Transactional
+    public int replayFailedOutbox(int limit) {
+        return outboxReplayService.replayFailed(limit);
     }
 }

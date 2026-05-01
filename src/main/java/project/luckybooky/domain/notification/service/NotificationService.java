@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.luckybooky.domain.event.repository.EventRepository;
 import project.luckybooky.domain.notification.converter.NotificationConverter;
 import project.luckybooky.domain.notification.dto.request.FcmTokenRequestDTO;
 import project.luckybooky.domain.notification.dto.request.NotificationRequestDTO;
@@ -26,6 +25,7 @@ import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.util.AuthenticatedUserUtils;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
 
 @Slf4j
 @Service
@@ -33,14 +33,13 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 public class NotificationService {
 
     private final UserRepository userRepository;
-    private final EventRepository eventRepository;
     @Getter
     private final ParticipationRepository participationRepository;
     private final NotificationRepository notificationRepository;
-    private final MailTemplateService mailTemplateService;
+    private final NotificationOutboxProducer notificationOutboxProducer;
 
-    @Value("${app.home-url}")
-    private String homeUrl;
+    @Value("${app.notification.messaging.mode:legacy}")
+    private String messagingMode;
 
     public FcmTokenResponseDTO registerFcmToken(FcmTokenRequestDTO dto) {
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
@@ -71,6 +70,16 @@ public class NotificationService {
         String email = AuthenticatedUserUtils.getAuthenticatedUserEmail();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (isKafkaMode()) {
+            notificationOutboxProducer.enqueueDirectNotification(
+                    user.getId(),
+                    requestDTO.getTitle(),
+                    requestDTO.getBody(),
+                    requestDTO.getEventId()
+            );
+            return new SendNotificationResponseDTO("accepted", "알림 전송 요청이 큐에 등록되었습니다.");
+        }
 
         // 2) 메시지 생성 (토큰 없으면 null)
         Message message = NotificationConverter.toMessage(
@@ -113,6 +122,10 @@ public class NotificationService {
         }
 
         return new SendNotificationResponseDTO("success", "알림 전송 및 저장 완료");
+    }
+
+    private boolean isKafkaMode() {
+        return "kafka".equalsIgnoreCase(messagingMode);
     }
 
 //    @Transactional(readOnly = true)

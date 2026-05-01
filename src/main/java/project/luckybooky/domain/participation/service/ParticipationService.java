@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -14,7 +13,6 @@ import project.luckybooky.domain.event.dto.response.EventResponse;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.entity.type.EventStatus;
 import project.luckybooky.domain.event.service.EventService;
-import project.luckybooky.domain.notification.event.app.ParticipantNotificationEvent;
 import project.luckybooky.domain.notification.type.ParticipantNotificationType;
 import project.luckybooky.domain.participation.converter.ParticipationConverter;
 import project.luckybooky.domain.participation.entity.Participation;
@@ -24,6 +22,7 @@ import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +31,7 @@ public class ParticipationService {
     private final ParticipationRepository participationRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
-    private final ApplicationEventPublisher publisher;
+    private final NotificationOutboxProducer notificationOutboxProducer;
 
 
     @Transactional
@@ -47,12 +46,12 @@ public class ParticipationService {
 
         // 참여자인 경우 알림 전송
         if (role == ParticipateRole.PARTICIPANT) {
-            publisher.publishEvent(new ParticipantNotificationEvent(
+            notificationOutboxProducer.enqueueParticipantNotification(
                     eventId,
                     userId,
                     ParticipantNotificationType.APPLY_COMPLETED,
                     event.getEventTitle()
-            ));
+            );
         }
 
         return EventConverter.toEventCreateResponseDTO(event);

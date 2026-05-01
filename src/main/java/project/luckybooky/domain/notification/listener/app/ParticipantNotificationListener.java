@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,7 @@ import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(value = "app.notification.messaging.mode", havingValue = "legacy", matchIfMissing = true)
 public class ParticipantNotificationListener {
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
