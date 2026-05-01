@@ -20,7 +20,8 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
             """)
     List<OutboxEvent> findPublishableEvents(
             @Param("status") OutboxStatus status,
-            @Param("now") LocalDateTime now
+            @Param("now") LocalDateTime now,
+            Pageable pageable
     );
 
     long countByStatus(OutboxStatus status);

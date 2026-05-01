@@ -13,13 +13,8 @@ public class ProcessedMessageService {
 
     private final ProcessedMessageRepository processedMessageRepository;
 
-    @Transactional(readOnly = true)
-    public boolean isProcessed(String eventId, String consumerGroup) {
-        return processedMessageRepository.existsByEventIdAndConsumerGroup(eventId, consumerGroup);
-    }
-
     @Transactional
-    public void markProcessed(
+    public boolean tryAcquireForProcessing(
             String eventId,
             String consumerGroup,
             String topic,
@@ -36,8 +31,10 @@ public class ProcessedMessageService {
                             .offsetNo(offset)
                             .build()
             );
+            return true;
         } catch (DataIntegrityViolationException ignored) {
-            // unique(event_id, consumer_group)로 중복 소비를 무시한다.
+            // unique(event_id, consumer_group) 선점 실패 -> 이미 처리 중/완료된 메시지
+            return false;
         }
     }
 }

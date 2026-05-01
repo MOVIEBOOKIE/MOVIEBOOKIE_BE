@@ -46,12 +46,13 @@ public class AdminGlobalNotificationItemWriter implements ItemWriter<User>, Step
     public void write(Chunk<? extends User> chunk) {
         batchCount++;
         for (User user : chunk.getItems()) {
+            notificationOutboxProducer.enqueueDirectNotification(user.getId(), title, body, null);
+            savedCount++;
+
             if (user.getFcmToken() == null || user.getFcmToken().isBlank()) {
                 pushSkippedCount++;
             } else {
-                notificationOutboxProducer.enqueueDirectNotification(user.getId(), title, body, null);
                 pushSentCount++;
-                savedCount++;
             }
             processedCount++;
         }

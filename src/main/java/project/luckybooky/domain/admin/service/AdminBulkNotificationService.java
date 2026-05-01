@@ -32,17 +32,20 @@ public class AdminBulkNotificationService {
         List<User> targets = resolveTargets(eventId, request.getTargetType());
         int pushSentCount = 0;
         int pushSkippedCount = 0;
+        int queuedCount = 0;
 
         for (User user : targets) {
+            notificationOutboxProducer.enqueueDirectNotification(
+                    user.getId(),
+                    request.getTitle(),
+                    request.getBody(),
+                    eventId
+            );
+            queuedCount++;
+
             if (user.getFcmToken() == null || user.getFcmToken().isBlank()) {
                 pushSkippedCount++;
             } else {
-                notificationOutboxProducer.enqueueDirectNotification(
-                        user.getId(),
-                        request.getTitle(),
-                        request.getBody(),
-                        eventId
-                );
                 pushSentCount++;
             }
         }
@@ -53,7 +56,7 @@ public class AdminBulkNotificationService {
                 .targetCount(targets.size())
                 .pushSentCount(pushSentCount)
                 .pushSkippedCount(pushSkippedCount)
-                .savedCount(pushSentCount)
+                .savedCount(queuedCount)
                 .build();
     }
 

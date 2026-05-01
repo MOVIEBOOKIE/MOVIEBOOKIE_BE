@@ -28,7 +28,6 @@ import project.luckybooky.domain.participation.entity.type.ParticipateRole;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
-import project.luckybooky.domain.user.service.AuthService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.messaging.NotificationEventType;
@@ -73,7 +72,14 @@ public class NotificationKafkaConsumer {
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
         NotificationEnvelope envelope = parseEnvelope(rawMessage);
-        if (processedMessageService.isProcessed(envelope.eventId(), consumerGroupId)) {
+        boolean acquired = processedMessageService.tryAcquireForProcessing(
+                envelope.eventId(),
+                consumerGroupId,
+                topic,
+                partition,
+                offset
+        );
+        if (!acquired) {
             return;
         }
 
@@ -84,8 +90,6 @@ public class NotificationKafkaConsumer {
             case NotificationEventType.DIRECT_PUSH -> processDirectPush(payloadNode);
             default -> throw new IllegalStateException("Unsupported push event type: " + envelope.eventType());
         }
-
-        processedMessageService.markProcessed(envelope.eventId(), consumerGroupId, topic, partition, offset);
     }
 
     @KafkaListener(
@@ -101,7 +105,14 @@ public class NotificationKafkaConsumer {
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
         NotificationEnvelope envelope = parseEnvelope(rawMessage);
-        if (processedMessageService.isProcessed(envelope.eventId(), consumerGroupId)) {
+        boolean acquired = processedMessageService.tryAcquireForProcessing(
+                envelope.eventId(),
+                consumerGroupId,
+                topic,
+                partition,
+                offset
+        );
+        if (!acquired) {
             return;
         }
 
@@ -111,8 +122,6 @@ public class NotificationKafkaConsumer {
             case NotificationEventType.VENUE_REJECTED_MAIL -> processVenueRejectedMail(payloadNode);
             default -> throw new IllegalStateException("Unsupported mail event type: " + envelope.eventType());
         }
-
-        processedMessageService.markProcessed(envelope.eventId(), consumerGroupId, topic, partition, offset);
     }
 
     private void processHostPush(JsonNode payloadNode) {
@@ -169,9 +178,6 @@ public class NotificationKafkaConsumer {
     }
 
     private void processVenueConfirmedMail(JsonNode payloadNode) {
-        if (AuthService.isUserWithdrawalInProgress()) {
-            return;
-        }
         VenueConfirmedMailPayload payload = objectMapper.convertValue(payloadNode, VenueConfirmedMailPayload.class);
         Participation hostPart = participationRepository
                 .findByUser_IdAndEvent_IdAndParticipateRole(
@@ -179,16 +185,26 @@ public class NotificationKafkaConsumer {
                         payload.eventId(),
                         ParticipateRole.HOST
                 )
-                .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+                .orElse(null);
+        if (hostPart == null) {
+            log.warn("Skip venue-confirmed mail: host participation not found. eventId={}, hostUserId={}",
+                    payload.eventId(),
+                    payload.hostUserId());
+            return;
+        }
 
         ConfirmedData data = NotificationConverter.toConfirmedData(hostPart, homeUrl);
-        mailTemplateService.sendVenueConfirmedMail(hostPart.getUser().getEmail(), data);
+        String to = resolveNotificationEmail(hostPart.getUser());
+        if (to == null || to.isBlank()) {
+            log.warn("Skip venue-confirmed mail: email not found. eventId={}, hostUserId={}",
+                    payload.eventId(),
+                    payload.hostUserId());
+            return;
+        }
+        mailTemplateService.sendVenueConfirmedMail(to, data);
     }
 
     private void processVenueRejectedMail(JsonNode payloadNode) {
-        if (AuthService.isUserWithdrawalInProgress()) {
-            return;
-        }
         VenueRejectedMailPayload payload = objectMapper.convertValue(payloadNode, VenueRejectedMailPayload.class);
         Participation hostPart = participationRepository
                 .findByUser_IdAndEvent_IdAndParticipateRole(
@@ -198,6 +214,9 @@ public class NotificationKafkaConsumer {
                 )
                 .orElse(null);
         if (hostPart == null) {
+            log.warn("Skip venue-rejected mail: host participation not found. eventId={}, hostUserId={}",
+                    payload.eventId(),
+                    payload.hostUserId());
             return;
         }
 
@@ -207,11 +226,20 @@ public class NotificationKafkaConsumer {
                         && event.getHostEventButtonState() == HostEventButtonState.VENUE_RESERVATION_CANCELED
                         && event.getParticipantEventButtonState() == ParticipantEventButtonState.VENUE_RESERVATION_CANCELED;
         if (!shouldSend) {
+            log.info("Skip venue-rejected mail: event status mismatch. eventId={}, status={}",
+                    event.getId(),
+                    event.getEventStatus());
             return;
         }
 
         RejectedData data = NotificationConverter.toRejectedData(hostPart, homeUrl);
-        String to = hostPart.getUser().getCertificationEmail();
+        String to = resolveNotificationEmail(hostPart.getUser());
+        if (to == null || to.isBlank()) {
+            log.warn("Skip venue-rejected mail: email not found. eventId={}, hostUserId={}",
+                    payload.eventId(),
+                    payload.hostUserId());
+            return;
+        }
         mailTemplateService.sendVenueRejectedMail(to, data);
     }
 
@@ -231,5 +259,12 @@ public class NotificationKafkaConsumer {
         } catch (Exception e) {
             throw new IllegalStateException("Failed to send notification", e);
         }
+    }
+
+    private String resolveNotificationEmail(User user) {
+        if (user.getCertificationEmail() != null && !user.getCertificationEmail().isBlank()) {
+            return user.getCertificationEmail();
+        }
+        return user.getEmail();
     }
 }
