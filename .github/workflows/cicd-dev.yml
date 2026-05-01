@@ -140,11 +140,13 @@ jobs:
               local url="http://127.0.0.1:${port}${HEALTH_PATH}"
 
               for ((i=1; i<=HEALTH_MAX_RETRIES; i++)); do
-                if curl -fsS "$url" >/dev/null; then
-                  echo "Local health check succeeded: $url"
+                local status_code
+                status_code="$(curl -sS -o /dev/null -w "%{http_code}" "$url" || true)"
+                if [[ "$status_code" == "200" || "$status_code" == "401" || "$status_code" == "403" ]]; then
+                  echo "Local health check succeeded (${status_code}): $url"
                   return 0
                 fi
-                echo "Waiting for local health (${i}/${HEALTH_MAX_RETRIES}): $url"
+                echo "Waiting for local health (${i}/${HEALTH_MAX_RETRIES}, status=${status_code:-n/a}): $url"
                 sleep "$HEALTH_SLEEP_SECONDS"
               done
 
