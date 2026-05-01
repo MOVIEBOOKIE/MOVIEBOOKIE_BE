@@ -12,6 +12,7 @@ public class AdminGlobalNotificationResponse {
     private final Long processedCount;
     private final Long pushSentCount;
     private final Long pushSkippedCount;
+    private final Long queuedCount;
     private final Long savedCount;
     private final Integer totalBatches;
 }

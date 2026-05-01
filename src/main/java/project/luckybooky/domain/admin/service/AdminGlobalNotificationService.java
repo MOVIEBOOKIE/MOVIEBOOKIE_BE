@@ -46,7 +46,8 @@ public class AdminGlobalNotificationService {
                 .processedCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_PROCESSED_COUNT))
                 .pushSentCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_PUSH_SENT_COUNT))
                 .pushSkippedCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_PUSH_SKIPPED_COUNT))
-                .savedCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_SAVED_COUNT))
+                .queuedCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_QUEUED_COUNT))
+                .savedCount(getContextLong(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_QUEUED_COUNT))
                 .totalBatches(getContextInt(jobExecution, AdminGlobalNotificationItemWriter.CONTEXT_BATCH_COUNT))
                 .build();
     }

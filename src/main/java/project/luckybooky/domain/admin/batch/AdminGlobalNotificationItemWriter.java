@@ -12,6 +12,8 @@ public class AdminGlobalNotificationItemWriter implements ItemWriter<User>, Step
 
     public static final String CONTEXT_PUSH_SENT_COUNT = "pushSentCount";
     public static final String CONTEXT_PUSH_SKIPPED_COUNT = "pushSkippedCount";
+    public static final String CONTEXT_QUEUED_COUNT = "queuedCount";
+    @Deprecated
     public static final String CONTEXT_SAVED_COUNT = "savedCount";
     public static final String CONTEXT_PROCESSED_COUNT = "processedCount";
     public static final String CONTEXT_BATCH_COUNT = "batchCount";
@@ -22,7 +24,7 @@ public class AdminGlobalNotificationItemWriter implements ItemWriter<User>, Step
 
     private long pushSentCount;
     private long pushSkippedCount;
-    private long savedCount;
+    private long queuedCount;
     private long processedCount;
     private int batchCount;
     private StepExecution stepExecution;
@@ -47,7 +49,7 @@ public class AdminGlobalNotificationItemWriter implements ItemWriter<User>, Step
         batchCount++;
         for (User user : chunk.getItems()) {
             notificationOutboxProducer.enqueueDirectNotification(user.getId(), title, body, null);
-            savedCount++;
+            queuedCount++;
 
             if (user.getFcmToken() == null || user.getFcmToken().isBlank()) {
                 pushSkippedCount++;
@@ -65,7 +67,9 @@ public class AdminGlobalNotificationItemWriter implements ItemWriter<User>, Step
         this.stepExecution.getJobExecution().getExecutionContext()
                 .putLong(CONTEXT_PUSH_SKIPPED_COUNT, pushSkippedCount);
         this.stepExecution.getJobExecution().getExecutionContext()
-                .putLong(CONTEXT_SAVED_COUNT, savedCount);
+                .putLong(CONTEXT_QUEUED_COUNT, queuedCount);
+        this.stepExecution.getJobExecution().getExecutionContext()
+                .putLong(CONTEXT_SAVED_COUNT, queuedCount);
         this.stepExecution.getJobExecution().getExecutionContext()
                 .putLong(CONTEXT_PROCESSED_COUNT, processedCount);
         this.stepExecution.getJobExecution().getExecutionContext()

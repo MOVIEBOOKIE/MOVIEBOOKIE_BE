@@ -56,6 +56,7 @@ public class AdminBulkNotificationService {
                 .targetCount(targets.size())
                 .pushSentCount(pushSentCount)
                 .pushSkippedCount(pushSkippedCount)
+                .queuedCount(queuedCount)
                 .savedCount(queuedCount)
                 .build();
     }
