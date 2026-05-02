@@ -30,6 +30,8 @@ public class OutboxPublisher {
 
     @Scheduled(fixedDelayString = "${app.notification.messaging.outbox-poll-delay-ms:3000}")
     public void publishPendingMessages() {
+        recoverStuckPublishingRows();
+
         List<OutboxEvent> publishable = outboxEventRepository.findPublishableEvents(
                 OutboxStatus.PENDING,
                 LocalDateTime.now(),
@@ -39,5 +41,19 @@ public class OutboxPublisher {
             return;
         }
         publishable.forEach(event -> outboxPublishWorker.publishOneSafely(event.getId()));
+    }
+
+    private void recoverStuckPublishingRows() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime threshold = now.minusMinutes(5);
+        int recovered = outboxEventRepository.recoverStuckPublishing(
+                OutboxStatus.PUBLISHING,
+                OutboxStatus.PENDING,
+                threshold,
+                now
+        );
+        if (recovered > 0) {
+            log.warn("Recovered stuck publishing outbox rows: {}", recovered);
+        }
     }
 }

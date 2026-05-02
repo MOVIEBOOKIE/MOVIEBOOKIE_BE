@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import project.luckybooky.global.messaging.entity.OutboxEvent;
@@ -27,4 +28,35 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
     long countByStatus(OutboxStatus status);
 
     List<OutboxEvent> findByStatusOrderByCreatedAtAsc(OutboxStatus status, Pageable pageable);
+
+    @Modifying
+    @Query("""
+            update OutboxEvent oe
+            set oe.status = :publishingStatus,
+                oe.updatedAt = :now
+            where oe.id = :id
+              and oe.status = :pendingStatus
+              and (oe.nextRetryAt is null or oe.nextRetryAt <= :now)
+            """)
+    int claimForPublishing(
+            @Param("id") Long id,
+            @Param("pendingStatus") OutboxStatus pendingStatus,
+            @Param("publishingStatus") OutboxStatus publishingStatus,
+            @Param("now") LocalDateTime now
+    );
+
+    @Modifying
+    @Query("""
+            update OutboxEvent oe
+            set oe.status = :pendingStatus,
+                oe.updatedAt = :now
+            where oe.status = :publishingStatus
+              and oe.updatedAt < :threshold
+            """)
+    int recoverStuckPublishing(
+            @Param("publishingStatus") OutboxStatus publishingStatus,
+            @Param("pendingStatus") OutboxStatus pendingStatus,
+            @Param("threshold") LocalDateTime threshold,
+            @Param("now") LocalDateTime now
+    );
 }

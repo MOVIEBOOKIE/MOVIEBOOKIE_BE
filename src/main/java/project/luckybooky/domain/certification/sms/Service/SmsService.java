@@ -2,18 +2,9 @@ package project.luckybooky.domain.certification.sms.Service;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
 import java.security.SecureRandom;
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.task.TaskExecutor;
@@ -44,20 +35,6 @@ public class SmsService {
     private final MeterRegistry meterRegistry;
 
     private final SecureRandom random = new SecureRandom();
-    private final Map<String, Instant> lockMap = new ConcurrentHashMap<>();
-    private ScheduledExecutorService cleaner;
-
-    // 캐시 락 정리 스케줄러
-    @PostConstruct
-    private void init() {
-        cleaner = Executors.newSingleThreadScheduledExecutor();
-        cleaner.scheduleAtFixedRate(this::cleanUpLocks, 30, 30, TimeUnit.SECONDS);
-    }
-
-    @PreDestroy
-    private void destroy() {
-        cleaner.shutdownNow();
-    }
 
     /**
      * 1) 인증번호 발송
@@ -77,8 +54,7 @@ public class SmsService {
 
             // 코드 생성 및 저장
             String code = generateCode();
-            cache.remove(PREFIX + phone);
-            cache.store(PREFIX + phone, code, CODE_TTL);
+            cache.put(PREFIX + phone, code, CODE_TTL);
 
             Timer.Sample enqueue = Timer.start(meterRegistry);
             smsExecutor.execute(() -> {
@@ -158,21 +134,7 @@ public class SmsService {
     }
 
     private boolean acquireLock(String key, Duration ttl) {
-        Instant now = Instant.now();
-        AtomicBoolean acquired = new AtomicBoolean(false);
-        lockMap.compute(key, (k, expireAt) -> {
-            if (expireAt == null || now.isAfter(expireAt)) {
-                acquired.set(true);
-                return now.plus(ttl);
-            }
-            return expireAt;
-        });
-        return acquired.get();
-    }
-
-    private void cleanUpLocks() {
-        Instant now = Instant.now();
-        lockMap.entrySet().removeIf(e -> now.isAfter(e.getValue()));
+        return cache.store(key, "1", ttl);
     }
 
     private String generateCode() {

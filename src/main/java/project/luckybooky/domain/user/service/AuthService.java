@@ -197,7 +197,16 @@ public class AuthService {
         String newRefreshToken = jwtUtil.createRefreshToken(email);
 
         long newRtTtl = jwtUtil.getRemainingSeconds(newRefreshToken);
-        tokenService.storeRefreshToken(userId, newRefreshToken, newRtTtl);
+        boolean rotated = tokenService.compareAndSetRefreshToken(
+                userId,
+                refreshToken,
+                newRefreshToken,
+                newRtTtl
+        );
+        if (!rotated) {
+            log.warn("🔹 [Token Reissue] 동시 재발급 경쟁 감지. userId={}", userId);
+            throw new BusinessException(ErrorCode.MULTI_ENV_LOGIN);
+        }
 
         user.setAccessToken(newAccessToken);
         user.setRefreshToken(newRefreshToken);

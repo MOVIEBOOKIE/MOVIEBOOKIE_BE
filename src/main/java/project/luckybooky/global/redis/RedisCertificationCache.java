@@ -18,6 +18,11 @@ public class RedisCertificationCache implements SmsCertificationCache {
     }
 
     @Override
+    public void put(String key, String value, Duration ttl) {
+        redis.opsForValue().set(key, value, ttl);
+    }
+
+    @Override
     public String get(String key) {
         return redis.opsForValue().get(key);
     }
