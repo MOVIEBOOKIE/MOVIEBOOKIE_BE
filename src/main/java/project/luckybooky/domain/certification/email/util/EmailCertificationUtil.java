@@ -29,6 +29,9 @@ public class EmailCertificationUtil {
     @Value("${app.email.from}")
     private String from;
 
+    @Value("${app.email.mock-enabled:false}")
+    private boolean mockEnabled;
+
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
     );
@@ -38,6 +41,11 @@ public class EmailCertificationUtil {
         try {
             // 이메일 형식 검증
             validateEmailFormat(to);
+
+            if (mockEnabled) {
+                log.info("[MOCK EMAIL] skip real send. to={}, code={}", to, code);
+                return;
+            }
 
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(
@@ -101,7 +109,6 @@ public class EmailCertificationUtil {
     }
 
     private void handleEmailError(Exception e) {
-        String errorMessage = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
         String fullErrorMessage = e.toString().toLowerCase();
 
         log.error("이메일 전송 에러: {}", e.getMessage());
