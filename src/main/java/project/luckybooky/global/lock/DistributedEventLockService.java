@@ -20,7 +20,7 @@ public class DistributedEventLockService {
     @Value("${app.lock.event-register.key-prefix:event:register:}")
     private String registerEventLockPrefix;
 
-    @Value("${app.lock.event-register.wait-ms:0}")
+    @Value("${app.lock.event-register.wait-ms:3000}")
     private long registerEventWaitMs;
 
     @Value("${app.lock.event-register.lease-ms:10000}")
@@ -34,6 +34,9 @@ public class DistributedEventLockService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new BusinessException(ErrorCode.INVALID_OPERATION);
+        } catch (Exception e) {
+            log.warn("Failed to acquire distributed lock. key={}, reason={}", lockKey, e.getMessage());
+            return null;
         }
     }
 

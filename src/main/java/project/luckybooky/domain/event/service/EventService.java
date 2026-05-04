@@ -4,17 +4,17 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.StaleObjectStateException;
 import org.redisson.api.RLock;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,9 +71,6 @@ public class EventService {
     private final UserRepository userRepository;
     private final LockRepository lockRepository;
     private final DistributedEventLockService distributedEventLockService;
-
-    private static final long REGISTER_LOCK_TIMEOUT_MILLIS = 3000L;
-    private final ConcurrentHashMap<Long, LockHolder> eventLocks = new ConcurrentHashMap<>();
 
     /**
      * 이벤트 생성
@@ -278,20 +275,11 @@ public class EventService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        LockHolder eventLock = acquireEventLock(eventId);
-        boolean acquired = false;
+        RLock eventLock = distributedEventLockService.tryLockForEventRegistration(eventId);
+        if (eventLock == null) {
+            throw new BusinessException(ErrorCode.EVENT_FULL);
+        }
         try {
-            try {
-                acquired = eventLock.lock().tryLock(REGISTER_LOCK_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new BusinessException(ErrorCode.INVALID_OPERATION);
-            }
-
-            if (!acquired) {
-                throw new BusinessException(ErrorCode.EVENT_FULL);
-            }
-
             Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
@@ -323,11 +311,17 @@ public class EventService {
             if (event.getCurrentParticipants() == event.getMaxParticipants()) {
                 event.changeAnonymousButtonState();
             }
-        } finally {
-            if (acquired) {
-                eventLock.lock().unlock();
+        } catch (ObjectOptimisticLockingFailureException | OptimisticLockException | StaleObjectStateException e) {
+            log.warn("Concurrent registration conflict. eventId={}, userId={}, reason={}", eventId, userId, e.getMessage());
+            throw new BusinessException(ErrorCode.EVENT_FULL);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Registration data integrity conflict. eventId={}, userId={}, reason={}", eventId, userId, e.getMessage());
+            if (participationRepository.existsByUserIdAndEventId(userId, eventId)) {
+                throw new BusinessException(ErrorCode.ALREADY_REGISTERED_EVENT);
             }
-            releaseEventLock(eventId, eventLock);
+            throw new BusinessException(ErrorCode.EVENT_FULL);
+        } finally {
+            distributedEventLockService.unlockSafely(eventLock);
         }
     }
 
@@ -700,39 +694,6 @@ public class EventService {
      **/
     private boolean isNotParticipatedOnDate(Long userId, LocalDate date) {
         return participationRepository.existsByUserIdAndEventDate(userId, date);
-    }
-
-    private LockHolder acquireEventLock(Long eventId) {
-        return eventLocks.compute(eventId, (id, holder) -> {
-            if (holder == null) {
-                holder = new LockHolder();
-            }
-            holder.increment();
-            return holder;
-        });
-    }
-
-    private void releaseEventLock(Long eventId, LockHolder lock) {
-        if (lock.decrementAndGet() == 0) {
-            eventLocks.remove(eventId, lock);
-        }
-    }
-
-    private static final class LockHolder {
-        private final ReentrantLock lock = new ReentrantLock();
-        private final AtomicInteger refCount = new AtomicInteger(0);
-
-        void increment() {
-            refCount.incrementAndGet();
-        }
-
-        int decrementAndGet() {
-            return refCount.decrementAndGet();
-        }
-
-        ReentrantLock lock() {
-            return lock;
-        }
     }
 
 }

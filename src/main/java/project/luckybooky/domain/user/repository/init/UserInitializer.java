@@ -21,52 +21,52 @@ import project.luckybooky.global.jwt.JwtUtil;
 @Order(0)
 public class UserInitializer implements ApplicationRunner {
 
-    private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
+  private final UserRepository userRepository;
+  private final JwtUtil jwtUtil;
 
-    @Override
-    @Transactional
-    public void run(ApplicationArguments args) {
+  @Override
+  @Transactional
+  public void run(ApplicationArguments args) {
 
-        /* 최초 기동 시 한 번만 삽입 */
-        if (userRepository.count() > 0) {
-            return;
-        }
-
-        List<User> guests = IntStream.rangeClosed(1, 5)
-                .mapToObj(i -> buildGuest(
-                        "guest" + i + "@example.com",
-                        "게스트" + i,
-                        "+8210123" + String.format("%04d", i),
-                        UserType.MOVIE_DETAIL_COLLECTOR))
-                .peek(this::attachJwtTokens)
-                .collect(Collectors.toList());
-
-        userRepository.saveAll(guests);
+    /* 최초 기동 시 한 번만 삽입 */
+    if (userRepository.count() > 0) {
+      return;
     }
 
-    /**
-     * 게스트 회원 기본 빌더
-     */
-    private User buildGuest(String email, String username, String phone, UserType type) {
-        return User.builder()
-                .email(email)
-                .username(username)
-                .profileImage("https://example.com/avatar/" + username + ".png")
-                .hostExperienceCount(0)
-                .participationExperienceCount(0)
-                .phoneNumber(phone)
-                .userType(type)
-                .build();
-    }
+    List<User> guests = IntStream.rangeClosed(1, 250)
+        .mapToObj(i -> buildGuest(
+            "guest" + i + "@example.com",
+            "게스트" + i,
+            "+8210123" + String.format("%04d", i),
+            UserType.MOVIE_DETAIL_COLLECTOR))
+        .peek(this::attachJwtTokens)
+        .collect(Collectors.toList());
 
-    /**
-     * Access / Refresh Token 생성 & 주입
-     */
-    private void attachJwtTokens(User u) {
-        String accessToken = jwtUtil.createAccessToken(u.getEmail());     // 15분 만료 등
-        String refreshToken = jwtUtil.createAccessToken(u.getEmail());    // 2주 만료 등
-        u.setAccessToken(accessToken);
-        u.setRefreshToken(refreshToken);
-    }
+    userRepository.saveAll(guests);
+  }
+
+  /**
+   * 게스트 회원 기본 빌더
+   */
+  private User buildGuest(String email, String username, String phone, UserType type) {
+    return User.builder()
+        .email(email)
+        .username(username)
+        .profileImage("https://example.com/avatar/" + username + ".png")
+        .hostExperienceCount(0)
+        .participationExperienceCount(0)
+        .phoneNumber(phone)
+        .userType(type)
+        .build();
+  }
+
+  /**
+   * Access / Refresh Token 생성 & 주입
+   */
+  private void attachJwtTokens(User u) {
+    String accessToken = jwtUtil.createAccessToken(u.getEmail());     // 15분 만료 등
+    String refreshToken = jwtUtil.createAccessToken(u.getEmail());    // 2주 만료 등
+    u.setAccessToken(accessToken);
+    u.setRefreshToken(refreshToken);
+  }
 }

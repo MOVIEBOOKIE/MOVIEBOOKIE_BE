@@ -19,7 +19,7 @@ public class AuthFailureHandler implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
 
-    private static final ErrorCode ERROR = ErrorCode.JWT_EXPIRED_TOKEN;
+    private static final ErrorCode ERROR = ErrorCode.UNAUTHORIZED;
 
     @Value("${app.home-url:https://movie-bookie.shop}")
     private String homeUrl;

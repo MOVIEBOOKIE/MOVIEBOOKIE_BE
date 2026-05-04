@@ -7,7 +7,7 @@ import project.luckybooky.domain.admin.dto.EventUserInfoWebhookDTO;
 
 @Slf4j
 @Service
-@Profile("!dev & !prod")
+@Profile("!local & !dev & !prod")
 public class EventUserInfoWebhookNoopService implements EventUserInfoWebhookService {
 
     @Override

@@ -5,14 +5,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.redisson.api.RLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -42,6 +45,41 @@ import project.luckybooky.global.service.S3StorageService;
 @EnableJpaAuditing
 @Import({LockRepository.class, EventServiceConcurrencyTest.TestConfig.class})
 class EventServiceConcurrencyTest {
+
+  static class InMemoryDistributedEventLockService extends DistributedEventLockService {
+    private final ConcurrentHashMap<Long, ReentrantLock> locks = new ConcurrentHashMap<>();
+    private final ThreadLocal<ReentrantLock> heldLock = new ThreadLocal<>();
+
+    InMemoryDistributedEventLockService() {
+      super(null);
+    }
+
+    @Override
+    public RLock tryLockForEventRegistration(Long eventId) {
+      ReentrantLock lock = locks.computeIfAbsent(eventId, id -> new ReentrantLock());
+      boolean acquired;
+      try {
+        acquired = lock.tryLock(3, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return null;
+      }
+      if (!acquired) {
+        return null;
+      }
+      heldLock.set(lock);
+      return Mockito.mock(RLock.class);
+    }
+
+    @Override
+    public void unlockSafely(RLock lock) {
+      ReentrantLock held = heldLock.get();
+      if (held != null && held.isHeldByCurrentThread()) {
+        held.unlock();
+      }
+      heldLock.remove();
+    }
+  }
 
   @Autowired
   private EventRepository eventRepository;
@@ -126,7 +164,7 @@ class EventServiceConcurrencyTest {
 
     @Bean
     DistributedEventLockService distributedEventLockService() {
-      return Mockito.mock(DistributedEventLockService.class);
+      return new InMemoryDistributedEventLockService();
     }
   }
 

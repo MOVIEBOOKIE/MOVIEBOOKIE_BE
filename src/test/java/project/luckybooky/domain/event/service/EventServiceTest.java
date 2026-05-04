@@ -11,9 +11,11 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +23,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RLock;
 import org.springframework.context.ApplicationEventPublisher;
 import project.luckybooky.domain.category.service.CategoryService;
 import project.luckybooky.domain.event.entity.Event;
@@ -65,13 +69,13 @@ class EventServiceTest {
   private LockRepository lockRepository;
   @Mock
   private NotificationOutboxProducer notificationOutboxProducer;
-  @Mock
   private DistributedEventLockService distributedEventLockService;
 
   private EventService eventService;
 
   @BeforeEach
   void setUp() {
+    distributedEventLockService = new InMemoryDistributedEventLockService();
     eventService = new EventService(
         eventRepository,
         userTypeService,
@@ -86,6 +90,41 @@ class EventServiceTest {
         lockRepository,
         distributedEventLockService
     );
+  }
+
+  private static class InMemoryDistributedEventLockService extends DistributedEventLockService {
+    private final ConcurrentHashMap<Long, ReentrantLock> locks = new ConcurrentHashMap<>();
+    private final ThreadLocal<ReentrantLock> heldLock = new ThreadLocal<>();
+
+    InMemoryDistributedEventLockService() {
+      super(null);
+    }
+
+    @Override
+    public RLock tryLockForEventRegistration(Long eventId) {
+      ReentrantLock lock = locks.computeIfAbsent(eventId, id -> new ReentrantLock());
+      boolean acquired;
+      try {
+        acquired = lock.tryLock(3, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return null;
+      }
+      if (!acquired) {
+        return null;
+      }
+      heldLock.set(lock);
+      return Mockito.mock(RLock.class);
+    }
+
+    @Override
+    public void unlockSafely(RLock lock) {
+      ReentrantLock held = heldLock.get();
+      if (held != null && held.isHeldByCurrentThread()) {
+        held.unlock();
+      }
+      heldLock.remove();
+    }
   }
 
   private Event createEvent(Long eventId, int maxParticipants, int currentParticipants,
