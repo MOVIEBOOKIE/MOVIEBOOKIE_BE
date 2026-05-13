@@ -35,18 +35,29 @@ public class OutboxPublishWorker {
 
     @Transactional
     public void publishOneSafely(Long outboxEventId) {
+        LocalDateTime now = LocalDateTime.now();
+        int claimed = outboxEventRepository.claimForPublishing(
+                outboxEventId,
+                OutboxStatus.PENDING,
+                OutboxStatus.PUBLISHING,
+                now
+        );
+        if (claimed == 0) {
+            return;
+        }
+
         OutboxEvent outboxEvent = outboxEventRepository.findById(outboxEventId).orElse(null);
         if (outboxEvent == null) {
-            return;
+            throw new IllegalStateException(
+                    "Outbox consistency violation: claimed event not found. id=" + outboxEventId
+            );
         }
 
-        if (outboxEvent.getStatus() != OutboxStatus.PENDING) {
-            return;
-        }
-
-        LocalDateTime nextRetryAt = outboxEvent.getNextRetryAt();
-        if (nextRetryAt != null && nextRetryAt.isAfter(LocalDateTime.now())) {
-            return;
+        if (outboxEvent.getStatus() != OutboxStatus.PUBLISHING) {
+            throw new IllegalStateException(
+                    "Outbox consistency violation: claimed event must be PUBLISHING. id=" + outboxEventId
+                            + ", status=" + outboxEvent.getStatus()
+            );
         }
 
         try {

@@ -4,16 +4,17 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.StaleObjectStateException;
+import org.redisson.api.RLock;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +47,7 @@ import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.lock.DistributedEventLockService;
 import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
 import project.luckybooky.global.repository.LockRepository;
 import project.luckybooky.global.service.S3StorageService;
@@ -55,6 +57,8 @@ import project.luckybooky.global.service.S3StorageService;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class EventService {
+    private static final String EXPIRED_EVENT_SCHEDULER_LOCK_KEY = "scheduler:event:process-expired";
+
     private final EventRepository eventRepository;
     private final UserTypeService userTypeService;
     private final ParticipationRepository participationRepository;
@@ -66,9 +70,7 @@ public class EventService {
     private final NotificationOutboxProducer notificationOutboxProducer;
     private final UserRepository userRepository;
     private final LockRepository lockRepository;
-
-    private static final long REGISTER_LOCK_TIMEOUT_MILLIS = 3000L;
-    private final ConcurrentHashMap<Long, LockHolder> eventLocks = new ConcurrentHashMap<>();
+    private final DistributedEventLockService distributedEventLockService;
 
     /**
      * 이벤트 생성
@@ -273,20 +275,11 @@ public class EventService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        LockHolder eventLock = acquireEventLock(eventId);
-        boolean acquired = false;
+        RLock eventLock = distributedEventLockService.tryLockForEventRegistration(eventId);
+        if (eventLock == null) {
+            throw new BusinessException(ErrorCode.EVENT_FULL);
+        }
         try {
-            try {
-                acquired = eventLock.lock().tryLock(REGISTER_LOCK_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new BusinessException(ErrorCode.INVALID_OPERATION);
-            }
-
-            if (!acquired) {
-                throw new BusinessException(ErrorCode.EVENT_FULL);
-            }
-
             Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
@@ -318,11 +311,17 @@ public class EventService {
             if (event.getCurrentParticipants() == event.getMaxParticipants()) {
                 event.changeAnonymousButtonState();
             }
-        } finally {
-            if (acquired) {
-                eventLock.lock().unlock();
+        } catch (ObjectOptimisticLockingFailureException | OptimisticLockException | StaleObjectStateException e) {
+            log.warn("Concurrent registration conflict. eventId={}, userId={}, reason={}", eventId, userId, e.getMessage());
+            throw new BusinessException(ErrorCode.EVENT_FULL);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Registration data integrity conflict. eventId={}, userId={}, reason={}", eventId, userId, e.getMessage());
+            if (participationRepository.existsByUserIdAndEventId(userId, eventId)) {
+                throw new BusinessException(ErrorCode.ALREADY_REGISTERED_EVENT);
             }
-            releaseEventLock(eventId, eventLock);
+            throw new BusinessException(ErrorCode.EVENT_FULL);
+        } finally {
+            distributedEventLockService.unlockSafely(eventLock);
         }
     }
 
@@ -410,60 +409,69 @@ public class EventService {
     @Scheduled(cron = "0 0 0 * * *") // 매일 자정에 실행
     @Transactional
     public void processExpiredEvents() {
-        List<Event> expiredEvents = findExpiredEvents();
-        expiredEvents.forEach(event -> {
-            Long eventId = event.getId();
+        RLock schedulerLock = distributedEventLockService.tryLock(EXPIRED_EVENT_SCHEDULER_LOCK_KEY, 0, 300_000);
+        if (schedulerLock == null) {
+            log.info("Skip processExpiredEvents: scheduler lock is already held by another instance");
+            return;
+        }
+        try {
+            List<Event> expiredEvents = findExpiredEvents();
+            expiredEvents.forEach(event -> {
+                Long eventId = event.getId();
 
-            // 이벤트를 생성한 호스트의 userId = hostId로 설정 -> 엔티티 조회가 아닌 userId만 조회
-            Long hostId = participationRepository
-                    .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
+                // 이벤트를 생성한 호스트의 userId = hostId로 설정 -> 엔티티 조회가 아닌 userId만 조회
+                Long hostId = participationRepository
+                        .findByUserIdAndEventIdAndRole(event.getId(), ParticipateRole.HOST)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.PARTICIPATION_NOT_FOUND));
 
-            if (event.getCurrentParticipants() < event.getMinParticipants()) {
-                event.recruitCancel();
-                // 인원부족으로 이벤트 취소 시 자동 알림(호스트)
-                notificationOutboxProducer.enqueueHostNotification(
-                        event.getId(),
-                        hostId,
-                        HostNotificationType.RECRUITMENT_CANCELLED,
-                        event.getMediaTitle()
-                );
-
-                // 모든 참여자 조회 후 알림 발송
-                List<Participation> participants = participationRepository
-                        .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
-                for (Participation p : participants) {
-                    notificationOutboxProducer.enqueueParticipantNotification(
+                if (event.getCurrentParticipants() < event.getMinParticipants()) {
+                    event.recruitCancel();
+                    // 인원부족으로 이벤트 취소 시 자동 알림(호스트)
+                    notificationOutboxProducer.enqueueHostNotification(
                             event.getId(),
-                            p.getUser().getId(),
-                            ParticipantNotificationType.RECRUITMENT_CANCELLED,
+                            hostId,
+                            HostNotificationType.RECRUITMENT_CANCELLED,
                             event.getMediaTitle()
                     );
-                }
 
-            } else {
-                event.recruitDone();
-                // 인원 모집 달성 상태로 모집 기간 끝날 시 자동으로 알림 발송(호스트)
-                notificationOutboxProducer.enqueueHostNotification(
-                        event.getId(),
-                        hostId,
-                        HostNotificationType.RECRUITMENT_COMPLETED,
-                        event.getEventTitle()
-                );
+                    // 모든 참여자 조회 후 알림 발송
+                    List<Participation> participants = participationRepository
+                            .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+                    for (Participation p : participants) {
+                        notificationOutboxProducer.enqueueParticipantNotification(
+                                event.getId(),
+                                p.getUser().getId(),
+                                ParticipantNotificationType.RECRUITMENT_CANCELLED,
+                                event.getMediaTitle()
+                        );
+                    }
 
-                // 참여자 전원에게 모집 완료 알림 발송
-                List<Participation> participants = participationRepository
-                        .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
-                for (Participation p : participants) {
-                    notificationOutboxProducer.enqueueParticipantNotification(
+                } else {
+                    event.recruitDone();
+                    // 인원 모집 달성 상태로 모집 기간 끝날 시 자동으로 알림 발송(호스트)
+                    notificationOutboxProducer.enqueueHostNotification(
                             event.getId(),
-                            p.getUser().getId(),
-                            ParticipantNotificationType.RECRUITMENT_COMPLETED,
-                            event.getMediaTitle()
+                            hostId,
+                            HostNotificationType.RECRUITMENT_COMPLETED,
+                            event.getEventTitle()
                     );
+
+                    // 참여자 전원에게 모집 완료 알림 발송
+                    List<Participation> participants = participationRepository
+                            .findAllByEventIdAndRole(eventId, ParticipateRole.PARTICIPANT);
+                    for (Participation p : participants) {
+                        notificationOutboxProducer.enqueueParticipantNotification(
+                                event.getId(),
+                                p.getUser().getId(),
+                                ParticipantNotificationType.RECRUITMENT_COMPLETED,
+                                event.getMediaTitle()
+                        );
+                    }
                 }
-            }
-        });
+            });
+        } finally {
+            distributedEventLockService.unlockSafely(schedulerLock);
+        }
     }
 
     /**
@@ -685,39 +693,6 @@ public class EventService {
      **/
     private boolean isNotParticipatedOnDate(Long userId, LocalDate date) {
         return participationRepository.existsByUserIdAndEventDate(userId, date);
-    }
-
-    private LockHolder acquireEventLock(Long eventId) {
-        return eventLocks.compute(eventId, (id, holder) -> {
-            if (holder == null) {
-                holder = new LockHolder();
-            }
-            holder.increment();
-            return holder;
-        });
-    }
-
-    private void releaseEventLock(Long eventId, LockHolder lock) {
-        if (lock.decrementAndGet() == 0) {
-            eventLocks.remove(eventId, lock);
-        }
-    }
-
-    private static final class LockHolder {
-        private final ReentrantLock lock = new ReentrantLock();
-        private final AtomicInteger refCount = new AtomicInteger(0);
-
-        void increment() {
-            refCount.incrementAndGet();
-        }
-
-        int decrementAndGet() {
-            return refCount.decrementAndGet();
-        }
-
-        ReentrantLock lock() {
-            return lock;
-        }
     }
 
 }

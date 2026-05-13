@@ -4,8 +4,6 @@ import com.google.api.core.ApiFuture;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,8 +47,6 @@ public class HostNotificationListener {
     @Value("${app.home-url}")
     private String homeUrl;
 
-    private static final Set<String> sentKeys = ConcurrentHashMap.newKeySet();
-
     @Async("notificationExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Retryable(
@@ -60,11 +56,6 @@ public class HostNotificationListener {
     public void onHostNotification(HostNotificationEvent evt) throws Exception {
         String idKey = evt.getType() + ":" + evt.getEventId() + ":" + evt.getHostUserId();
         log.info("▶ 처리 시작 [{}]", idKey);
-
-        if (!sentKeys.add(idKey)) {
-            log.info("🛡️ 이미 전송됨 [{}] 스킵", idKey);
-            return;
-        }
 
         User host = userRepository.findById(evt.getHostUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

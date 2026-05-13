@@ -10,19 +10,21 @@ import org.springframework.web.bind.annotation.RestController;
 import project.luckybooky.domain.user.repository.UserRepository;
 
 @RestController
-@Profile("dev")
+@Profile("local")
 @RequestMapping("/api/test/users")
 @RequiredArgsConstructor
 public class TestUserTokenController {
-    private final UserRepository userRepository;
 
-    @GetMapping("/tokens")
-    public List<UserTokenDto> getAllUserTokens() {
-        return userRepository.findAll().stream()
-                .map(u -> new UserTokenDto(u.getUsername(), u.getAccessToken()))
-                .collect(Collectors.toList());
-    }
+  private final UserRepository userRepository;
 
-    public record UserTokenDto(String username, String token) {
-    }
+  @GetMapping("/tokens")
+  public List<UserTokenDto> getAllUserTokens() {
+    return userRepository.findAll().stream()
+        .map(u -> new UserTokenDto(u.getUsername(), u.getAccessToken()))
+        .collect(Collectors.toList());
+  }
+
+  public record UserTokenDto(String username, String token) {
+
+  }
 }

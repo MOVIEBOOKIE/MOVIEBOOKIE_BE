@@ -2,18 +2,9 @@ package project.luckybooky.domain.certification.email.service;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
 import java.security.SecureRandom;
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
@@ -25,6 +16,7 @@ import project.luckybooky.domain.user.entity.User;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.redis.SmsCertificationCache;
 
 @Service
 @Slf4j
@@ -39,31 +31,19 @@ public class EmailService {
     private final TaskExecutor mailExecutor;
     private final UserRepository userRepository;
     private final MeterRegistry meterRegistry;
+    private final SmsCertificationCache cache;
     private final SecureRandom random = new SecureRandom();
-
-    private final Map<String, CacheEntry> codeCache = new ConcurrentHashMap<>();
-    private final Map<String, CacheEntry> lockCache = new ConcurrentHashMap<>();
-    private ScheduledExecutorService cleaner;
 
     public EmailService(EmailCertificationUtil mailUtil,
                         @Qualifier("mailExecutor") TaskExecutor mailExecutor,
                         UserRepository userRepository,
-                        MeterRegistry meterRegistry) {
+                        MeterRegistry meterRegistry,
+                        SmsCertificationCache cache) {
         this.mailUtil = mailUtil;
         this.mailExecutor = mailExecutor;
         this.userRepository = userRepository;
         this.meterRegistry = meterRegistry;
-    }
-
-    @PostConstruct
-    private void init() {
-        cleaner = Executors.newSingleThreadScheduledExecutor();
-        cleaner.scheduleAtFixedRate(this::cleanUp, 30, 30, TimeUnit.SECONDS);
-    }
-
-    @PreDestroy
-    private void destroy() {
-        cleaner.shutdownNow();
+        this.cache = cache;
     }
 
     /**
@@ -83,9 +63,8 @@ public class EmailService {
                 throw new BusinessException(ErrorCode.CERTIFICATION_DUPLICATED);
             }
 
-            codeCache.remove(codeKey);
             String code = generate();
-            codeCache.put(codeKey, new CacheEntry(code, Instant.now().plus(CODE_TTL)));
+            cache.put(codeKey, code, CODE_TTL);
 
             // 큐잉 시간 측정
             Timer.Sample enqueueSample = Timer.start(meterRegistry);
@@ -130,12 +109,11 @@ public class EmailService {
             validateEmailFormat(email);
             validateCertificationCode(code);
             
-            CacheEntry entry = codeCache.get(codeKey);
-            if (entry == null || entry.isExpired()) {
-                codeCache.remove(codeKey);
+            String saved = cache.get(codeKey);
+            if (saved == null) {
                 throw new BusinessException(ErrorCode.CERTIFICATION_EXPIRED);
             }
-            if (!entry.value.equals(code)) {
+            if (!saved.equals(code)) {
                 throw new BusinessException(ErrorCode.CERTIFICATION_MISMATCH);
             }
 
@@ -148,7 +126,7 @@ public class EmailService {
             }
             
             user.setCertificationEmail(email);
-            codeCache.remove(codeKey);
+            cache.remove(codeKey);
             log.info("이메일 인증번호 검증 성공: email={}, user={}", email, loginEmail);
             
         } catch (BusinessException e) {
@@ -161,22 +139,7 @@ public class EmailService {
     }
 
     private boolean acquireLock(String key, Duration ttl) {
-        Instant now = Instant.now();
-        AtomicBoolean acquired = new AtomicBoolean(false);
-        lockCache.compute(key, (k, existing) -> {
-            if (existing == null || existing.isExpiredAt(now)) {
-                acquired.set(true);
-                return new CacheEntry("1", now.plus(ttl));
-            }
-            return existing;
-        });
-        return acquired.get();
-    }
-
-    private void cleanUp() {
-        Instant now = Instant.now();
-        codeCache.entrySet().removeIf(e -> e.getValue().isExpiredAt(now));
-        lockCache.entrySet().removeIf(e -> e.getValue().isExpiredAt(now));
+        return cache.store(key, "1", ttl);
     }
 
     private String generate() {
@@ -206,21 +169,4 @@ public class EmailService {
         }
     }
 
-    private static class CacheEntry {
-        final String value;
-        final Instant expireAt;
-
-        CacheEntry(String value, Instant expireAt) {
-            this.value = value;
-            this.expireAt = expireAt;
-        }
-
-        boolean isExpired() {
-            return isExpiredAt(Instant.now());
-        }
-
-        boolean isExpiredAt(Instant now) {
-            return now.isAfter(expireAt);
-        }
-    }
 }

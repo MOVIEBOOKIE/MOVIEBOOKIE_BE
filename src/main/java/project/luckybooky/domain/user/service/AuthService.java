@@ -56,6 +56,21 @@ public class AuthService {
         }
     }
 
+    private boolean isLocalRequest(HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
+        String origin = request.getHeader("Origin");
+        String host = request.getHeader("Host");
+
+        return containsLocalHost(referer)
+                || containsLocalHost(origin)
+                || containsLocalHost(host);
+    }
+
+    private boolean containsLocalHost(String value) {
+        return value != null
+                && (value.contains("localhost") || value.contains("127.0.0.1"));
+    }
+
 
     @Transactional
     public User oAuthLogin(String accessCode, String redirectUri, HttpServletResponse httpServletResponse,
@@ -144,11 +159,7 @@ public class AuthService {
         userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        boolean isLocal = false;
-        String referer = request.getHeader("Referer");
-        if (referer != null && referer.contains("localhost:3000")) {
-            isLocal = true;
-        }
+        boolean isLocal = isLocalRequest(request);
 
         // 5. 쿠키 삭제
         CookieUtil.deleteCookie(response, "accessToken", isLocal);
@@ -197,14 +208,22 @@ public class AuthService {
         String newRefreshToken = jwtUtil.createRefreshToken(email);
 
         long newRtTtl = jwtUtil.getRemainingSeconds(newRefreshToken);
-        tokenService.storeRefreshToken(userId, newRefreshToken, newRtTtl);
+        boolean rotated = tokenService.compareAndSetRefreshToken(
+                userId,
+                refreshToken,
+                newRefreshToken,
+                newRtTtl
+        );
+        if (!rotated) {
+            log.warn("🔹 [Token Reissue] 동시 재발급 경쟁 감지. userId={}", userId);
+            throw new BusinessException(ErrorCode.MULTI_ENV_LOGIN);
+        }
 
         user.setAccessToken(newAccessToken);
         user.setRefreshToken(newRefreshToken);
         userRepository.save(user);
 
-        boolean isLocal = request.getHeader("Referer") != null
-                && request.getHeader("Referer").contains("localhost:3000");
+        boolean isLocal = isLocalRequest(request);
         CookieUtil.addCookie(response,
                 "accessToken",
                 newAccessToken,
@@ -215,6 +234,7 @@ public class AuthService {
                 newRefreshToken,
                 (int) jwtUtil.getRefreshTokenValidity(),
                 isLocal);
+        response.setHeader("Authorization", newAccessToken);
 
         return BaseResponse.onSuccess(null);
     }
@@ -245,11 +265,7 @@ public class AuthService {
             // 4) Redis에 남은 리프레시 토큰 삭제
             tokenService.deleteAllRefreshTokens(userId);
 
-            boolean isLocal = false;
-            String referer = request.getHeader("Referer");
-            if (referer != null && referer.contains("localhost:3000")) {
-                isLocal = true;
-            }
+            boolean isLocal = isLocalRequest(request);
 
             // 5) 클라이언트 쿠키 만료
             CookieUtil.deleteCookie(response, "accessToken", isLocal);

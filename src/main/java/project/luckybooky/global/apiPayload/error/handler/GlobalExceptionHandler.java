@@ -53,6 +53,16 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e, HttpServletRequest request) {
+        if (isEventRegisterRequest(request) && hasConcurrencyLikeCause(e)) {
+            return buildErrorResponse(
+                    ErrorCode.EVENT_FULL,
+                    ErrorCode.EVENT_FULL.getMessage(),
+                    null,
+                    request,
+                    e
+            );
+        }
+
         // 예상치 못한 예외: INTERNAL_SERVER_ERROR로 통일
         return buildErrorResponse(
                 ErrorCode.INTERNAL_SERVER_ERROR,
@@ -230,6 +240,33 @@ public class GlobalExceptionHandler {
                 request,
                 e
         );
+    }
+
+    private boolean isEventRegisterRequest(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+        String uri = request.getRequestURI();
+        return uri != null && uri.matches("^/api/events/\\d+/register$");
+    }
+
+    private boolean hasConcurrencyLikeCause(Throwable throwable) {
+        Throwable cursor = throwable;
+        while (cursor != null) {
+            String name = cursor.getClass().getName();
+            if (name.contains("OptimisticLock")
+                    || name.contains("StaleObjectState")
+                    || name.contains("ConcurrencyFailure")
+                    || name.contains("Deadlock")
+                    || name.contains("CannotAcquireLock")
+                    || name.contains("PessimisticLock")
+                    || name.contains("CannotSerializeTransaction")
+                    || name.contains("LockAcquisition")) {
+                return true;
+            }
+            cursor = cursor.getCause();
+        }
+        return false;
     }
 
 }

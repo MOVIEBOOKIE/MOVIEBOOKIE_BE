@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import project.luckybooky.domain.category.service.CategoryService;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
+import project.luckybooky.domain.event.service.support.InMemoryDistributedEventLockService;
 import project.luckybooky.domain.location.service.LocationService;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.ticket.service.TicketService;
@@ -33,6 +34,8 @@ import project.luckybooky.domain.user.entity.UserType;
 import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.lock.DistributedEventLockService;
+import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
 import project.luckybooky.global.repository.LockRepository;
 import project.luckybooky.global.service.S3StorageService;
 
@@ -96,8 +99,10 @@ class EventServiceConcurrencyTest {
         CategoryService categoryService,
         TicketService ticketService,
         ApplicationEventPublisher publisher,
+        NotificationOutboxProducer notificationOutboxProducer,
         UserRepository userRepository,
-        LockRepository lockRepository
+        LockRepository lockRepository,
+        DistributedEventLockService distributedEventLockService
     ) {
       return new EventService(
           eventRepository,
@@ -108,9 +113,21 @@ class EventServiceConcurrencyTest {
           categoryService,
           ticketService,
           publisher,
+          notificationOutboxProducer,
           userRepository,
-          lockRepository
+          lockRepository,
+          distributedEventLockService
       );
+    }
+
+    @Bean
+    NotificationOutboxProducer notificationOutboxProducer() {
+      return Mockito.mock(NotificationOutboxProducer.class);
+    }
+
+    @Bean
+    DistributedEventLockService distributedEventLockService() {
+      return new InMemoryDistributedEventLockService();
     }
   }
 

@@ -26,8 +26,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import project.luckybooky.domain.category.service.CategoryService;
 import project.luckybooky.domain.event.entity.Event;
 import project.luckybooky.domain.event.repository.EventRepository;
+import project.luckybooky.domain.event.service.support.InMemoryDistributedEventLockService;
 import project.luckybooky.domain.location.service.LocationService;
-import project.luckybooky.domain.notification.event.app.ParticipantNotificationEvent;
 import project.luckybooky.domain.participation.entity.Participation;
 import project.luckybooky.domain.participation.repository.ParticipationRepository;
 import project.luckybooky.domain.ticket.service.TicketService;
@@ -36,6 +36,8 @@ import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
+import project.luckybooky.global.lock.DistributedEventLockService;
+import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
 import project.luckybooky.global.repository.LockRepository;
 import project.luckybooky.global.service.S3StorageService;
 
@@ -62,11 +64,15 @@ class EventServiceTest {
   private UserRepository userRepository;
   @Mock
   private LockRepository lockRepository;
+  @Mock
+  private NotificationOutboxProducer notificationOutboxProducer;
+  private DistributedEventLockService distributedEventLockService;
 
   private EventService eventService;
 
   @BeforeEach
   void setUp() {
+    distributedEventLockService = new InMemoryDistributedEventLockService();
     eventService = new EventService(
         eventRepository,
         userTypeService,
@@ -76,8 +82,10 @@ class EventServiceTest {
         categoryService,
         ticketService,
         publisher,
+        notificationOutboxProducer,
         userRepository,
-        lockRepository
+        lockRepository,
+        distributedEventLockService
     );
   }
 
@@ -130,7 +138,12 @@ class EventServiceTest {
 
     assertThat(event.getCurrentParticipants()).isEqualTo(1);
     verify(participationRepository).save(any(Participation.class));
-    verify(publisher).publishEvent(any(ParticipantNotificationEvent.class));
+    verify(notificationOutboxProducer).enqueueParticipantNotification(
+        eq(eventId),
+        eq(userId),
+        any(),
+        eq(event.getMediaTitle())
+    );
   }
 
   @Test
@@ -147,7 +160,6 @@ class EventServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
     when(participationRepository.existsByUserIdAndEventId(userId, eventId)).thenReturn(false);
-    when(participationRepository.existsByUserIdAndEventDate(userId, eventDate)).thenReturn(false);
 
     assertThatThrownBy(() -> eventService.registerEvent(userId, eventId))
         .isInstanceOf(BusinessException.class)

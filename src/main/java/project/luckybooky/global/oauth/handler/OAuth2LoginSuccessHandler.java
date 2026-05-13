@@ -15,6 +15,7 @@ import project.luckybooky.domain.user.repository.UserRepository;
 import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.jwt.JwtUtil;
+import project.luckybooky.global.jwt.TokenService;
 
 @Component
 @Slf4j
@@ -23,6 +24,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final TokenService tokenService;
 
 
     @Override
@@ -64,7 +66,14 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         if (user.getId() != null) {
             log.info("🔹 [OAuth2 Login] 기존 토큰 정리 시작. userId={}", user.getId());
+            tokenService.deleteAllRefreshTokens(user.getId());
         }
+
+        long rtTtl = jwtUtil.getRemainingSeconds(refreshToken);
+        tokenService.storeRefreshToken(user.getId(), refreshToken, rtTtl);
+        user.setAccessToken(accessToken);
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
 
         boolean firstLogin = (user.getUserType() == null);
 
