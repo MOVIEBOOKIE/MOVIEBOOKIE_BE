@@ -48,11 +48,16 @@ public class OutboxPublishWorker {
 
         OutboxEvent outboxEvent = outboxEventRepository.findById(outboxEventId).orElse(null);
         if (outboxEvent == null) {
-            return;
+            throw new IllegalStateException(
+                    "Outbox consistency violation: claimed event not found. id=" + outboxEventId
+            );
         }
 
         if (outboxEvent.getStatus() != OutboxStatus.PUBLISHING) {
-            return;
+            throw new IllegalStateException(
+                    "Outbox consistency violation: claimed event must be PUBLISHING. id=" + outboxEventId
+                            + ", status=" + outboxEvent.getStatus()
+            );
         }
 
         try {

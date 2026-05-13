@@ -65,7 +65,7 @@ public class UserInitializer implements ApplicationRunner {
    */
   private void attachJwtTokens(User u) {
     String accessToken = jwtUtil.createAccessToken(u.getEmail());     // 15분 만료 등
-    String refreshToken = jwtUtil.createAccessToken(u.getEmail());    // 2주 만료 등
+    String refreshToken = jwtUtil.createRefreshToken(u.getEmail());   // 2주 만료 등
     u.setAccessToken(accessToken);
     u.setRefreshToken(refreshToken);
   }

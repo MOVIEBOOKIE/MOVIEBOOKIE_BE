@@ -414,9 +414,8 @@ public class EventService {
             log.info("Skip processExpiredEvents: scheduler lock is already held by another instance");
             return;
         }
-
-        List<Event> expiredEvents = findExpiredEvents();
         try {
+            List<Event> expiredEvents = findExpiredEvents();
             expiredEvents.forEach(event -> {
                 Long eventId = event.getId();
 
