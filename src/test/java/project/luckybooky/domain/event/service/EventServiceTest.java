@@ -38,7 +38,6 @@ import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.lock.DistributedEventLockService;
 import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
-import project.luckybooky.global.repository.LockRepository;
 import project.luckybooky.global.service.S3StorageService;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,8 +62,6 @@ class EventServiceTest {
   @Mock
   private UserRepository userRepository;
   @Mock
-  private LockRepository lockRepository;
-  @Mock
   private NotificationOutboxProducer notificationOutboxProducer;
   private DistributedEventLockService distributedEventLockService;
 
@@ -84,7 +81,6 @@ class EventServiceTest {
         publisher,
         notificationOutboxProducer,
         userRepository,
-        lockRepository,
         distributedEventLockService
     );
   }
@@ -129,7 +125,7 @@ class EventServiceTest {
     Event event = createEvent(eventId, 5, 0, eventDate);
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+    when(eventRepository.findByIdWithLock(eventId)).thenReturn(Optional.of(event));
     when(participationRepository.existsByUserIdAndEventId(userId, eventId)).thenReturn(false);
     when(participationRepository.existsByUserIdAndEventDate(userId, eventDate)).thenReturn(false);
     when(participationRepository.save(any(Participation.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -158,7 +154,7 @@ class EventServiceTest {
     Event event = createEvent(eventId, maxParticipants, maxParticipants, eventDate);
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+    when(eventRepository.findByIdWithLock(eventId)).thenReturn(Optional.of(event));
     when(participationRepository.existsByUserIdAndEventId(userId, eventId)).thenReturn(false);
 
     assertThatThrownBy(() -> eventService.registerEvent(userId, eventId))
@@ -180,7 +176,7 @@ class EventServiceTest {
     Event event = createEvent(eventId, 20, 0, eventDate);
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+    when(eventRepository.findByIdWithLock(eventId)).thenReturn(Optional.of(event));
     when(participationRepository.existsByUserIdAndEventId(userId, eventId)).thenReturn(true);
 
     assertThatThrownBy(() -> eventService.registerEvent(userId, eventId))
@@ -200,7 +196,7 @@ class EventServiceTest {
 
     when(userRepository.findById(anyLong()))
         .thenAnswer(invocation -> Optional.of(createUser(invocation.getArgument(0, Long.class))));
-    when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+    when(eventRepository.findByIdWithLock(eventId)).thenReturn(Optional.of(event));
     when(participationRepository.existsByUserIdAndEventId(anyLong(), eq(eventId))).thenReturn(false);
     when(participationRepository.existsByUserIdAndEventDate(anyLong(), eq(eventDate))).thenReturn(false);
 
@@ -236,7 +232,7 @@ class EventServiceTest {
 
     when(userRepository.findById(anyLong()))
         .thenAnswer(invocation -> Optional.of(createUser(invocation.getArgument(0, Long.class))));
-    when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+    when(eventRepository.findByIdWithLock(eventId)).thenReturn(Optional.of(event));
     when(participationRepository.existsByUserIdAndEventId(anyLong(), eq(eventId))).thenReturn(false);
     when(participationRepository.existsByUserIdAndEventDate(anyLong(), eq(eventDate))).thenReturn(false);
 

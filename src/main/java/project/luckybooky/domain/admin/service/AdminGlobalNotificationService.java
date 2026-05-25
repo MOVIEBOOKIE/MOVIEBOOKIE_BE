@@ -1,6 +1,7 @@
 package project.luckybooky.domain.admin.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
@@ -18,6 +19,7 @@ import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.messaging.service.OutboxReplayService;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminGlobalNotificationService {
@@ -30,7 +32,6 @@ public class AdminGlobalNotificationService {
     @Qualifier("adminGlobalNotificationJob")
     private final Job adminGlobalNotificationJob;
 
-    @Transactional
     public AdminGlobalNotificationResponse sendToAllUsers(AdminGlobalNotificationRequest request) {
         int effectiveBatchSize = request.getBatchSize() == null ? DEFAULT_BATCH_SIZE : request.getBatchSize();
         long totalTargetCount = userRepository.count();
@@ -53,15 +54,19 @@ public class AdminGlobalNotificationService {
     }
 
     private JobExecution runGlobalNotificationJob(AdminGlobalNotificationRequest request, int effectiveBatchSize) {
+        String requestId = java.util.UUID.randomUUID().toString();
         JobParameters parameters = new JobParametersBuilder()
                 .addString("title", request.getTitle())
                 .addString("body", request.getBody())
                 .addLong("batchSize", (long) effectiveBatchSize)
                 .addLong("requestedAt", System.currentTimeMillis())
+                .addString("requestId", requestId)
                 .toJobParameters();
         try {
             return jobLauncher.run(adminGlobalNotificationJob, parameters);
         } catch (Exception e) {
+            log.error("Failed to launch adminGlobalNotificationJob. requestId={}, batchSize={}, title={}, reason={}",
+                    requestId, effectiveBatchSize, request.getTitle(), e.getMessage(), e);
             throw new BusinessException(ErrorCode.ADMIN_BATCH_EXECUTION_FAILED);
         }
     }

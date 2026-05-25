@@ -20,10 +20,10 @@ public class DistributedEventLockService {
     @Value("${app.lock.event-register.key-prefix:event:register:}")
     private String registerEventLockPrefix;
 
-    @Value("${app.lock.event-register.wait-ms:3000}")
+    @Value("${app.lock.event-register.wait-ms:1500}")
     private long registerEventWaitMs;
 
-    @Value("${app.lock.event-register.lease-ms:10000}")
+    @Value("${app.lock.event-register.lease-ms:8000}")
     private long registerEventLeaseMs;
 
     public RLock tryLock(String lockKey, long waitMs, long leaseMs) {

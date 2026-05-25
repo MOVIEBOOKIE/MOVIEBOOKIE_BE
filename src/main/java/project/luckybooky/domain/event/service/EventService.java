@@ -5,16 +5,13 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
-import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.StaleObjectStateException;
 import org.redisson.api.RLock;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,7 +46,6 @@ import project.luckybooky.global.apiPayload.error.dto.ErrorCode;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.lock.DistributedEventLockService;
 import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
-import project.luckybooky.global.repository.LockRepository;
 import project.luckybooky.global.service.S3StorageService;
 
 @Slf4j
@@ -69,7 +65,6 @@ public class EventService {
     private final ApplicationEventPublisher publisher;
     private final NotificationOutboxProducer notificationOutboxProducer;
     private final UserRepository userRepository;
-    private final LockRepository lockRepository;
     private final DistributedEventLockService distributedEventLockService;
 
     /**
@@ -77,72 +72,44 @@ public class EventService {
      **/
     @Transactional
     public Long createEvent(Long userId, EventRequest.EventCreateRequestDTO request, MultipartFile eventImage) {
-        String lockKey = buildLockKey(request.getLocationId(), request.getEventDate());
-        boolean locked = false;
-        try {
-            // 락 획득 시도
-            locked = lockRepository.getLock(lockKey, 10);
-            if (!locked) {
-                throw new BusinessException(ErrorCode.LOCATION_DATE_LOCKED);
-            }
-
-            // 해당 날짜에 이미 참여한 이벤트 없는지 검증
-            if (isNotParticipatedOnDate(userId, request.getEventDate())) {
-                throw new BusinessException(ErrorCode.EVENT_ALREADY_EXIST);
-            }
-
-            // 영화관 검증
-            String eventEndTime = toEventEndTime(request.getEventStartTime(), request.getEventProgressTime());
-            Integer isDuplicated = eventRepository.isExistOverlappingLocationsByTime(request.getLocationId(),
-                    request.getEventDate(), request.getEventStartTime(), eventEndTime);
-            if (isDuplicated > 0) {
-                throw new BusinessException(ErrorCode.LOCATION_ALREADY_RESERVED);
-            }
-
-            // 이벤트 생성
-            String eventImageUrl = s3Service.uploadFile(eventImage);
-            Category category = categoryService.findByName(request.getMediaType());
-            Location location = locationService.findOne(request.getLocationId());
-            Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(),
-                    request.getMinParticipants());
-
-            Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime,
-                    estimatedPrice);
-            eventRepository.save(event);
-
-            // 호스트 Participation 저장
-            Participation hostParticipation = Participation.builder()
-                    .user(userTypeService.findOne(userId))  // User 엔티티 조회
-                    .event(event)
-                    .participateRole(ParticipateRole.HOST)
-                    .build();
-            participationRepository.save(hostParticipation);
-
-            // 호스트 생성 알림
-            notificationOutboxProducer.enqueueHostNotification(
-                    event.getId(),
-                    userId,
-                    HostNotificationType.EVENT_CREATED,
-                    event.getMediaTitle()
-            );
-
-            // 이벤트 생성 디스코드 웹훅 발송
-            publisher.publishEvent(new EventCreatedWebhookEvent(this, event.getId()));
-
-            return event.getId();
-        } finally {
-            if (locked) {
-                try {
-                    lockRepository.releaseLock(lockKey);
-                } catch (Exception ignore) {
-                }
-            }
+        if (isNotParticipatedOnDate(userId, request.getEventDate())) {
+            throw new BusinessException(ErrorCode.EVENT_ALREADY_EXIST);
         }
-    }
 
-    // 문자열 Lock 키 생성
-    private String buildLockKey(Long locationId, LocalDate date) {
-        return "event:loc:" + locationId + ":" + date; // 64자 제한 고려
+        String eventEndTime = toEventEndTime(request.getEventStartTime(), request.getEventProgressTime());
+        Integer isDuplicated = eventRepository.isExistOverlappingLocationsByTime(request.getLocationId(),
+                request.getEventDate(), request.getEventStartTime(), eventEndTime);
+        if (isDuplicated > 0) {
+            throw new BusinessException(ErrorCode.LOCATION_ALREADY_RESERVED);
+        }
+
+        String eventImageUrl = s3Service.uploadFile(eventImage);
+        Category category = categoryService.findByName(request.getMediaType());
+        Location location = locationService.findOne(request.getLocationId());
+        Integer estimatedPrice = toEstimatedPrice(request.getEventProgressTime(), location.getPricePerHour(),
+                request.getMinParticipants());
+
+        Event event = EventConverter.toEvent(request, eventImageUrl, category, location, eventEndTime,
+                estimatedPrice);
+        eventRepository.save(event);
+
+        Participation hostParticipation = Participation.builder()
+                .user(userTypeService.findOne(userId))
+                .event(event)
+                .participateRole(ParticipateRole.HOST)
+                .build();
+        participationRepository.save(hostParticipation);
+
+        notificationOutboxProducer.enqueueHostNotification(
+                event.getId(),
+                userId,
+                HostNotificationType.EVENT_CREATED,
+                event.getMediaTitle()
+        );
+
+        publisher.publishEvent(new EventCreatedWebhookEvent(this, event.getId()));
+
+        return event.getId();
     }
 
     private Integer toEstimatedPrice(Integer eventProgressTime, Integer pricePerHour, Integer minParticipants) {
@@ -275,12 +242,26 @@ public class EventService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        RLock eventLock = distributedEventLockService.tryLockForEventRegistration(eventId);
-        if (eventLock == null) {
+        if (participationRepository.existsByUserIdAndEventId(userId, eventId)) {
+            throw new BusinessException(ErrorCode.ALREADY_REGISTERED_EVENT);
+        }
+
+        Event eventSnapshot = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
+        if (eventSnapshot.getCurrentParticipants() >= eventSnapshot.getMaxParticipants()) {
             throw new BusinessException(ErrorCode.EVENT_FULL);
         }
+
+        if (isNotParticipatedOnDate(userId, eventSnapshot.getEventDate())) {
+            throw new BusinessException(ErrorCode.EVENT_ALREADY_EXIST);
+        }
+
+        RLock eventLock = distributedEventLockService.tryLockForEventRegistration(eventId);
+        if (eventLock == null) {
+            throw new BusinessException(ErrorCode.SYSTEM_BUSY);
+        }
         try {
-            Event event = eventRepository.findById(eventId)
+            Event event = eventRepository.findByIdWithLock(eventId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
 
             boolean already = participationRepository.existsByUserIdAndEventId(userId, eventId);
@@ -311,9 +292,6 @@ public class EventService {
             if (event.getCurrentParticipants() == event.getMaxParticipants()) {
                 event.changeAnonymousButtonState();
             }
-        } catch (ObjectOptimisticLockingFailureException | OptimisticLockException | StaleObjectStateException e) {
-            log.warn("Concurrent registration conflict. eventId={}, userId={}, reason={}", eventId, userId, e.getMessage());
-            throw new BusinessException(ErrorCode.EVENT_FULL);
         } catch (DataIntegrityViolationException e) {
             log.warn("Registration data integrity conflict. eventId={}, userId={}, reason={}", eventId, userId, e.getMessage());
             if (participationRepository.existsByUserIdAndEventId(userId, eventId)) {
