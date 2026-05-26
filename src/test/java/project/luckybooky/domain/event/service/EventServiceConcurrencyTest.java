@@ -36,12 +36,11 @@ import project.luckybooky.domain.user.service.UserTypeService;
 import project.luckybooky.global.apiPayload.error.exception.BusinessException;
 import project.luckybooky.global.lock.DistributedEventLockService;
 import project.luckybooky.global.messaging.service.NotificationOutboxProducer;
-import project.luckybooky.global.repository.LockRepository;
 import project.luckybooky.global.service.S3StorageService;
 
 @DataJpaTest
 @EnableJpaAuditing
-@Import({LockRepository.class, EventServiceConcurrencyTest.TestConfig.class})
+@Import({EventServiceConcurrencyTest.TestConfig.class})
 class EventServiceConcurrencyTest {
 
   @Autowired
@@ -101,7 +100,6 @@ class EventServiceConcurrencyTest {
         ApplicationEventPublisher publisher,
         NotificationOutboxProducer notificationOutboxProducer,
         UserRepository userRepository,
-        LockRepository lockRepository,
         DistributedEventLockService distributedEventLockService
     ) {
       return new EventService(
@@ -115,7 +113,6 @@ class EventServiceConcurrencyTest {
           publisher,
           notificationOutboxProducer,
           userRepository,
-          lockRepository,
           distributedEventLockService
       );
     }

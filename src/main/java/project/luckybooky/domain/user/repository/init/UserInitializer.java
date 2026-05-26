@@ -33,7 +33,7 @@ public class UserInitializer implements ApplicationRunner {
       return;
     }
 
-    List<User> guests = IntStream.rangeClosed(1, 250)
+    List<User> guests = IntStream.rangeClosed(1, 5000)
         .mapToObj(i -> buildGuest(
             "guest" + i + "@example.com",
             "게스트" + i,

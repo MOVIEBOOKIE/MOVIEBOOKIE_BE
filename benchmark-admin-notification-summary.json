@@ -1,0 +1,257 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "bulk notify: expected business result": {
+                    "path": "::bulk notify: expected business result",
+                    "id": "fbb79bdc948f15639e3035505d94bfea",
+                    "passes": 1,
+                    "fails": 0,
+                    "name": "bulk notify: expected business result"
+                },
+                "bulk notify: no client payload error": {
+                    "name": "bulk notify: no client payload error",
+                    "path": "::bulk notify: no client payload error",
+                    "id": "ab23bcdfe83b01024cbefb3c7585ecf7",
+                    "passes": 1,
+                    "fails": 0
+                },
+                "outbox consistency: queued >= processed": {
+                    "fails": 0,
+                    "name": "outbox consistency: queued >= processed",
+                    "path": "::outbox consistency: queued >= processed",
+                    "id": "993b1d4ff6a2a3caf8ac25fe7e6ffbee",
+                    "passes": 1
+                },
+                "outbox consistency: processed accounting": {
+                    "path": "::outbox consistency: processed accounting",
+                    "id": "699114feaf3a13fa35c4867aeacd2723",
+                    "passes": 1,
+                    "fails": 0,
+                    "name": "outbox consistency: processed accounting"
+                },
+                "bulk strict: target count matches": {
+                    "passes": 1,
+                    "fails": 0,
+                    "name": "bulk strict: target count matches",
+                    "path": "::bulk strict: target count matches",
+                    "id": "99df5454f101730a0d28272610b05961"
+                },
+                "bulk strict: batch size matches": {
+                    "path": "::bulk strict: batch size matches",
+                    "id": "7e35f53ade94418589dba02e3396f823",
+                    "passes": 1,
+                    "fails": 0,
+                    "name": "bulk strict: batch size matches"
+                },
+                "bulk strict: total batches matches": {
+                    "passes": 1,
+                    "fails": 0,
+                    "name": "bulk strict: total batches matches",
+                    "path": "::bulk strict: total batches matches",
+                    "id": "75a228f66bd484779b2de40d257cb5a9"
+                },
+                "bulk strict: processed=target": {
+                    "name": "bulk strict: processed=target",
+                    "path": "::bulk strict: processed=target",
+                    "id": "f1f68e1f6b9764899a550dd5a3b2076f",
+                    "passes": 1,
+                    "fails": 0
+                },
+                "bulk strict: queued=target": {
+                    "name": "bulk strict: queued=target",
+                    "path": "::bulk strict: queued=target",
+                    "id": "074b70617039f072a7910d31fe67dfce",
+                    "passes": 1,
+                    "fails": 0
+                },
+                "bulk strict: saved=target": {
+                    "passes": 1,
+                    "fails": 0,
+                    "name": "bulk strict: saved=target",
+                    "path": "::bulk strict: saved=target",
+                    "id": "e5fe7cde39ff6bfd12afb5a3f3f8c1f9"
+                }
+            }
+    },
+    "metrics": {
+        "outbox_replay_ok": {
+            "count": 462,
+            "rate": 8.347221278693121
+        },
+        "outbox_queued_total": {
+            "count": 5000,
+            "rate": 90.33789262654894
+        },
+        "push_sent_total": {
+            "count": 0,
+            "rate": 0
+        },
+        "replay_idempotency_rate": {
+            "passes": 231,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.90": false
+            },
+            "value": 1
+        },
+        "admin_bulk_duration_ms": {
+            "med": 6943.308,
+            "p(95)": 6943.308,
+            "p(99)": 6943.308,
+            "max": 6943.308,
+            "avg": 6943.308,
+            "min": 6943.308,
+            "thresholds": {
+                "p(99)<4000": true,
+                "p(95)<2500": true
+            }
+        },
+        "http_req_sending": {
+            "max": 0.303,
+            "avg": 0.023896328293736464,
+            "min": 0.004,
+            "med": 0.02,
+            "p(95)": 0.034,
+            "p(99)": 0.11421999999999971
+        },
+        "bulk_strict_pass": {
+            "count": 1,
+            "rate": 0.018067578525309786
+        },
+        "http_req_blocked": {
+            "p(99)": 0.43076,
+            "max": 1.657,
+            "avg": 0.01777969762419004,
+            "min": 0.002,
+            "med": 0.007,
+            "p(95)": 0.01
+        },
+        "http_req_tls_handshaking": {
+            "p(99)": 0,
+            "max": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "p(95)": 0
+        },
+        "http_req_waiting": {
+            "med": 9.899,
+            "p(95)": 14.0837,
+            "p(99)": 15.60338,
+            "max": 6940.101,
+            "avg": 25.340710583153356,
+            "min": 5.895
+        },
+        "data_received": {
+            "count": 236844,
+            "rate": 4279.197568248471
+        },
+        "iterations": {
+            "rate": 4.19167821787187,
+            "count": 232
+        },
+        "outbox_replay_recovered_total": {
+            "count": 0,
+            "rate": 0
+        },
+        "http_reqs": {
+            "rate": 8.365288857218431,
+            "count": 463
+        },
+        "admin_bulk_ok": {
+            "rate": 0.018067578525309786,
+            "count": 1
+        },
+        "outbox_processed_total": {
+            "count": 5000,
+            "rate": 90.33789262654894
+        },
+        "messaging_loss_suspected_rate": {
+            "passes": 0,
+            "fails": 1,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "vus_max": {
+            "value": 4,
+            "min": 4,
+            "max": 4
+        },
+        "http_req_connecting": {
+            "min": 0,
+            "med": 0,
+            "p(95)": 0,
+            "p(99)": 0.33114,
+            "max": 0.563,
+            "avg": 0.005706263498920086
+        },
+        "http_req_receiving": {
+            "avg": 0.4073174946004322,
+            "min": 0.026,
+            "med": 0.382,
+            "p(95)": 0.6981999999999996,
+            "p(99)": 0.83914,
+            "max": 2.909
+        },
+        "checks": {
+            "passes": 10,
+            "fails": 0,
+            "value": 1
+        },
+        "push_skipped_total": {
+            "count": 5000,
+            "rate": 90.33789262654894
+        },
+        "data_sent": {
+            "count": 167721,
+            "rate": 3030.3123378434825
+        },
+        "vus": {
+            "value": 3,
+            "min": 0,
+            "max": 3
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 463,
+            "thresholds": {
+                "rate<0.2": false
+            },
+            "value": 0
+        },
+        "http_req_duration": {
+            "avg": 25.77192440604751,
+            "min": 6.086,
+            "med": 10.349,
+            "p(95)": 14.829899999999999,
+            "p(99)": 16.33594,
+            "max": 6943.308,
+            "thresholds": {
+                "p(95)<2500": false,
+                "p(99)<4000": false
+            }
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 25.77192440604751,
+            "min": 6.086,
+            "med": 10.349,
+            "p(95)": 14.829899999999999,
+            "p(99)": 16.33594,
+            "max": 6943.308
+        },
+        "iteration_duration": {
+            "min": 514.894584,
+            "med": 523.3004585,
+            "p(95)": 531.0060375,
+            "p(99)": 541.1987212500001,
+            "max": 6946.758708,
+            "avg": 551.6279845991377
+        }
+    }
+}

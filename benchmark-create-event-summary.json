@@ -1,0 +1,23 @@
+{
+  "testCase": "create-event",
+  "duration": "1m",
+  "vus": 500,
+  "leaseMs": 10000,
+  "leaseRiskRatio": 0.7,
+  "requestCount": 203367,
+  "tps": 3389.45,
+  "latencyMs": {
+    "p95": 198,
+    "p99": 0
+  },
+  "businessSuccessRate": 1,
+  "leaseRiskRate": 0,
+  "recommendedLeaseMs": null,
+  "counts": {
+    "createLocked": 0,
+    "createOverlap": 0,
+    "eventFull": 0,
+    "alreadyRegistered": 0,
+    "dateConflict": 0
+  }
+}
